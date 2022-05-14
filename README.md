@@ -68,8 +68,8 @@ class CredentialsDto extends createZodDto(CredentialsSchema) {}
 ### Using DTO
 
 DTO does two things:
-- Validates user input
-- Provides you a type from Zod schema
+- Provides a schema for `ZodValidationPipe`
+- Provides a type from Zod schema for you
 
 ```ts
 @Controller('auth')
