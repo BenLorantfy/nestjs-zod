@@ -6,6 +6,20 @@
   </p>
 </p>
 <br/>
+<p align="center">
+  <a href="https://github.com/risenforces/nestjs-zod/actions?query=branch%3Amain">
+    <img src="https://github.com/risenforces/nestjs-zod/actions/workflows/test-and-build.yml/badge.svg?event=push&branch=main" alt="nestjs-zod CI Status" />
+  </a>
+  <a href="https://opensource.org/licenses/MIT" rel="nofollow">
+    <img src="https://img.shields.io/github/license/risenforces/nestjs-zod" alt="License">
+  </a>
+  <a href="https://www.npmjs.com/package/nestjs-zod" rel="nofollow">
+    <img src="https://img.shields.io/npm/dw/nestjs-zod.svg" alt="npm">
+  </a>
+  <a href="https://www.npmjs.com/package/nestjs-zod" rel="nofollow">
+    <img src="https://img.shields.io/github/stars/risenforces/nestjs-zod" alt="stars">
+  </a>
+</p>
 
 ## Core library features
 
