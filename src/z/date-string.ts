@@ -37,7 +37,8 @@ export interface ZodDateStringDef extends ZodTypeDef {
 
 const formatToRegex: Record<DateStringFormat, RegExp> = {
   'date': /^\d{4}-\d{2}-\d{2}$/,
-  'date-time': /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/,
+  'date-time':
+    /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(|\.\d{3})(Z|[+-]\d{2}:\d{2})$/,
 }
 
 export class ZodDateString extends ZodType<string, ZodDateStringDef> {
@@ -197,7 +198,7 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
     })
   }
 
-  toDate() {
+  cast() {
     return this.transform((string) => new Date(string))
   }
 

@@ -26,7 +26,7 @@ const extendedErrorMap: ZodErrorMapExtended = (issue, context) => {
   if (issue.code === ZodIssueCode.invalid_date_string_format) {
     const mapper: Record<DateStringFormat, string> = {
       'date': 'YYYY-MM-DD',
-      'date-time': 'YYYY-MM-DDTHH-mm-ssZ',
+      'date-time': 'YYYY-MM-DDTHH:mm:ssZ',
     }
 
     const readable = mapper[issue.expected]

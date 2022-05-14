@@ -23,7 +23,7 @@ const complexTestSchema = z.object({
   }),
   record: z.record(z.number()),
   recordWithKeys: z.record(z.number(), z.string()),
-  dateString: z.dateString().toDate().describe('My date string'),
+  dateString: z.dateString().cast().describe('My date string'),
 })
 
 it('should serialize a complex schema', () => {
