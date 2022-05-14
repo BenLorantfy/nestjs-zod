@@ -10,6 +10,11 @@ Object {
       "maxItems": 3,
       "type": "array",
     },
+    "dateString": Object {
+      "description": "My date string",
+      "format": "date-time",
+      "type": "string",
+    },
     "enumDefault": Object {
       "default": "buy-it-now",
       "enum": Array [
@@ -145,6 +150,7 @@ Object {
     "objectNested",
     "record",
     "recordWithKeys",
+    "dateString",
   ],
   "type": "object",
 }

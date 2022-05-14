@@ -1,4 +1,4 @@
-import { z, ZodTypeAny } from 'zod'
+import { z, ZodTypeAny } from '../z'
 import { zodToOpenAPI } from './zod-to-openapi'
 
 const complexTestSchema = z.object({
@@ -21,6 +21,7 @@ const complexTestSchema = z.object({
   }),
   record: z.record(z.number()),
   recordWithKeys: z.record(z.number(), z.string()),
+  dateString: z.dateString().describe('My date string'),
 })
 
 it('should serialize a complex schema', () => {
