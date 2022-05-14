@@ -197,6 +197,10 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
     })
   }
 
+  toDate() {
+    return this.transform((string) => new Date(string))
+  }
+
   get format_() {
     return findCheck(this._def.checks, 'format')
   }
