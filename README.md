@@ -23,7 +23,7 @@ yarn add nestjs-zod
 ```
 
 Included dependencies:
-- `zod` -  `3.14.3` (extended Zod and Swagger integration are bound to the internal API, so even the patch updates can cause errors)
+- `zod` -  `3.14.3`
 
 Peer dependencies:
 - `@nestjs/common` -  `^8.0.0`
