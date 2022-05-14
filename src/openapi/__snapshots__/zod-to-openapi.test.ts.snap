@@ -121,6 +121,7 @@ Object {
       "type": "array",
     },
     "union": Object {
+      "description": "Please choose topkek",
       "oneOf": Array [
         Object {
           "enum": Array [

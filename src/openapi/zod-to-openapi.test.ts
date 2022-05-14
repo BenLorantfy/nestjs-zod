@@ -11,7 +11,9 @@ const complexTestSchema = z.object({
     z.object({ name: z.literal('Rudy') }),
     z.array(z.union([z.literal('blue'), z.literal('red')])),
   ]),
-  union: z.union([z.literal('kek'), z.literal('topkek')]),
+  union: z
+    .union([z.literal('kek'), z.literal('topkek')])
+    .describe('Please choose topkek'),
   literalString: z.literal('123'),
   literalNumber: z.literal(123),
   literalBoolean: z.literal(true),
