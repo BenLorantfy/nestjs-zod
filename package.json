@@ -2,10 +2,13 @@
   "name": "nestjs-zod",
   "description": "All NestJS + Zod utilities you need",
   "version": "0.0.0-set-by-ci",
-  "main": "./dist/lib/index.js",
-  "module": "./dist/lib/index.js",
-  "types": "./dist/lib/index.d.ts",
-  "exports": "./dist/lib/index.js",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./nz": "./dist/nz.js"
+  },
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
