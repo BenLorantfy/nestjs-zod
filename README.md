@@ -1,6 +1,10 @@
-# nestjs-zod
-
-Tired of integrating Zod into your NestJS application? Here is the solution!
+<p align="center">
+  <img src="logo.png" height="200px" align="center" alt="NestJS + Zod logo" />
+  <p align="center">
+    A superior validation solution for your NestJS application
+  </p>
+</p>
+<br/>
 
 ## Core library features
 
