@@ -1,0 +1,61 @@
+{
+  "name": "nestjs-zod",
+  "description": "All NestJS + Zod utilities you need",
+  "version": "0.0.0-set-by-ci",
+  "main": "./dist/lib/index.js",
+  "module": "./dist/lib/index.js",
+  "types": "./dist/lib/index.d.ts",
+  "exports": "./dist/lib/index.js",
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "license": "MIT",
+  "repository": "git@github.com:risenforces/nestjs-zod.git",
+  "author": "Evgeny Zakharov <to@risen.dev>",
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "rollup -c",
+    "test": "jest",
+    "lint": "eslint --ext .ts,.tsx src"
+  },
+  "devDependencies": {
+    "@eslint-kit/eslint-config-base": "^5.0.2",
+    "@eslint-kit/eslint-config-node": "^2.0.0",
+    "@eslint-kit/eslint-config-patch": "^1.0.0",
+    "@eslint-kit/eslint-config-prettier": "^5.0.0",
+    "@eslint-kit/eslint-config-typescript": "^5.2.0",
+    "@nestjs/common": "8.0.0",
+    "@nestjs/core": "8.0.0",
+    "@nestjs/swagger": "^5.2.1",
+    "@types/jest": "^26.0.14",
+    "@typescript-eslint/parser": "^5.23.0",
+    "esbuild": "^0.14.24",
+    "eslint": "7.32.0",
+    "jest": "^28.1.0",
+    "prettier": "2.3.0",
+    "rollup": "^2.69.0",
+    "rollup-plugin-bundle-size": "^1.0.3",
+    "rollup-plugin-dts": "^4.1.0",
+    "rollup-plugin-esbuild": "^4.8.2",
+    "rollup-plugin-terser": "^7.0.2",
+    "ts-jest": "^28.0.2",
+    "typescript": "4.6.3"
+  },
+  "peerDependencies": {
+    "@nestjs/common": "^8.0.0",
+    "@nestjs/core": "^8.0.0",
+    "@nestjs/swagger": "^5.0.0"
+  },
+  "peerDependenciesMeta": {
+    "@nestjs/swagger": {
+      "optional": true
+    }
+  },
+  "dependencies": {
+    "zod": "3.14.3"
+  }
+}

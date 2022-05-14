@@ -1,0 +1,56 @@
+categories:
+  - title: '⚠️ Breaking changes'
+    label: 'BREAKING CHANGES'
+
+  - title: '🚀 Features'
+    label: 'feature'
+
+  - title: '🛠 Refactor'
+    label: 'refactor'
+
+  - title: '🐛 Bug Fixes'
+    label: 'fix'
+
+  - title: '💅 Style'
+    label: 'style'
+
+  - title: '🧰 Maintenance'
+    labels:
+      - 'chore'
+      - 'dependencies'
+      - 'ci'
+
+  - title: '📚 Documentation'
+    label: 'documentation'
+
+  - title: '🧪 Tests'
+    label: 'tests'
+
+  - title: '🏎 Optimizations'
+    label: 'optimizations'
+
+version-resolver:
+  major:
+    labels:
+      - 'BREAKING CHANGES'
+  minor:
+    labels:
+      - 'feature'
+      - 'enhancement'
+      - 'dependencies'
+  patch:
+    labels:
+      - 'fix'
+      - 'bugfix'
+      - 'bug'
+      - 'optimizations'
+      - 'refactor'
+      - 'style'
+  default: patch
+
+name-template: 'v$RESOLVED_VERSION'
+tag-template: 'v$RESOLVED_VERSION'
+
+change-template: '- $TITLE #$NUMBER (@$AUTHOR)'
+template: |
+  $CHANGES

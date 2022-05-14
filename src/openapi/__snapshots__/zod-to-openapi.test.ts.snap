@@ -1,0 +1,151 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`should serialize a complex schema 1`] = `
+Object {
+  "properties": Object {
+    "array": Object {
+      "items": Object {
+        "type": "string",
+      },
+      "maxItems": 3,
+      "type": "array",
+    },
+    "enumDefault": Object {
+      "default": "buy-it-now",
+      "enum": Array [
+        "buy-it-now",
+        "auctions",
+      ],
+      "type": "string",
+    },
+    "literalBoolean": Object {
+      "type": "boolean",
+    },
+    "literalNumber": Object {
+      "maximum": 123,
+      "minimum": 123,
+      "type": "number",
+    },
+    "literalString": Object {
+      "enum": Array [
+        "123",
+      ],
+      "type": "string",
+    },
+    "numberMinMax": Object {
+      "exclusiveMaximum": false,
+      "exclusiveMinimum": false,
+      "maximum": 10,
+      "minimum": 3,
+      "type": "number",
+    },
+    "numberMultipleOf": Object {
+      "multipleOf": 10,
+      "type": "number",
+    },
+    "objectNested": Object {
+      "properties": Object {
+        "uuid": Object {
+          "format": "uuid",
+          "type": "string",
+        },
+      },
+      "required": Array [
+        "uuid",
+      ],
+      "type": "object",
+    },
+    "record": Object {
+      "additionalProperties": Object {
+        "type": "number",
+      },
+      "type": "object",
+    },
+    "recordWithKeys": Object {
+      "additionalProperties": Object {
+        "type": "string",
+      },
+      "type": "object",
+    },
+    "stringMinMax": Object {
+      "maxLength": 15,
+      "minLength": 5,
+      "type": "string",
+    },
+    "tuple": Object {
+      "items": Object {
+        "oneOf": Array [
+          Object {
+            "type": "string",
+          },
+          Object {
+            "properties": Object {
+              "name": Object {
+                "enum": Array [
+                  "Rudy",
+                ],
+                "type": "string",
+              },
+            },
+            "required": Array [
+              "name",
+            ],
+            "type": "object",
+          },
+          Object {
+            "items": Object {
+              "oneOf": Array [
+                Object {
+                  "enum": Array [
+                    "blue",
+                  ],
+                  "type": "string",
+                },
+                Object {
+                  "enum": Array [
+                    "red",
+                  ],
+                  "type": "string",
+                },
+              ],
+            },
+            "type": "array",
+          },
+        ],
+      },
+      "type": "array",
+    },
+    "union": Object {
+      "oneOf": Array [
+        Object {
+          "enum": Array [
+            "kek",
+          ],
+          "type": "string",
+        },
+        Object {
+          "enum": Array [
+            "topkek",
+          ],
+          "type": "string",
+        },
+      ],
+    },
+  },
+  "required": Array [
+    "stringMinMax",
+    "numberMinMax",
+    "numberMultipleOf",
+    "tuple",
+    "union",
+    "literalString",
+    "literalNumber",
+    "literalBoolean",
+    "array",
+    "objectNested",
+    "record",
+    "recordWithKeys",
+  ],
+  "type": "object",
+}
+`;
