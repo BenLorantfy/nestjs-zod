@@ -17,3 +17,4 @@ node_modules
 !.vscode/extensions.json
 dist
 package-lock.json
+/*.d.ts

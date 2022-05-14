@@ -6,6 +6,7 @@ import bundleSize from 'rollup-plugin-bundle-size'
 
 const src = (file) => `src/${file}`
 const dist = (file) => `dist/${file}`
+const root = (file) => `${file}`
 
 const bundle = (input, config) =>
   defineConfig({
@@ -50,7 +51,7 @@ const config = defineConfig([
     plugins: [dts()],
     output: [
       {
-        file: dist('nz.d.ts'),
+        file: root('nz.d.ts'),
         format: 'es',
       },
     ],
