@@ -225,6 +225,53 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
 }
 ```
 
+## Extended Zod
+
+As you learned in [Writing Zod Schemas](#writing-zod-schemas) section, `nestjs-zod` provides a special version of Zod. It helps you to validate the user input more accurately by using our custom schemas and methods.
+
+### ZodDateString
+
+In HTTP, we always accept Dates as strings. But default Zod doesn't have methods to validate such type of strings. `ZodDateString` was created to address this issue.
+
+```ts
+// 1. Expect user input to be a "string" type
+// 2. Expect user input to be a valid date (by using new Date)
+z.dateString()
+
+// Cast to Date instance
+// (use it on end of the chain, but before "describe")
+z.dateString().cast()
+
+// Expect string in "full-date" format from RFC3339
+z.dateString().format('date')
+
+// [default format]
+// Expect string in "date-time" format from RFC3339
+z.dateString().format('date-time')
+
+// Expect year to be greater or equal to 2000
+z.dateString().minYear(2000)
+
+// Expect year to be less or equal to 2025
+z.dateString().maxYear(2025)
+
+// Expect day to be a week day
+z.dateString().weekDay()
+
+// Expect year to be a weekend
+z.dateString().weekend()
+```
+
+Valid `date` format examples:
+- `2022-05-15`
+
+Valid `date-time` format examples:
+- `2022-05-02:08:33Z`
+- `2022-05-02:08:33.000Z`
+- `2022-05-02:08:33+00:00`
+- `2022-05-02:08:33-00:00`
+- `2022-05-02:08:33.000+00:00`
+
 ## OpenAPI (Swagger) support
 
 ### Setup
