@@ -1,4 +1,11 @@
 /* eslint-disable import/export */
+
+/*
+ * Here, we override Zod exports with our custom entities
+ * It's one of the recommended ways to extend Zod:
+ * https://github.com/colinhacks/zod/issues/465#issuecomment-847479217
+ */
+
 export * from 'zod'
 
 export { defaultErrorMap, setErrorMap } from './error-map'
@@ -8,7 +15,7 @@ export { ZodIssueCode, addIssueToContext } from './issues'
 export type {
   ZodIssue,
   ZodIssueOptionalMessage,
-  ZodInvalidIsoDateDayIssue,
+  ZodInvalidDateStringDayIssue,
   ZodTooBigIssue,
   ZodTooSmallIssue,
 } from './issues'

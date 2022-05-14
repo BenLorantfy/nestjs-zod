@@ -7,47 +7,63 @@ import {
   ZodIssueOptionalMessage,
 } from 'zod'
 
-type OmitKeys<T, K extends string> = Pick<T, Exclude<keyof T, K>>
-
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare type StripPath<T extends object> = T extends any
-  ? OmitKeys<T, 'path'>
+  ? Omit<T, 'path'>
   : never
 
 const ZodIssueCodeExtended = {
   ...ZodIssueCode,
+  invalid_date_string_format: 'invalid_date_string_format' as const,
   invalid_date_string_day: 'invalid_date_string_day' as const,
 }
 
 type ZodIssueCodeExtended = keyof typeof ZodIssueCodeExtended
 
-export interface ZodInvalidIsoDateDayIssue extends ZodIssueBase {
+export type DateStringFormat = 'date' | 'date-time'
+
+export interface ZodInvalidDateStringFormat extends ZodIssueBase {
+  code: typeof ZodIssueCodeExtended.invalid_date_string_format
+  expected: DateStringFormat
+}
+
+export interface ZodInvalidDateStringDayIssue extends ZodIssueBase {
   code: typeof ZodIssueCodeExtended.invalid_date_string_day
   expected: 'weekDay' | 'weekend'
 }
+
+/*
+ * If you add a new string to "type" union,
+ * don't forget to handle it in "extendedErrorMap" function
+ * Otherwise, there may be a runtime error
+ */
 
 export interface ZodTooSmallIssue extends ZodIssueBase {
   code: typeof ZodIssueCode.too_small
   minimum: number
   inclusive: boolean
-  type: 'array' | 'string' | 'number' | 'set' | 'iso_date_year'
+  // see comment above
+  type: 'array' | 'string' | 'number' | 'set' | 'date_string_year'
 }
 
 export interface ZodTooBigIssue extends ZodIssueBase {
   code: typeof ZodIssueCode.too_big
   maximum: number
   inclusive: boolean
-  type: 'array' | 'string' | 'number' | 'set' | 'iso_date_year'
+  // see comment above
+  type: 'array' | 'string' | 'number' | 'set' | 'date_string_year'
 }
 
 type ZodIssueOptionalMessageExtended =
   | ZodIssueOptionalMessage
-  | ZodInvalidIsoDateDayIssue
+  | ZodInvalidDateStringFormat
+  | ZodInvalidDateStringDayIssue
   | ZodTooSmallIssue
   | ZodTooBigIssue
 
 type ZodIssueExtended = ZodIssueOptionalMessageExtended & { message: string }
 
+// for some reason "type" field breaks when using default Omit
 type IssueDataExtended = StripPath<ZodIssueOptionalMessageExtended> & {
   path?: (string | number)[]
   fatal?: boolean

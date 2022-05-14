@@ -7,7 +7,7 @@ import {
   ZodType,
   ZodTypeDef,
 } from 'zod'
-import { ZodIssueCode, addIssueToContext } from './issues'
+import { ZodIssueCode, addIssueToContext, DateStringFormat } from './issues'
 import {
   ErrorMessage,
   findCheck,
@@ -19,6 +19,12 @@ import {
 import { ZodFirstPartyTypeKindExtended } from './type-names'
 
 type ZodIsoDateCheck =
+  | {
+      kind: 'format'
+      value: DateStringFormat
+      regex: RegExp
+      message?: string
+    }
   | { kind: 'minYear'; value: number; message?: string }
   | { kind: 'maxYear'; value: number; message?: string }
   | { kind: 'weekDay'; message?: string }
@@ -26,7 +32,12 @@ type ZodIsoDateCheck =
 
 export interface ZodDateStringDef extends ZodTypeDef {
   checks: ZodIsoDateCheck[]
-  typeName: ZodFirstPartyTypeKindExtended
+  typeName: ZodFirstPartyTypeKindExtended.ZodDateString
+}
+
+const formatToRegex: Record<DateStringFormat, RegExp> = {
+  'date': /^\d{4}-\d{2}-\d{2}$/,
+  'date-time': /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/,
 }
 
 export class ZodDateString extends ZodType<string, ZodDateStringDef> {
@@ -50,13 +61,24 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
     const status = new ParseStatus()
 
     for (const check of this._def.checks) {
-      if (check.kind === 'minYear') {
+      if (check.kind === 'format') {
+        const valid = check.regex.test(input.data)
+        if (valid) continue
+
+        addIssueToContext(context, {
+          code: ZodIssueCode.invalid_date_string_format,
+          expected: check.value,
+          message: check.message,
+        })
+
+        status.dirty()
+      } else if (check.kind === 'minYear') {
         const invalid = date.getFullYear() < check.value
         if (!invalid) continue
 
         addIssueToContext(context, {
           code: ZodIssueCode.too_small,
-          type: 'iso_date_year',
+          type: 'date_string_year',
           minimum: check.value,
           inclusive: true,
           message: check.message,
@@ -69,7 +91,7 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
 
         addIssueToContext(context, {
           code: ZodIssueCode.too_big,
-          type: 'iso_date_year',
+          type: 'date_string_year',
           maximum: check.value,
           inclusive: true,
           message: check.message,
@@ -113,11 +135,35 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
     })
   }
 
+  _replaceCheck(check: ZodIsoDateCheck) {
+    return new ZodDateString({
+      ...this._def,
+      checks: this._def.checks
+        .filter((item) => item.kind !== check.kind)
+        .concat(check),
+    })
+  }
+
   static create = (params?: RawCreateParams): ZodDateString => {
     return new ZodDateString({
-      checks: [],
+      checks: [
+        {
+          kind: 'format',
+          value: 'date-time',
+          regex: formatToRegex['date-time'],
+        },
+      ],
       typeName: ZodFirstPartyTypeKindExtended.ZodDateString,
       ...processCreateParams(params),
+    })
+  }
+
+  format(format: DateStringFormat, message?: ErrorMessage) {
+    return this._replaceCheck({
+      kind: 'format',
+      value: format,
+      regex: formatToRegex[format],
+      ...normalizeErrorMessage(message),
     })
   }
 
@@ -151,11 +197,15 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
     })
   }
 
-  get _minYear() {
+  get format_() {
+    return findCheck(this._def.checks, 'format')
+  }
+
+  get minYear_() {
     return findCheck(this._def.checks, 'minYear')
   }
 
-  get _maxYear() {
+  get maxYear_() {
     return findCheck(this._def.checks, 'maxYear')
   }
 

@@ -19,6 +19,9 @@ interface ProcessedCreateParams {
   description?: string
 }
 
+/**
+ * It's a copy of Zod's internal processCreateParams
+ */
 export function processCreateParams(
   params?: RawCreateParams
 ): ProcessedCreateParams {
@@ -57,8 +60,7 @@ export function findCheck<
 
 export function hasCheck<
   TCheck extends { kind: string },
-  TKind extends TCheck['kind'],
-  TSearch extends TKind
->(checks: TCheck[], kind: TSearch) {
+  TKind extends TCheck['kind']
+>(checks: TCheck[], kind: TKind) {
   return Boolean(findCheck(checks, kind))
 }

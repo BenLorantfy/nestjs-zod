@@ -4,7 +4,7 @@ import {
   ZodArray,
   ZodBigInt,
   ZodBoolean,
-  ZodDate,
+  ZodDateString,
   ZodDefault,
   ZodEnum,
   ZodLiteral,
@@ -19,7 +19,7 @@ import {
   ZodTuple,
   ZodTypeAny,
   ZodUnion,
-} from 'zod'
+} from '../z'
 
 export function is<T extends Type<ZodTypeAny>>(
   input: ZodTypeAny,
@@ -80,9 +80,15 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     }
   }
 
-  if (is(zodType, ZodDate)) {
+  if (is(zodType, ZodDateString)) {
+    const { checks } = zodType._def
     object.type = 'string'
-    object.format = 'date-time'
+
+    for (const check of checks) {
+      if (check.kind === 'format') {
+        object.format = check.value
+      }
+    }
   }
 
   if (is(zodType, ZodBigInt)) {
