@@ -32,7 +32,7 @@ Peer dependencies:
 
 ## Writing Zod schemas
 
-Extended Zod and Swagger integration are bound to the internal API, so even the patch updates can cause errors
+Extended Zod and Swagger integration are bound to the internal API, so even the patch updates can cause errors.
 
 For that reason, `nestjs-zod` uses specific `zod` version inside and re-exports it as `nz`:
 
@@ -96,7 +96,7 @@ class AuthController {
 
 The validation pipe uses your Zod schema to parse data from parameter decorator.
 
-When the data is invalid - it throws [ZodValidationException](#validation-exceptions)
+When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
 
 ### Globally (recommended)
 
@@ -153,7 +153,7 @@ It has 2 syntax forms:
 
 The first parameter is `Source`: `'body' | 'query' | 'params'`
 
-When the data is invalid - it throws [ZodValidationException](#validation-exceptions)
+When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
 
 ```ts
 import { ZodGuard } from 'nestjs-zod'
@@ -239,7 +239,7 @@ import { patchNestjsSwagger } from 'nestjs-zod'
 patchNestjsSwagger()
 ```
 
-Then follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction)
+Then follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction).
 
 ### Schemas-writing advices
 
