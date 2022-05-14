@@ -7,6 +7,4 @@ export { createZodValidationPipe, ZodValidationPipe } from './pipe'
 
 export { createZodGuard, ZodGuard, UseZodGuard } from './guard'
 
-export { nz } from './nz'
-
 export { patchNestjsSwagger, zodToOpenAPI } from './openapi'

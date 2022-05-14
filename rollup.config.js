@@ -38,20 +38,20 @@ const config = defineConfig([
       },
     ],
   }),
-  bundle(src('nz/index.ts'), {
+  bundle(src('z/index.ts'), {
     plugins: [esbuild(), terser()],
     output: [
       {
-        file: dist('nz.js'),
+        file: dist('z.js'),
         format: 'cjs',
       },
     ],
   }),
-  bundle(src('nz/index.ts'), {
+  bundle(src('z/index.ts'), {
     plugins: [dts()],
     output: [
       {
-        file: root('nz.d.ts'),
+        file: root('z.d.ts'),
         format: 'es',
       },
     ],

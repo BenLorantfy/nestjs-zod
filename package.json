@@ -5,13 +5,13 @@
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
-    "./nz": "./dist/nz.js"
+    "./z": "./dist/z.js"
   },
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "nz.d.ts"
+    "z.d.ts"
   ],
   "sideEffects": false,
   "license": "MIT",

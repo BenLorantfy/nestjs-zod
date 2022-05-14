@@ -13,7 +13,7 @@ Tired of integrating Zod into your NestJS application? Here is the solution!
 - `zodToOpenAPI` - create OpenAPI declarations from Zod schemas
 - `@nestjs/swagger` integration, but you need to apply patch
   - `nestjs-zod` generates highly accurate Swagger Schema
-- `nz` - extended Zod schemas for NestJS (work in progress)
+- Extended Zod schemas for NestJS (work in progress)
 - Customization - you freely can replace `ZodValidationException`
 
 ## Installation
@@ -34,31 +34,32 @@ Peer dependencies:
 
 Extended Zod and Swagger integration are bound to the internal API, so even the patch updates can cause errors.
 
-For that reason, `nestjs-zod` uses specific `zod` version inside and re-exports it as `nz`:
+For that reason, `nestjs-zod` uses specific `zod` version inside and re-exports it under `/z` scope:
 
 ```ts
-import { nz } from 'nestjs-zod'
+import { z, ZodString, ZodError } from 'nestjs-zod/z'
 
-const CredentialsSchema = nz.schema({
-  username: nz.string(),
-  password: nz.string(),
+const CredentialsSchema = z.schema({
+  username: z.string(),
+  password: z.string(),
 })
 ```
 
-Zod's classes and types are re-exported too, but under `/nz` scope for more clarity:
+Zod's classes and types are re-exported too, but under `/z` scope for more clarity:
 
 ```ts
-import { ZodString, ZodError, ZodIssue } from 'nestjs-zod/nz' 
+import { ZodString, ZodError, ZodIssue } from 'nestjs-zod/z' 
 ```
 
 ## Creating DTO from Zod schema
 
 ```ts
-import { nz, createZodDto } from 'nestjs-zod'
+import { createZodDto } from 'nestjs-zod'
+import { z } from 'nestjs-zod/z'
 
-const CredentialsSchema = nz.schema({
-  username: nz.string(),
-  password: nz.string(),
+const CredentialsSchema = z.schema({
+  username: z.string(),
+  password: z.string(),
 })
 
 // class is required for using DTO as a type
@@ -246,10 +247,10 @@ Then follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/
 Use `.describe()` method to add Swagger description:
 
 ```ts
-import { nz } from 'nestjs-zod'
+import { z } from 'nestjs-zod/z'
 
-const CredentialsSchema = nz.schema({
-  username: nz.string().describe('This is an username'),
-  password: nz.string().describe('This is a password'),
+const CredentialsSchema = z.schema({
+  username: z.string().describe('This is an username'),
+  password: z.string().describe('This is a password'),
 })
 ```
