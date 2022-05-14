@@ -30,6 +30,24 @@ Peer dependencies:
 - `@nestjs/core` -  `^8.0.0`
 - `@nestjs/swagger` -  `^5.0.0` (optional)
 
+## Navigation
+
+- [Writing Zod schemas](#writing-zod-schemas)
+- [Creating DTO from Zod schema](#creating-dto-from-zod-schema)
+  - [Using DTO](#using-dto)
+- [Using ZodValidationPipe](#using-zodvalidationpipe)
+  - [Globally](#globally-recommended)
+  - [Locally](#locally)
+  - [Creating custom validation pipe](#creating-custom-validation-pipe)
+- [Using ZodGuard](#using-zodguard)
+  - [Creating custom guard](#creating-custom-guard)
+- [Validation Exceptions](#validation-exceptions)
+- [Extended Zod](#extended-zod)
+  - [ZodDateString](#zoddatestring)
+- [OpenAPI (Swagger) support](#openapi-swagger-support)
+  - [Setup](#setup)
+  - [Writing more Swagger-compatible schemas](#writing-more-swagger-compatible-schemas)
+
 ## Writing Zod schemas
 
 Extended Zod and Swagger integration are bound to the internal API, so even the patch updates can cause errors.
@@ -289,7 +307,7 @@ patchNestjsSwagger()
 
 Then follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction).
 
-### Schemas-writing advices
+### Writing more Swagger-compatible schemas
 
 Use `.describe()` method to add Swagger description:
 
