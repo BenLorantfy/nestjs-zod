@@ -8,6 +8,7 @@
   ],
   "parser": "@typescript-eslint/parser",
   "rules": {
-    "sonarjs/cognitive-complexity": "off"
+    "sonarjs/cognitive-complexity": "off",
+    "@typescript-eslint/no-unnecessary-condition": "off"
   }
 }
