@@ -5,7 +5,11 @@
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
-    "./z": "./dist/z.js"
+    "./z": "./dist/z.js",
+    "./frontend": {
+      "default": "./dist/frontend.js",
+      "import": "./dist/frontend.mjs"
+    }
   },
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",

@@ -45,6 +45,10 @@ const config = defineConfig([
         file: dist('z.js'),
         format: 'cjs',
       },
+      {
+        file: dist('z.mjs'),
+        format: 'es',
+      },
     ],
   }),
   bundle(src('z/exports/only-override.ts'), {
@@ -52,6 +56,28 @@ const config = defineConfig([
     output: [
       {
         file: dist('z-only-override.d.ts'),
+        format: 'es',
+      },
+    ],
+  }),
+  bundle(src('frontend/index.ts'), {
+    plugins: [esbuild(), terser()],
+    output: [
+      {
+        file: dist('frontend.mjs'),
+        format: 'es',
+      },
+      {
+        file: dist('frontend.js'),
+        format: 'cjs',
+      },
+    ],
+  }),
+  bundle(src('frontend/index.ts'), {
+    plugins: [dts()],
+    output: [
+      {
+        file: root('frontend.d.ts'),
         format: 'es',
       },
     ],

@@ -73,7 +73,7 @@ export interface ZodTooBigIssue extends ZodIssueBase {
   type: 'array' | 'string' | 'number' | 'set' | 'date_string_year'
 }
 
-export type NestJsZodCustomIssue =
+export type NestJsZodIssue =
   | ZodInvalidDateStringIssue
   | ZodInvalidDateStringFormatIssue
   | ZodInvalidDateStringDirectionIssue
@@ -81,7 +81,7 @@ export type NestJsZodCustomIssue =
 
 type ZodIssueOptionalMessageExtended =
   | ZodIssueOptionalMessage
-  | NestJsZodCustomIssue
+  | NestJsZodIssue
   | ZodTooSmallIssue
   | ZodTooBigIssue
 

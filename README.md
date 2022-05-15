@@ -63,6 +63,8 @@ Peer dependencies:
 - [Validation Exceptions](#validation-exceptions)
 - [Extended Zod](#extended-zod)
   - [ZodDateString](#zoddatestring)
+  - [Extended Zod Errors](#extended-zod-errors)
+  - [Working with errors on the client side](#working-with-errors-on-the-client-side)
 - [OpenAPI (Swagger) support](#openapi-swagger-support)
   - [Setup](#setup)
   - [Writing more Swagger-compatible schemas](#writing-more-swagger-compatible-schemas)
@@ -354,6 +356,24 @@ Therefore, the error details is located inside `params` property:
   "path": [
     "date"
   ]
+}
+```
+
+### Working with errors on the client side
+
+Optionally, you can install `nestjs-zod` on the client side.
+
+The library provides you a `/frontend` scope, that can be used to detect custom NestJS Zod issues and process them the way you want. 
+
+```ts
+import { isNestJsZodIssue, NestJsZodIssue, ZodIssue } from 'nestjs-zod/frontend'
+
+function mapToFormErrors(issues: ZodIssue[]) {
+  for (const issue of issues) {
+    if (isNestJsZodIssue(issue)) {
+      // issue is NestJsZodIssue
+    }
+  }
 }
 ```
 

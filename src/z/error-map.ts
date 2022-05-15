@@ -5,11 +5,8 @@ import {
   setErrorMap,
   ZodIssueCode,
 } from 'zod'
-import {
-  DateStringFormat,
-  NestJsZodCustomIssue,
-  ZodIssueOptionalMessage,
-} from './issues'
+import { isNestJsZodIssue } from './is-nestjs-zod-issue'
+import { DateStringFormat, ZodIssueOptionalMessage } from './issues'
 
 type ErrorMapContext = Parameters<ZodErrorMap>[1]
 
@@ -18,19 +15,13 @@ type ZodErrorMapExtended = (
   context: ErrorMapContext
 ) => ReturnType<ZodErrorMap>
 
-function isNestJsZodCustomIssue(
-  issue: ZodIssueOptionalMessage
-): issue is NestJsZodCustomIssue {
-  return issue.code === ZodIssueCode.custom && issue.params?.isNestJsZod
-}
-
 const extendedErrorMap: ZodErrorMapExtended = (issue, context) => {
   /*
    * At first, we should handle the custom Issues,
    * because defaultErrorMap throws an Error when no match found
    */
 
-  if (isNestJsZodCustomIssue(issue)) {
+  if (isNestJsZodIssue(issue)) {
     const real = issue.params
 
     if (real.code === 'invalid_date_string') {
