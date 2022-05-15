@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.png" align="center" alt="NestJS + Zod logo" />
+  <img src="logo.svg" width="560px" align="center" alt="NestJS + Zod logo" style="max-width: 100%;" />
   <h1></h1>
   <p align="center">
     A superior validation solution for your NestJS application
