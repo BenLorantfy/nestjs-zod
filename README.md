@@ -316,6 +316,47 @@ Valid `date-time` format examples:
 - `2022-05-02:08:33-00:00`
 - `2022-05-02:08:33.000+00:00`
 
+Errors:
+- `invalid_date_string` - invalid date
+
+- `invalid_date_string_format` - wrong format
+
+  Payload:
+  - `expected` - `'date' | 'date-time'`
+
+- `invalid_date_string_direction` - not past/future
+
+  Payload:
+  - `expected` - `'past' | 'future'`
+
+- `invalid_date_string_day` - not weekDay/weekend
+
+  Payload:
+  - `expected` - `'weekDay' | 'weekend'`
+
+### Extended Zod Errors
+
+Currently, we use `custom` error code due to some Zod limitations (`errorMap` priorities)
+
+Therefore, the error details is located inside `params` property:
+
+```json
+{
+  "code": "custom",
+  "message": "Invalid date, expected it to be the past",
+  "params": {
+    "isNestJsZod": true,
+    "code": "invalid_date_string_direction",
+
+    // payload is always located here in a flat view
+    "expected": "past"
+  },
+  "path": [
+    "date"
+  ]
+}
+```
+
 ## OpenAPI (Swagger) support
 
 ### Setup
