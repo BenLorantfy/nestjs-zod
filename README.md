@@ -377,6 +377,8 @@ function mapToFormErrors(issues: ZodIssue[]) {
 }
 ```
 
+> :warning: **If you use `zod` in your client-side application, and you want to install `nestjs-zod` too, it may be better to use only `nestjs-zod` to prevent issues caused by mismatch between `zod` versions. `nestjs-zod/frontend` doesn't use `zod` at the runtime, but it uses its types.**
+
 ## OpenAPI (Swagger) support
 
 ### Setup
