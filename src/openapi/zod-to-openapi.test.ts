@@ -1,5 +1,4 @@
-import { ZodTypeAny } from '../z'
-import { z } from '../z/_namespace'
+import { z, ZodTypeAny } from '../z'
 import { zodToOpenAPI } from './zod-to-openapi'
 
 const complexTestSchema = z.object({

@@ -38,7 +38,7 @@ const config = defineConfig([
       },
     ],
   }),
-  bundle(src('z/index.ts'), {
+  bundle(src('z/exports/everything.ts'), {
     plugins: [esbuild(), terser()],
     output: [
       {
@@ -47,11 +47,11 @@ const config = defineConfig([
       },
     ],
   }),
-  bundle(src('z/index.ts'), {
+  bundle(src('z/exports/only-override.ts'), {
     plugins: [dts()],
     output: [
       {
-        file: dist('z-without-namespace.d.ts'),
+        file: dist('z-only-override.d.ts'),
         format: 'es',
       },
     ],
