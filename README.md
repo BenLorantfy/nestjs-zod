@@ -30,10 +30,14 @@
 - `UseZodGuard` - alias for `@UseGuards(new ZodGuard(source, schema))`
 - `ZodValidationException` - BadRequestException extended with Zod errors
 - `zodToOpenAPI` - create OpenAPI declarations from Zod schemas
-- `@nestjs/swagger` integration, but you need to apply patch
-  - `nestjs-zod` generates highly accurate Swagger Schema
-- Extended Zod schemas for NestJS (work in progress)
-- Customization - you freely can replace `ZodValidationException`
+- OpenAPI support
+  - `@nestjs/swagger` integration using the patch
+  - `zodToOpenAPI` - generate highly accurate Swagger Schema
+  - Zod DTOs can be used in any `@nestjs/swagger` decorator
+- Extended Zod schemas for NestJS (`nestjs-zod/z`)
+  - `dateString` for dates (supports casting to `Date`)
+- Customization - change exception format easily
+- Useful helpers for client side error handling (`nestjs-zod/frontend`)
 
 ## Installation
 
@@ -45,9 +49,11 @@ Included dependencies:
 - `zod` -  `3.14.3`
 
 Peer dependencies:
-- `@nestjs/common` -  `^8.0.0`
-- `@nestjs/core` -  `^8.0.0`
+- `@nestjs/common` -  `^8.0.0` (required on server side)
+- `@nestjs/core` -  `^8.0.0` (required on server side)
 - `@nestjs/swagger` -  `^5.0.0` (optional)
+
+All peer dependencies are marked as optional for better client side usage, but you need to install required ones when using `nestjs-zod` on server side.
 
 ## Navigation
 

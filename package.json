@@ -60,6 +60,12 @@
     "@nestjs/swagger": "^5.0.0"
   },
   "peerDependenciesMeta": {
+    "@nestjs/common": {
+      "optional": true
+    },
+    "@nestjs/core": {
+      "optional": true
+    },
     "@nestjs/swagger": {
       "optional": true
     }
