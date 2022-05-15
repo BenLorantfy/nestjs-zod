@@ -14,6 +14,10 @@ const complexTestSchema = z.object({
   union: z
     .union([z.literal('kek'), z.literal('topkek')])
     .describe('Please choose topkek'),
+  discriminatedUnion: z.discriminatedUnion('name', [
+    z.object({ name: z.literal('vasya'), age: z.number() }),
+    z.object({ name: z.literal('petya'), age: z.number() }),
+  ]),
   literalString: z.literal('123'),
   literalNumber: z.literal(123),
   literalBoolean: z.literal(true),

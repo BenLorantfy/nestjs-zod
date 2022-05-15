@@ -21,6 +21,7 @@ import {
   ZodTypeAny,
   ZodUnion,
   ZodIntersection,
+  ZodDiscriminatedUnion,
 } from '../z'
 
 export function is<T extends Type<ZodTypeAny>>(
@@ -124,6 +125,14 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
   if (is(zodType, ZodUnion)) {
     const { options } = zodType._def
     object.oneOf = options.map(zodToOpenAPI)
+  }
+
+  if (is(zodType, ZodDiscriminatedUnion)) {
+    const { options } = zodType._def
+    object.oneOf = []
+    for (const schema of options.values()) {
+      object.oneOf.push(zodToOpenAPI(schema))
+    }
   }
 
   if (is(zodType, ZodLiteral)) {

@@ -15,6 +15,46 @@ Object {
       "format": "date-time",
       "type": "string",
     },
+    "discriminatedUnion": Object {
+      "oneOf": Array [
+        Object {
+          "properties": Object {
+            "age": Object {
+              "type": "number",
+            },
+            "name": Object {
+              "enum": Array [
+                "vasya",
+              ],
+              "type": "string",
+            },
+          },
+          "required": Array [
+            "name",
+            "age",
+          ],
+          "type": "object",
+        },
+        Object {
+          "properties": Object {
+            "age": Object {
+              "type": "number",
+            },
+            "name": Object {
+              "enum": Array [
+                "petya",
+              ],
+              "type": "string",
+            },
+          },
+          "required": Array [
+            "name",
+            "age",
+          ],
+          "type": "object",
+        },
+      ],
+    },
     "enumDefault": Object {
       "default": "buy-it-now",
       "enum": Array [
@@ -144,6 +184,7 @@ Object {
     "numberMultipleOf",
     "tuple",
     "union",
+    "discriminatedUnion",
     "literalString",
     "literalNumber",
     "literalBoolean",
