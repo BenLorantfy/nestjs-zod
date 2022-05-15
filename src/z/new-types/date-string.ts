@@ -3,20 +3,25 @@ import {
   ParseInput,
   ParseReturnType,
   ParseStatus,
+  ZodIssueCode,
   ZodParsedType,
   ZodType,
   ZodTypeDef,
 } from 'zod'
-import { ZodIssueCode, addIssueToContext, DateStringFormat } from './issues'
+import {
+  addIssueToContext,
+  DateStringDayType,
+  DateStringDirection,
+  DateStringFormat,
+} from '../issues'
 import {
   ErrorMessage,
   findCheck,
-  hasCheck,
   normalizeErrorMessage,
   processCreateParams,
   RawCreateParams,
-} from './shared'
-import { ZodFirstPartyTypeKindExtended } from './type-names'
+} from '../shared'
+import { ZodFirstPartyTypeKindExtended } from '../type-names'
 
 type ZodIsoDateCheck =
   | {
@@ -25,12 +30,10 @@ type ZodIsoDateCheck =
       regex: RegExp
       message?: string
     }
-  | { kind: 'future'; message?: string }
-  | { kind: 'past'; message?: string }
+  | { kind: 'direction'; direction: DateStringDirection; message?: string }
+  | { kind: 'day-type'; type: DateStringDayType; message?: string }
   | { kind: 'minYear'; value: number; message?: string }
   | { kind: 'maxYear'; value: number; message?: string }
-  | { kind: 'weekDay'; message?: string }
-  | { kind: 'weekend'; message?: string }
 
 export interface ZodDateStringDef extends ZodTypeDef {
   checks: ZodIsoDateCheck[]
@@ -48,14 +51,27 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
     const parsedType = this._getType(input)
     const context = this._getOrReturnCtx(input)
 
-    const notString = parsedType !== ZodParsedType.string
-    const date = new Date(input.data)
-
-    if (notString || Number.isNaN(date.getTime())) {
+    if (parsedType !== ZodParsedType.string) {
       addIssueToContext(context, {
         code: ZodIssueCode.invalid_type,
         expected: ZodParsedType.string,
         received: context.parsedType,
+      })
+
+      return INVALID
+    }
+
+    const date = new Date(input.data)
+
+    if (Number.isNaN(date.getTime())) {
+      addIssueToContext(context, {
+        code: ZodIssueCode.custom,
+        // TODO: add message
+        message: 'Invalid date string',
+        params: {
+          isNestJsZod: true,
+          code: 'invalid_date_string',
+        },
       })
 
       return INVALID
@@ -69,37 +85,60 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
         if (valid) continue
 
         addIssueToContext(context, {
-          code: ZodIssueCode.invalid_date_string_format,
-          expected: check.value,
+          code: ZodIssueCode.custom,
           message: check.message,
+          params: {
+            isNestJsZod: true,
+            code: 'invalid_date_string_format',
+            expected: check.value,
+          },
         })
 
         status.dirty()
-      } else if (check.kind === 'past') {
-        const valid = date < new Date()
+      } else if (check.kind === 'direction') {
+        const conditions: Record<DateStringDirection, boolean> = {
+          past: date < new Date(),
+          future: date > new Date(),
+        }
+
+        const valid = conditions[check.direction]
         if (valid) continue
 
         addIssueToContext(context, {
-          code: ZodIssueCode.invalid_date_string_direction,
-          expected: check.kind,
+          code: ZodIssueCode.custom,
           message: check.message,
+          params: {
+            isNestJsZod: true,
+            code: 'invalid_date_string_direction',
+            expected: check.direction,
+          },
         })
 
         status.dirty()
-      } else if (check.kind === 'future') {
-        const valid = date > new Date()
+      } else if (check.kind === 'day-type') {
+        const day = date.getDay()
+
+        const conditions: Record<DateStringDayType, boolean> = {
+          weekDay: day !== 0 && day !== 6,
+          weekend: day === 0 || day === 6,
+        }
+        const valid = conditions[check.type]
         if (valid) continue
 
         addIssueToContext(context, {
-          code: ZodIssueCode.invalid_date_string_direction,
-          expected: check.kind,
+          code: ZodIssueCode.custom,
           message: check.message,
+          params: {
+            isNestJsZod: true,
+            code: 'invalid_date_string_day',
+            expected: check.type,
+          },
         })
 
         status.dirty()
       } else if (check.kind === 'minYear') {
-        const invalid = date.getFullYear() < check.value
-        if (!invalid) continue
+        const valid = date.getFullYear() >= check.value
+        if (valid) continue
 
         addIssueToContext(context, {
           code: ZodIssueCode.too_small,
@@ -111,38 +150,14 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
 
         status.dirty()
       } else if (check.kind === 'maxYear') {
-        const invalid = date.getFullYear() > check.value
-        if (!invalid) continue
+        const valid = date.getFullYear() <= check.value
+        if (valid) continue
 
         addIssueToContext(context, {
           code: ZodIssueCode.too_big,
           type: 'date_string_year',
           maximum: check.value,
           inclusive: true,
-          message: check.message,
-        })
-
-        status.dirty()
-      } else if (check.kind === 'weekDay') {
-        const day = date.getDay()
-        const invalid = day === 0 || day === 6
-        if (!invalid) continue
-
-        addIssueToContext(context, {
-          code: ZodIssueCode.invalid_date_string_day,
-          expected: 'weekDay',
-          message: check.message,
-        })
-
-        status.dirty()
-      } else if (check.kind === 'weekend') {
-        const day = date.getDay()
-        const invalid = day !== 0 && day !== 6
-        if (!invalid) continue
-
-        addIssueToContext(context, {
-          code: ZodIssueCode.invalid_date_string_day,
-          expected: 'weekend',
           message: check.message,
         })
 
@@ -193,21 +208,39 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
   }
 
   past(message?: ErrorMessage) {
-    return this._addCheck({
-      kind: 'past',
+    return this._replaceCheck({
+      kind: 'direction',
+      direction: 'past',
       ...normalizeErrorMessage(message),
     })
   }
 
   future(message?: ErrorMessage) {
-    return this._addCheck({
-      kind: 'future',
+    return this._replaceCheck({
+      kind: 'direction',
+      direction: 'future',
+      ...normalizeErrorMessage(message),
+    })
+  }
+
+  weekDay(message?: ErrorMessage) {
+    return this._replaceCheck({
+      kind: 'day-type',
+      type: 'weekDay',
+      ...normalizeErrorMessage(message),
+    })
+  }
+
+  weekend(message?: ErrorMessage) {
+    return this._replaceCheck({
+      kind: 'day-type',
+      type: 'weekend',
       ...normalizeErrorMessage(message),
     })
   }
 
   minYear(year: number, message?: ErrorMessage) {
-    return this._addCheck({
+    return this._replaceCheck({
       kind: 'minYear',
       value: year,
       ...normalizeErrorMessage(message),
@@ -215,23 +248,9 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
   }
 
   maxYear(year: number, message?: ErrorMessage) {
-    return this._addCheck({
+    return this._replaceCheck({
       kind: 'maxYear',
       value: year,
-      ...normalizeErrorMessage(message),
-    })
-  }
-
-  weekDay(message?: ErrorMessage) {
-    return this._addCheck({
-      kind: 'weekDay',
-      ...normalizeErrorMessage(message),
-    })
-  }
-
-  weekend(message?: ErrorMessage) {
-    return this._addCheck({
-      kind: 'weekend',
       ...normalizeErrorMessage(message),
     })
   }
@@ -252,12 +271,20 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
     return findCheck(this._def.checks, 'maxYear')
   }
 
+  get isPast() {
+    return findCheck(this._def.checks, 'direction')?.direction === 'past'
+  }
+
+  get isFuture() {
+    return findCheck(this._def.checks, 'direction')?.direction === 'future'
+  }
+
   get isWeekDay() {
-    return hasCheck(this._def.checks, 'weekDay')
+    return findCheck(this._def.checks, 'day-type')?.type === 'weekDay'
   }
 
   get isWeekend() {
-    return hasCheck(this._def.checks, 'weekend')
+    return findCheck(this._def.checks, 'day-type')?.type === 'weekend'
   }
 }
 

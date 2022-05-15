@@ -12,30 +12,43 @@ declare type StripPath<T extends object> = T extends any
   ? Omit<T, 'path'>
   : never
 
-const ZodIssueCodeExtended = {
-  ...ZodIssueCode,
-  invalid_date_string_format: 'invalid_date_string_format' as const,
-  invalid_date_string_direction: 'invalid_date_string_direction' as const,
-  invalid_date_string_day: 'invalid_date_string_day' as const,
+export type DateStringFormat = 'date' | 'date-time'
+export type DateStringDirection = 'past' | 'future'
+export type DateStringDayType = 'weekDay' | 'weekend'
+
+export interface ZodInvalidDateStringIssue extends ZodIssueBase {
+  code: typeof ZodIssueCode.custom
+  params: {
+    isNestJsZod: true
+    code: 'invalid_date_string'
+  }
 }
 
-type ZodIssueCodeExtended = keyof typeof ZodIssueCodeExtended
-
-export type DateStringFormat = 'date' | 'date-time'
-
 export interface ZodInvalidDateStringFormatIssue extends ZodIssueBase {
-  code: typeof ZodIssueCodeExtended.invalid_date_string_format
-  expected: DateStringFormat
+  code: typeof ZodIssueCode.custom
+  params: {
+    isNestJsZod: true
+    code: 'invalid_date_string_format'
+    expected: DateStringFormat
+  }
 }
 
 export interface ZodInvalidDateStringDirectionIssue extends ZodIssueBase {
-  code: typeof ZodIssueCodeExtended.invalid_date_string_direction
-  expected: 'future' | 'past'
+  code: typeof ZodIssueCode.custom
+  params: {
+    isNestJsZod: true
+    code: 'invalid_date_string_direction'
+    expected: DateStringDirection
+  }
 }
 
 export interface ZodInvalidDateStringDayIssue extends ZodIssueBase {
-  code: typeof ZodIssueCodeExtended.invalid_date_string_day
-  expected: 'weekDay' | 'weekend'
+  code: typeof ZodIssueCode.custom
+  params: {
+    isNestJsZod: true
+    code: 'invalid_date_string_day'
+    expected: DateStringDayType
+  }
 }
 
 /*
@@ -60,11 +73,15 @@ export interface ZodTooBigIssue extends ZodIssueBase {
   type: 'array' | 'string' | 'number' | 'set' | 'date_string_year'
 }
 
-type ZodIssueOptionalMessageExtended =
-  | ZodIssueOptionalMessage
+export type NestJsZodCustomIssue =
+  | ZodInvalidDateStringIssue
   | ZodInvalidDateStringFormatIssue
   | ZodInvalidDateStringDirectionIssue
   | ZodInvalidDateStringDayIssue
+
+type ZodIssueOptionalMessageExtended =
+  | ZodIssueOptionalMessage
+  | NestJsZodCustomIssue
   | ZodTooSmallIssue
   | ZodTooBigIssue
 
@@ -83,7 +100,6 @@ function addIssueToContextExtended(
   addIssueToContext(context, issueData as IssueData)
 }
 
-export { ZodIssueCodeExtended as ZodIssueCode }
 export { addIssueToContextExtended as addIssueToContext }
 export type { ZodIssueOptionalMessageExtended as ZodIssueOptionalMessage }
 export type { ZodIssueExtended as ZodIssue }

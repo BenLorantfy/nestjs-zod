@@ -1,0 +1,320 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`dateString day-type should override previous day-type 1`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekend",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString day-type should override previous day-type 2`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekend",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString day-type should override previous day-type 3`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekend",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString day-type should override previous day-type 4`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekend",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString day-type should override previous day-type 5`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekend",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate date 1`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid date string",
+    "params": Object {
+      "code": "invalid_date_string",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate default format 1`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_format",
+      "expected": "date-time",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate direction 1`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_direction",
+      "expected": "past",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate direction 2`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_direction",
+      "expected": "future",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate min/max year 1`] = `
+Array [
+  Object {
+    "code": "too_small",
+    "inclusive": true,
+    "message": "Invalid input",
+    "minimum": 2000,
+    "path": Array [],
+    "type": "date_string_year",
+  },
+]
+`;
+
+exports[`dateString should validate min/max year 2`] = `
+Array [
+  Object {
+    "code": "too_big",
+    "inclusive": true,
+    "maximum": 2100,
+    "message": "Invalid input",
+    "path": Array [],
+    "type": "date_string_year",
+  },
+]
+`;
+
+exports[`dateString should validate specified format 1`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_format",
+      "expected": "date",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate specified format 2`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_format",
+      "expected": "date-time",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate type 1`] = `
+Array [
+  Object {
+    "code": "invalid_type",
+    "expected": "string",
+    "message": "Required",
+    "path": Array [],
+    "received": "undefined",
+  },
+]
+`;
+
+exports[`dateString should validate type 2`] = `
+Array [
+  Object {
+    "code": "invalid_type",
+    "expected": "string",
+    "message": "Expected string, received number",
+    "path": Array [],
+    "received": "number",
+  },
+]
+`;
+
+exports[`dateString should validate week days 1`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekDay",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate week days 2`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekDay",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate week days 3`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekend",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate week days 4`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekend",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate week days 5`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekend",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate week days 6`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekend",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;
+
+exports[`dateString should validate week days 7`] = `
+Array [
+  Object {
+    "code": "custom",
+    "message": "Invalid input",
+    "params": Object {
+      "code": "invalid_date_string_day",
+      "expected": "weekend",
+      "isNestJsZod": true,
+    },
+    "path": Array [],
+  },
+]
+`;

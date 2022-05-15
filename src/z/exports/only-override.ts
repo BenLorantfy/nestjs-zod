@@ -11,7 +11,7 @@ export * from 'zod'
 export { defaultErrorMap, setErrorMap } from '../error-map'
 export type { ZodErrorMap } from '../error-map'
 
-export { ZodIssueCode, addIssueToContext } from '../issues'
+export { addIssueToContext } from '../issues'
 export type {
   ZodIssue,
   ZodIssueOptionalMessage,
@@ -21,4 +21,4 @@ export type {
 } from '../issues'
 
 export * from '../type-names'
-export * from '../date-string'
+export * from '../new-types'

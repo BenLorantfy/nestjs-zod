@@ -3,10 +3,11 @@ import {
   defaultErrorMap,
   ZodIssueOptionalMessage as ZodIssueOptionalMessageDefault,
   setErrorMap,
+  ZodIssueCode,
 } from 'zod'
 import {
   DateStringFormat,
-  ZodIssueCode,
+  NestJsZodCustomIssue,
   ZodIssueOptionalMessage,
 } from './issues'
 
@@ -17,37 +18,52 @@ type ZodErrorMapExtended = (
   context: ErrorMapContext
 ) => ReturnType<ZodErrorMap>
 
+function isNestJsZodCustomIssue(
+  issue: ZodIssueOptionalMessage
+): issue is NestJsZodCustomIssue {
+  return issue.code === ZodIssueCode.custom && issue.params?.isNestJsZod
+}
+
 const extendedErrorMap: ZodErrorMapExtended = (issue, context) => {
   /*
    * At first, we should handle the custom Issues,
    * because defaultErrorMap throws an Error when no match found
    */
 
-  if (issue.code === ZodIssueCode.invalid_date_string_format) {
-    const mapper: Record<DateStringFormat, string> = {
-      'date': 'YYYY-MM-DD',
-      'date-time': 'YYYY-MM-DDTHH:mm:ssZ',
+  if (isNestJsZodCustomIssue(issue)) {
+    const real = issue.params
+
+    if (real.code === 'invalid_date_string') {
+      const message = `Invalid string, expected it to be a valid date`
+      return { message }
     }
 
-    const readable = mapper[issue.expected]
-    const message = `Invalid date, expected it to match format: ${readable}`
-    return { message }
-  }
+    if (real.code === 'invalid_date_string_format') {
+      const mapper: Record<DateStringFormat, string> = {
+        'date': 'YYYY-MM-DD',
+        'date-time': 'YYYY-MM-DDTHH:mm:ssZ',
+      }
 
-  if (issue.code === ZodIssueCode.invalid_date_string_direction) {
-    const message = `Invalid date, expected it to be the ${issue.expected}`
-    return { message }
-  }
-
-  if (issue.code === ZodIssueCode.invalid_date_string_day) {
-    const mapper: Record<typeof issue['expected'], string> = {
-      weekDay: 'week day',
-      weekend: 'weekend',
+      const readable = mapper[real.expected]
+      const message = `Invalid date, expected it to match format: ${readable}`
+      return { message }
     }
 
-    const readable = mapper[issue.expected]
-    const message = `Invalid date, expected it to be a ${readable}`
-    return { message }
+    if (real.code === 'invalid_date_string_direction') {
+      const message = `Invalid date, expected it to be the ${real.expected}`
+      return { message }
+    }
+
+    if (real.code === 'invalid_date_string_day') {
+      const mapper: Record<typeof real['expected'], string> = {
+        weekDay: 'week day',
+        weekend: 'weekend',
+      }
+
+      const readable = mapper[real.expected]
+      const message = `Invalid date, expected it to be a ${readable}`
+      return { message }
+    }
   }
 
   if (
