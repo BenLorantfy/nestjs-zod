@@ -40,12 +40,12 @@ const extendedErrorMap: ZodErrorMapExtended = (issue, context) => {
 
     if (real.code === 'invalid_date_string_format') {
       const mapper: Record<DateStringFormat, string> = {
-        'date': 'YYYY-MM-DD',
-        'date-time': 'YYYY-MM-DDTHH:mm:ssZ',
+        'date': 'YYYY-MM-DD (RFC3339 "full-date")',
+        'date-time': 'YYYY-MM-DDTHH:mm:ssZ (RFC3339 "date-time")',
       }
 
       const readable = mapper[real.expected]
-      const message = `Invalid date, expected it to match format: ${readable}`
+      const message = `Invalid date, expected it to match ${readable}`
       return { message }
     }
 
