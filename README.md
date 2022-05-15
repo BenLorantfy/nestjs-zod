@@ -342,7 +342,7 @@ Currently, we use `custom` error code due to some Zod limitations (`errorMap` pr
 
 Therefore, the error details is located inside `params` property:
 
-```json
+```ts
 {
   "code": "custom",
   "message": "Invalid date, expected it to be the past",
