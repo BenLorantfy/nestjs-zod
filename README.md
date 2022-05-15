@@ -66,6 +66,7 @@ Peer dependencies:
 - [OpenAPI (Swagger) support](#openapi-swagger-support)
   - [Setup](#setup)
   - [Writing more Swagger-compatible schemas](#writing-more-swagger-compatible-schemas)
+  - [Using zodToOpenAPI](#using-zodtoopenapi)
 
 ## Writing Zod schemas
 
@@ -343,6 +344,73 @@ const CredentialsSchema = z.schema({
   username: z.string().describe('This is an username'),
   password: z.string().describe('This is a password'),
 })
+```
+
+### Using zodToOpenAPI
+
+You can convert any Zod schema to an OpenAPI JSON object:
+
+```ts
+import { zodToOpenAPI } from 'nestjs-zod'
+
+const SignUpSchema = z.object({
+  username: z.string().min(8).max(20),
+  password: z.string().min(8).max(20),
+  sex: z
+    .enum(['male', 'female', 'Apache Attack Helicopter'])
+    .describe('We respect your gender choice'),
+  social: z.record(z.string().url()),
+  birthDate: z.dateString().past(),
+})
+
+const openapi = zodToOpenAPI(SignUpSchema)
+```
+
+The output will be the following:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 20
+    },
+    "password": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 20
+    },
+    "sex": {
+      "description": "We respect your gender choice",
+      "type": "string",
+      "enum": [
+        "male",
+        "female",
+        "Apache Attack Helicopter"
+      ]
+    },
+    "social": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "birthDate": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "username",
+    "password",
+    "sex",
+    "social",
+    "birthDate"
+  ]
+}
 ```
 
 ## Credits
