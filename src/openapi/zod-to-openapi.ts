@@ -1,5 +1,6 @@
 import { Type } from '@nestjs/common'
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
+import mergeDeep from 'merge-deep'
 import {
   ZodArray,
   ZodBigInt,
@@ -19,6 +20,7 @@ import {
   ZodTuple,
   ZodTypeAny,
   ZodUnion,
+  ZodIntersection,
 } from '../z'
 
 export function is<T extends Type<ZodTypeAny>>(
@@ -191,6 +193,12 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     const { valueType } = zodType._def
     object.type = 'object'
     object.additionalProperties = zodToOpenAPI(valueType)
+  }
+
+  if (is(zodType, ZodIntersection)) {
+    const { left, right } = zodType._def
+    const merged = mergeDeep(zodToOpenAPI(left), zodToOpenAPI(right))
+    Object.assign(object, merged)
   }
 
   return object

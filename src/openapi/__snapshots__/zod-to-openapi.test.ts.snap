@@ -156,3 +156,60 @@ Object {
   "type": "object",
 }
 `;
+
+exports[`should serialize an intersection of objects 1`] = `
+Object {
+  "properties": Object {
+    "one": Object {
+      "type": "number",
+    },
+    "two": Object {
+      "type": "number",
+    },
+  },
+  "required": Array [
+    "one",
+    "two",
+  ],
+  "type": "object",
+}
+`;
+
+exports[`should serialize an intersection of unions 1`] = `
+Object {
+  "oneOf": Array [
+    Object {
+      "enum": Array [
+        "123",
+      ],
+      "type": "string",
+    },
+    Object {
+      "type": "number",
+    },
+    Object {
+      "type": "boolean",
+    },
+    Object {
+      "items": Object {
+        "type": "string",
+      },
+      "type": "array",
+    },
+  ],
+}
+`;
+
+exports[`should serialize an intersection with overrided fields 1`] = `
+Object {
+  "properties": Object {
+    "one": Object {
+      "type": "string",
+    },
+  },
+  "required": Array [
+    "one",
+  ],
+  "type": "object",
+}
+`;

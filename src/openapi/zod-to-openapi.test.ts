@@ -26,8 +26,49 @@ const complexTestSchema = z.object({
   dateString: z.dateString().cast().describe('My date string'),
 })
 
+const intersectedObjectsSchema = z.intersection(
+  z.object({
+    one: z.number(),
+  }),
+  z.object({
+    two: z.number(),
+  })
+)
+
+const intersectedUnionsSchema = z.intersection(
+  z.union([z.literal('123'), z.number()]),
+  z.union([z.boolean(), z.array(z.string())])
+)
+
+const overrideIntersectionSchema = z.intersection(
+  z.object({
+    one: z.number(),
+  }),
+  z.object({
+    one: z.string(),
+  })
+)
+
 it('should serialize a complex schema', () => {
   const openApiObject = zodToOpenAPI(complexTestSchema)
+
+  expect(openApiObject).toMatchSnapshot()
+})
+
+it('should serialize an intersection of objects', () => {
+  const openApiObject = zodToOpenAPI(intersectedObjectsSchema)
+
+  expect(openApiObject).toMatchSnapshot()
+})
+
+it('should serialize an intersection of unions', () => {
+  const openApiObject = zodToOpenAPI(intersectedUnionsSchema)
+
+  expect(openApiObject).toMatchSnapshot()
+})
+
+it('should serialize an intersection with overrided fields', () => {
+  const openApiObject = zodToOpenAPI(overrideIntersectionSchema)
 
   expect(openApiObject).toMatchSnapshot()
 })
