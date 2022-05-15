@@ -25,6 +25,8 @@ type ZodIsoDateCheck =
       regex: RegExp
       message?: string
     }
+  | { kind: 'future'; message?: string }
+  | { kind: 'past'; message?: string }
   | { kind: 'minYear'; value: number; message?: string }
   | { kind: 'maxYear'; value: number; message?: string }
   | { kind: 'weekDay'; message?: string }
@@ -69,6 +71,28 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
         addIssueToContext(context, {
           code: ZodIssueCode.invalid_date_string_format,
           expected: check.value,
+          message: check.message,
+        })
+
+        status.dirty()
+      } else if (check.kind === 'past') {
+        const valid = date < new Date()
+        if (valid) continue
+
+        addIssueToContext(context, {
+          code: ZodIssueCode.invalid_date_string_direction,
+          expected: check.kind,
+          message: check.message,
+        })
+
+        status.dirty()
+      } else if (check.kind === 'future') {
+        const valid = date > new Date()
+        if (valid) continue
+
+        addIssueToContext(context, {
+          code: ZodIssueCode.invalid_date_string_direction,
+          expected: check.kind,
           message: check.message,
         })
 
@@ -164,6 +188,20 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
       kind: 'format',
       value: format,
       regex: formatToRegex[format],
+      ...normalizeErrorMessage(message),
+    })
+  }
+
+  past(message?: ErrorMessage) {
+    return this._addCheck({
+      kind: 'past',
+      ...normalizeErrorMessage(message),
+    })
+  }
+
+  future(message?: ErrorMessage) {
+    return this._addCheck({
+      kind: 'future',
       ...normalizeErrorMessage(message),
     })
   }

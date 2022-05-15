@@ -15,6 +15,7 @@ declare type StripPath<T extends object> = T extends any
 const ZodIssueCodeExtended = {
   ...ZodIssueCode,
   invalid_date_string_format: 'invalid_date_string_format' as const,
+  invalid_date_string_direction: 'invalid_date_string_direction' as const,
   invalid_date_string_day: 'invalid_date_string_day' as const,
 }
 
@@ -22,9 +23,14 @@ type ZodIssueCodeExtended = keyof typeof ZodIssueCodeExtended
 
 export type DateStringFormat = 'date' | 'date-time'
 
-export interface ZodInvalidDateStringFormat extends ZodIssueBase {
+export interface ZodInvalidDateStringFormatIssue extends ZodIssueBase {
   code: typeof ZodIssueCodeExtended.invalid_date_string_format
   expected: DateStringFormat
+}
+
+export interface ZodInvalidDateStringDirectionIssue extends ZodIssueBase {
+  code: typeof ZodIssueCodeExtended.invalid_date_string_direction
+  expected: 'future' | 'past'
 }
 
 export interface ZodInvalidDateStringDayIssue extends ZodIssueBase {
@@ -56,7 +62,8 @@ export interface ZodTooBigIssue extends ZodIssueBase {
 
 type ZodIssueOptionalMessageExtended =
   | ZodIssueOptionalMessage
-  | ZodInvalidDateStringFormat
+  | ZodInvalidDateStringFormatIssue
+  | ZodInvalidDateStringDirectionIssue
   | ZodInvalidDateStringDayIssue
   | ZodTooSmallIssue
   | ZodTooBigIssue

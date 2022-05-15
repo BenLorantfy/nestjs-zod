@@ -34,6 +34,11 @@ const extendedErrorMap: ZodErrorMapExtended = (issue, context) => {
     return { message }
   }
 
+  if (issue.code === ZodIssueCode.invalid_date_string_direction) {
+    const message = `Invalid date, expected it to be the ${issue.expected}`
+    return { message }
+  }
+
   if (issue.code === ZodIssueCode.invalid_date_string_day) {
     const mapper: Record<typeof issue['expected'], string> = {
       weekDay: 'week day',

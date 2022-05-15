@@ -286,6 +286,12 @@ z.dateString().format('date')
 // Expect string in "date-time" format from RFC3339
 z.dateString().format('date-time')
 
+// Expect date to be the past
+z.dateString().past()
+
+// Expect date to be the future
+z.dateString().future()
+
 // Expect year to be greater or equal to 2000
 z.dateString().minYear(2000)
 
