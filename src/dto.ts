@@ -1,4 +1,4 @@
-import { ZodSchema, ZodTypeDef } from 'zod'
+import { ZodSchema, ZodTypeDef } from './z'
 
 export interface ZodDto<
   TOutput,

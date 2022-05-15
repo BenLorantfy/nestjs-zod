@@ -1,5 +1,5 @@
 import { BadRequestException, HttpStatus } from '@nestjs/common'
-import { ZodError } from 'zod'
+import { ZodError } from './z'
 
 export class ZodValidationException extends BadRequestException {
   constructor(private error: ZodError) {

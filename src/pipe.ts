@@ -1,7 +1,7 @@
 import { PipeTransform, Injectable, ArgumentMetadata } from '@nestjs/common'
-import { ZodSchema } from 'zod'
 import { isZodDto } from './dto'
 import { createZodValidationException, ZodExceptionCreator } from './exception'
+import { ZodSchema } from './z'
 
 interface ZodValidationPipeOptions {
   createValidationException?: ZodExceptionCreator

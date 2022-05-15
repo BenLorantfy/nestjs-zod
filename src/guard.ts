@@ -4,9 +4,9 @@ import {
   Injectable,
   UseGuards,
 } from '@nestjs/common'
-import { ZodSchema } from 'zod'
 import { createZodValidationException, ZodExceptionCreator } from './exception'
 import { Source } from './shared/types'
+import { ZodSchema } from './z'
 
 interface ZodBodyGuardOptions {
   createValidationException?: ZodExceptionCreator

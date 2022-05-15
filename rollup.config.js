@@ -51,7 +51,7 @@ const config = defineConfig([
     plugins: [dts()],
     output: [
       {
-        file: root('z.d.ts'),
+        file: dist('z-without-namespace.d.ts'),
         format: 'es',
       },
     ],
