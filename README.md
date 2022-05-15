@@ -352,6 +352,7 @@ You can convert any Zod schema to an OpenAPI JSON object:
 
 ```ts
 import { zodToOpenAPI } from 'nestjs-zod'
+import { z } from 'nestjs-zod/z'
 
 const SignUpSchema = z.object({
   username: z.string().min(8).max(20),
