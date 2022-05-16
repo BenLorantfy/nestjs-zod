@@ -5,7 +5,10 @@
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
-    "./z": "./dist/z.js",
+    "./z": {
+      "default": "./dist/z.js",
+      "import": "./dist/z.mjs"
+    },
     "./frontend": {
       "default": "./dist/frontend.js",
       "import": "./dist/frontend.mjs"
