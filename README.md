@@ -168,11 +168,29 @@ import { ZodValidationPipe } from 'nestjs-zod'
 
 // controller-level
 @UsePipes(ZodValidationPipe)
-class MyController {}
+class AuthController {}
 
-class MyController {
+class AuthController {
   // route-level
   @UsePipes(ZodValidationPipe)
+  async signIn() {}
+}
+```
+
+Also, you can instantly pass a Schema or DTO:
+
+```ts
+import { ZodValidationPipe } from 'nestjs-zod'
+import { UserDto, UserSchema } from './auth.contracts'
+
+// using schema
+@UsePipes(new ZodValidationPipe(UserSchema))
+// using DTO
+@UsePipes(new ZodValidationPipe(UserDto))
+class AuthController {}
+
+class AuthController {
+  // the same applies to route-level
   async signIn() {}
 }
 ```

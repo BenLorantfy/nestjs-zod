@@ -46,6 +46,7 @@
     "eslint": "7.32.0",
     "jest": "^28.1.0",
     "prettier": "2.3.0",
+    "reflect-metadata": "^0.1.13",
     "rollup": "^2.69.0",
     "rollup-plugin-bundle-size": "^1.0.3",
     "rollup-plugin-dts": "^4.1.0",

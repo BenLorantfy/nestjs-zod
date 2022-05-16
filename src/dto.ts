@@ -1,17 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { ZodSchema, ZodTypeDef } from './z'
 
 export interface ZodDto<
-  TOutput,
+  TOutput = any,
   TDef extends ZodTypeDef = ZodTypeDef,
   TInput = TOutput
 > {
   new (): TOutput
+  isZodDto: true
   schema: ZodSchema<TOutput, TDef, TInput>
   create(input: unknown): TOutput
 }
 
 export function createZodDto<
-  TOutput,
+  TOutput = any,
   TDef extends ZodTypeDef = ZodTypeDef,
   TInput = TOutput
 >(schema: ZodSchema<TOutput, TDef, TInput>) {

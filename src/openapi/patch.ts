@@ -4,7 +4,6 @@ import { isZodDto } from '../dto'
 import { zodToOpenAPI } from './zod-to-openapi'
 
 /* eslint-disable @typescript-eslint/naming-convention */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable dot-notation */
 /* eslint-disable no-param-reassign */
 
