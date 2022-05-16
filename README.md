@@ -51,7 +51,7 @@ Included dependencies:
 Peer dependencies:
 - `@nestjs/common` -  `^8.0.0` (required on server side)
 - `@nestjs/core` -  `^8.0.0` (required on server side)
-- `@nestjs/swagger` -  `^5.0.0` (only when using `pathNestJsSwagger`)
+- `@nestjs/swagger` -  `^5.0.0` (only when using `patchNestJsSwagger`)
 
 All peer dependencies are marked as optional for better client side usage, but you need to install required ones when using `nestjs-zod` on server side.
 
@@ -413,9 +413,9 @@ Prerequisites:
 Apply a patch:
 
 ```ts
-import { patchNestjsSwagger } from 'nestjs-zod'
+import { patchNestJsSwagger } from 'nestjs-zod'
 
-patchNestjsSwagger()
+patchNestJsSwagger()
 ```
 
 Then follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction).
