@@ -40,6 +40,7 @@
     "@eslint-kit/eslint-config-patch": "^1.0.0",
     "@eslint-kit/eslint-config-prettier": "^5.0.0",
     "@eslint-kit/eslint-config-typescript": "^5.2.0",
+    "@golevelup/ts-jest": "^0.3.3",
     "@nestjs/common": "8.0.0",
     "@nestjs/core": "8.0.0",
     "@nestjs/swagger": "^5.2.1",
