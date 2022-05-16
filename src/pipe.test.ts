@@ -1,5 +1,6 @@
 import { ArgumentMetadata } from '@nestjs/common'
 import { createZodDto } from './dto'
+import { ZodValidationException } from './exception'
 import { ZodValidationPipe } from './pipe'
 import { z } from './z'
 
@@ -53,6 +54,8 @@ describe('ZodValidationPipe', () => {
     }
 
     expect(pipe.transform(valid, metadata)).toEqual(valid)
-    expect(() => pipe.transform(invalid, metadata)).toThrowError()
+    expect(() => pipe.transform(invalid, metadata)).toThrowError(
+      ZodValidationException
+    )
   })
 })

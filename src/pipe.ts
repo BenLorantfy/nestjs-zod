@@ -1,6 +1,7 @@
 import { PipeTransform, Injectable, ArgumentMetadata } from '@nestjs/common'
 import { isZodDto, ZodDto } from './dto'
-import { createZodValidationException, ZodExceptionCreator } from './exception'
+import { ZodExceptionCreator } from './exception'
+import { validate } from './validate'
 import { ZodSchema } from './z'
 
 interface ZodValidationPipeOptions {
@@ -12,29 +13,15 @@ type ZodValidationPipeClass = new (
 ) => PipeTransform
 
 export function createZodValidationPipe({
-  createValidationException = createZodValidationException,
+  createValidationException,
 }: ZodValidationPipeOptions = {}): ZodValidationPipeClass {
   @Injectable()
   class ZodValidationPipe implements PipeTransform {
     constructor(private schemaOrDto?: ZodSchema | ZodDto) {}
 
-    private validate(value: unknown, schema: ZodSchema) {
-      const result = schema.safeParse(value)
-
-      if (!result.success) {
-        throw createValidationException(result.error)
-      }
-
-      return result.data
-    }
-
     public transform(value: unknown, metadata: ArgumentMetadata) {
       if (this.schemaOrDto) {
-        const schema = isZodDto(this.schemaOrDto)
-          ? this.schemaOrDto.schema
-          : this.schemaOrDto
-
-        return this.validate(value, schema)
+        return validate(value, this.schemaOrDto, createValidationException)
       }
 
       const { metatype } = metadata
@@ -43,7 +30,7 @@ export function createZodValidationPipe({
         return value
       }
 
-      return this.validate(value, metatype.schema)
+      return validate(value, metatype.schema, createValidationException)
     }
   }
 
