@@ -12,7 +12,7 @@ function getSchemaObjectFactory(): Type<SchemaObjectFactoryClass> {
     .SchemaObjectFactory
 }
 
-export function patchNestjsSwagger(
+export function patchNestJsSwagger(
   SchemaObjectFactory = getSchemaObjectFactory()
 ) {
   if (SchemaObjectFactory.prototype.__patchedWithLoveByNestjsZod) return
