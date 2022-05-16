@@ -18,7 +18,8 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "z.d.ts"
+    "z.d.ts",
+    "frontend.d.ts"
   ],
   "sideEffects": false,
   "license": "MIT",
