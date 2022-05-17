@@ -70,6 +70,7 @@ All peer dependencies are marked as optional for better client side usage, but y
 - [Validation Exceptions](#validation-exceptions)
 - [Extended Zod](#extended-zod)
   - [ZodDateString](#zoddatestring)
+  - [ZodPassword](#zodpassword)
   - [Extended Zod Errors](#extended-zod-errors)
   - [Working with errors on the client side](#working-with-errors-on-the-client-side)
 - [OpenAPI (Swagger) support](#openapi-swagger-support)
