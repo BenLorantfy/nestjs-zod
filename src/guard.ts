@@ -43,5 +43,5 @@ export function createZodGuard({
 
 export const ZodGuard = createZodGuard()
 
-export const UseZodGuard = (source: Source, schema: ZodSchema) =>
-  UseGuards(new ZodGuard(source, schema))
+export const UseZodGuard = (source: Source, schemaOrDto: ZodSchema | ZodDto) =>
+  UseGuards(new ZodGuard(source, schemaOrDto))

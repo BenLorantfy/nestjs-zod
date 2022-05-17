@@ -219,6 +219,7 @@ It has 2 syntax forms:
 - `@UseZodGuard('body', CredentialsSchema)`
 
 The first parameter is `Source`: `'body' | 'query' | 'params'`
+The second is Zod Schema or DTO (just like `ZodValidationPipe`)
 
 When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
 
@@ -227,11 +228,13 @@ import { ZodGuard } from 'nestjs-zod'
 
 // controller-level
 @UseZodGuard('body', CredentialsSchema)
+@UseZodGuard('params', CredentialsDto)
 class MyController {}
 
 class MyController {
   // route-level
-  @UseZodGuard('body', CredentialsSchema)
+  @UseZodGuard('query', CredentialsSchema)
+  @UseZodGuard('body', CredentialsDto)
   async signIn() {}
 }
 ```
