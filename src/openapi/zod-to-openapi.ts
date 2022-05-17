@@ -22,6 +22,7 @@ import {
   ZodUnion,
   ZodIntersection,
   ZodDiscriminatedUnion,
+  ZodPassword,
 } from '../z'
 
 export function is<T extends Type<ZodTypeAny>>(
@@ -56,6 +57,22 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
         object.format = 'cuid'
       } else if (check.kind === 'regex') {
         object.pattern = check.regex.source
+      }
+    }
+  }
+
+  if (is(zodType, ZodPassword)) {
+    const { checks } = zodType._def
+    const regex = zodType.buildFullRegExp()
+    object.type = 'string'
+    object.format = 'password'
+    object.pattern = regex.source
+
+    for (const check of checks) {
+      if (check.kind === 'minLength') {
+        object.minLength = check.value
+      } else if (check.kind === 'maxLength') {
+        object.maxLength = check.value
       }
     }
   }

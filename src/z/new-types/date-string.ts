@@ -168,13 +168,6 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
     return { status: status.value, value: input.data }
   }
 
-  _addCheck(check: ZodIsoDateCheck) {
-    return new ZodDateString({
-      ...this._def,
-      checks: [...this._def.checks, check],
-    })
-  }
-
   _replaceCheck(check: ZodIsoDateCheck) {
     return new ZodDateString({
       ...this._def,
@@ -263,14 +256,6 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
     return findCheck(this._def.checks, 'format')
   }
 
-  get minYear_() {
-    return findCheck(this._def.checks, 'minYear')
-  }
-
-  get maxYear_() {
-    return findCheck(this._def.checks, 'maxYear')
-  }
-
   get isPast() {
     return findCheck(this._def.checks, 'direction')?.direction === 'past'
   }
@@ -285,6 +270,14 @@ export class ZodDateString extends ZodType<string, ZodDateStringDef> {
 
   get isWeekend() {
     return findCheck(this._def.checks, 'day-type')?.type === 'weekend'
+  }
+
+  get minYear_() {
+    return findCheck(this._def.checks, 'minYear')
+  }
+
+  get maxYear_() {
+    return findCheck(this._def.checks, 'maxYear')
   }
 }
 

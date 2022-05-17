@@ -4,4 +4,5 @@
  */
 export enum ZodFirstPartyTypeKindExtended {
   ZodDateString = 'ZodDateString',
+  ZodPassword = 'ZodPassword',
 }

@@ -360,6 +360,46 @@ Errors:
   Payload:
   - `expected` - `'weekDay' | 'weekend'`
 
+- `too_small` with `type === 'date_string_year'`
+- `too_big` with `type === 'date_string_year'`
+
+### ZodPassword
+
+`ZodPassword` is a string-like type, just like the `ZodDateString`. As you might have guessed, it's intended to help you with password schemas definition.
+
+Also, `ZodPassword` has a more accurate OpenAPI conversion, comparing to regular `.string()`: it has `password` format and generated RegExp string for `pattern`.
+
+```ts
+// Expect user input to be a "string" type
+z.password()
+
+// Expect password length to be greater or equal to 8
+z.password().min(8)
+
+// Expect password length to be less or equal to 100
+z.password().max(100)
+
+// Expect password to have at least one digit
+z.password().atLeastOne('digit')
+
+// Expect password to have at least one lowercase letter
+z.password().atLeastOne('lowercase')
+
+// Expect password to have at least one uppercase letter
+z.password().atLeastOne('uppercase')
+
+// Expect password to have at least one special symbol
+z.password().atLeastOne('special')
+```
+
+Errors:
+- `invalid_password_no_digit`
+- `invalid_password_no_lowercase`
+- `invalid_password_no_uppercase`
+- `invalid_password_no_special`
+- `too_small` with `type === 'password'`
+- `too_big` with `type === 'password'`
+
 ### Extended Zod Errors
 
 Currently, we use `custom` error code due to some Zod limitations (`errorMap` priorities)

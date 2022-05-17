@@ -100,6 +100,18 @@ Object {
       ],
       "type": "object",
     },
+    "password": Object {
+      "format": "password",
+      "pattern": "^.*$",
+      "type": "string",
+    },
+    "passwordComplex": Object {
+      "format": "password",
+      "maxLength": 100,
+      "minLength": 8,
+      "pattern": "^(?:(?=.*\\\\d)(?=.*[A-Z]).*)$",
+      "type": "string",
+    },
     "record": Object {
       "additionalProperties": Object {
         "type": "number",
@@ -193,6 +205,8 @@ Object {
     "record",
     "recordWithKeys",
     "dateString",
+    "password",
+    "passwordComplex",
   ],
   "type": "object",
 }
