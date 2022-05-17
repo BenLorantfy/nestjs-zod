@@ -71,6 +71,8 @@ All peer dependencies are marked as optional for better client side usage, but y
 - [Extended Zod](#extended-zod)
   - [ZodDateString](#zoddatestring)
   - [ZodPassword](#zodpassword)
+  - [Json Schema](#json-schema)
+  - ["from" function](#"from"-function)
   - [Extended Zod Errors](#extended-zod-errors)
   - [Working with errors on the client side](#working-with-errors-on-the-client-side)
 - [OpenAPI (Swagger) support](#openapi-swagger-support)
@@ -404,6 +406,24 @@ Errors:
 - `invalid_password_no_special`
 - `too_small` with `type === 'password'`
 - `too_big` with `type === 'password'`
+
+### Json Schema
+
+> Created for `nestjs-zod-prisma`
+
+```ts
+z.json()
+```
+
+### "from" function
+
+> Created for custom schemas in `nestjs-zod-prisma`
+
+Just returns the same Schema
+
+```ts
+z.from(MySchema)
+```
 
 ### Extended Zod Errors
 
