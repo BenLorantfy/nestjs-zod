@@ -22,3 +22,4 @@ export type {
 
 export * from '../type-names'
 export * from '../new-types'
+export * from '../generic-types'
