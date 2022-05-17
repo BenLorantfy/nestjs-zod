@@ -36,6 +36,7 @@
   - Zod DTOs can be used in any `@nestjs/swagger` decorator
 - Extended Zod schemas for NestJS (`nestjs-zod/z`)
   - `dateString` for dates (supports casting to `Date`)
+  - `password` for passwords (more complex string rules + OpenAPI conversion)
 - Customization - change exception format easily
 - Useful helpers for client side error handling (`nestjs-zod/frontend`)
 
