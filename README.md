@@ -227,8 +227,9 @@ It has 2 syntax forms:
 - `@UseGuards(new ZodGuard('body', CredentialsSchema))`
 - `@UseZodGuard('body', CredentialsSchema)`
 
-The first parameter is `Source`: `'body' | 'query' | 'params'`  
-The second is Zod Schema or DTO (just like `ZodValidationPipe`)
+Parameters:
+1. The source - `'body' | 'query' | 'params'`  
+2. Zod Schema or DTO (just like `ZodValidationPipe`)
 
 When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
 
