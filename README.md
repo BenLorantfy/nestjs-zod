@@ -72,7 +72,7 @@ All peer dependencies are marked as optional for better client side usage, but y
   - [ZodDateString](#zoddatestring)
   - [ZodPassword](#zodpassword)
   - [Json Schema](#json-schema)
-  - ["from" function](#"from"-function)
+  - ["from" function](#from-function)
   - [Extended Zod Errors](#extended-zod-errors)
   - [Working with errors on the client side](#working-with-errors-on-the-client-side)
 - [OpenAPI (Swagger) support](#openapi-swagger-support)
