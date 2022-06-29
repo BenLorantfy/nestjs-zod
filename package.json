@@ -12,6 +12,10 @@
     "./frontend": {
       "default": "./dist/frontend.js",
       "import": "./dist/frontend.mjs"
+    },
+    "./dto": {
+      "default": "./dist/dto.js",
+      "import": "./dist/dto.mjs"
     }
   },
   "module": "./dist/index.js",
@@ -19,7 +23,8 @@
   "files": [
     "dist",
     "z.d.ts",
-    "frontend.d.ts"
+    "frontend.d.ts",
+    "dto.d.ts"
   ],
   "sideEffects": false,
   "license": "MIT",
@@ -32,7 +37,8 @@
     "dev": "vite",
     "build": "rollup -c",
     "test": "jest",
-    "lint": "eslint --ext .ts,.tsx src"
+    "lint": "eslint --ext .ts,.tsx src",
+    "lint:fix": "eslint --ext .ts,.tsx src --fix"
   },
   "devDependencies": {
     "@golevelup/ts-jest": "^0.3.3",
@@ -42,7 +48,8 @@
     "@types/jest": "^26.0.14",
     "@types/merge-deep": "^3.0.0",
     "esbuild": "^0.14.24",
-    "eslint-kit": "^1.0.3",
+    "eslint": "^8.18.0",
+    "eslint-kit": "^5.7.0",
     "jest": "^28.1.0",
     "reflect-metadata": "^0.1.13",
     "rollup": "^2.69.0",
