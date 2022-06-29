@@ -6,20 +6,17 @@
  * https://github.com/colinhacks/zod/issues/465#issuecomment-847479217
  */
 
-export * from 'zod'
-
-export { defaultErrorMap, setErrorMap } from '../error-map'
 export type { ZodErrorMap } from '../error-map'
-
-export { addIssueToContext } from '../issues'
+export { defaultErrorMap, setErrorMap } from '../error-map'
+export * from '../generic-types'
 export type {
+  ZodInvalidDateStringDayIssue,
   ZodIssue,
   ZodIssueOptionalMessage,
-  ZodInvalidDateStringDayIssue,
   ZodTooBigIssue,
   ZodTooSmallIssue,
 } from '../issues'
-
-export * from '../type-names'
+export { addIssueToContext } from '../issues'
 export * from '../new-types'
-export * from '../generic-types'
+export * from '../type-names'
+export * from 'zod'

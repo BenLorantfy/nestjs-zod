@@ -7,12 +7,15 @@ import {
   ZodBoolean,
   ZodDateString,
   ZodDefault,
+  ZodDiscriminatedUnion,
   ZodEnum,
+  ZodIntersection,
   ZodLiteral,
   ZodNullable,
   ZodNumber,
   ZodObject,
   ZodOptional,
+  ZodPassword,
   ZodRecord,
   ZodSet,
   ZodString,
@@ -20,9 +23,6 @@ import {
   ZodTuple,
   ZodTypeAny,
   ZodUnion,
-  ZodIntersection,
-  ZodDiscriminatedUnion,
-  ZodPassword,
 } from '../z'
 
 export function is<T extends Type<ZodTypeAny>>(

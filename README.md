@@ -150,6 +150,12 @@ class AuthController {
 }
 ```
 
+### Using standalone (without server-side dependencies)
+
+```ts
+import { createZodDto } from 'nestjs-zod/dto'
+```
+
 ## Using ZodValidationPipe
 
 The validation pipe uses your Zod schema to parse data from parameter decorator.

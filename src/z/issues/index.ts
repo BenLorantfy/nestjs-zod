@@ -5,7 +5,7 @@ import {
   ZodIssueOptionalMessage,
 } from 'zod'
 import { ZodAnyDateStringIssue } from './date-string'
-import { ZodTooSmallIssue, ZodTooBigIssue } from './overrided'
+import { ZodTooBigIssue, ZodTooSmallIssue } from './overrided'
 import { ZodAnyPasswordIssue } from './password'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -40,6 +40,6 @@ export { addIssueToContextExtended as addIssueToContext }
 export type { ZodIssueOptionalMessageExtended as ZodIssueOptionalMessage }
 export type { ZodIssueExtended as ZodIssue }
 
-export * from './overrided'
 export * from './date-string'
+export * from './overrided'
 export * from './password'

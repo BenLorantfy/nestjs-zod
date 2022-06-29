@@ -82,6 +82,28 @@ const config = defineConfig([
       },
     ],
   }),
+  bundle(src('dto.ts'), {
+    plugins: [esbuild(), terser()],
+    output: [
+      {
+        file: dist('dto.mjs'),
+        format: 'es',
+      },
+      {
+        file: dist('dto.js'),
+        format: 'cjs',
+      },
+    ],
+  }),
+  bundle(src('dto.ts'), {
+    plugins: [dts()],
+    output: [
+      {
+        file: root('dto.d.ts'),
+        format: 'es',
+      },
+    ],
+  }),
 ])
 
 export default config
