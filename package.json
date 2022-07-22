@@ -6,16 +6,16 @@
   "exports": {
     ".": "./dist/index.js",
     "./z": {
-      "default": "./dist/z.js",
-      "import": "./dist/z.mjs"
+      "import": "./dist/z.mjs",
+      "default": "./dist/z.js"
     },
     "./frontend": {
-      "default": "./dist/frontend.js",
-      "import": "./dist/frontend.mjs"
+      "import": "./dist/frontend.mjs",
+      "default": "./dist/frontend.js"
     },
     "./dto": {
-      "default": "./dist/dto.js",
-      "import": "./dist/dto.mjs"
+      "import": "./dist/dto.mjs",
+      "default": "./dist/dto.js"
     }
   },
   "module": "./dist/index.js",
