@@ -11,6 +11,7 @@ import {
   ZodEnum,
   ZodIntersection,
   ZodLiteral,
+  ZodNativeEnum,
   ZodNullable,
   ZodNumber,
   ZodObject,
@@ -176,6 +177,13 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     const { values } = zodType._def
     object.type = 'string'
     object.enum = values
+  }
+
+  if (is(zodType, ZodNativeEnum)) {
+    const { values } = zodType._def
+    // this only supports enums with string literal values
+    object.type = 'string'
+    object.enum = Object.values(values)
   }
 
   if (is(zodType, ZodTransformer)) {
