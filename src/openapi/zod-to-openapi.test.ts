@@ -136,6 +136,21 @@ it('should serialize enums', () => {
   })
 })
 
+it('should serialize native enums', () => {
+  enum NativeEnum {
+    ADAMA = 'adama',
+    KOTA = 'kota',
+  }
+
+  const schema = z.nativeEnum(NativeEnum)
+  const openApiObject = zodToOpenAPI(schema)
+
+  expect(openApiObject).toEqual({
+    type: 'string',
+    enum: ['adama', 'kota'],
+  })
+})
+
 describe('scalar types', () => {
   const testCases: [ZodTypeAny, string, string?][] = [
     // [zod type, expected open api type, expected format]
