@@ -96,7 +96,7 @@ For that reason, `nestjs-zod` uses specific `zod` version inside and re-exports 
 ```ts
 import { z, ZodString, ZodError } from 'nestjs-zod/z'
 
-const CredentialsSchema = z.schema({
+const CredentialsSchema = z.object({
   username: z.string(),
   password: z.string(),
 })
@@ -114,7 +114,7 @@ import { ZodString, ZodError, ZodIssue } from 'nestjs-zod/z'
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'nestjs-zod/z'
 
-const CredentialsSchema = z.schema({
+const CredentialsSchema = z.object({
   username: z.string(),
   password: z.string(),
 })
@@ -446,7 +446,7 @@ Currently, we use `custom` error code due to some Zod limitations (`errorMap` pr
 Therefore, the error details is located inside `params` property:
 
 ```ts
-{
+const error = {
   "code": "custom",
   "message": "Invalid date, expected it to be the past",
   "params": {
@@ -506,7 +506,7 @@ Use `.describe()` method to add Swagger description:
 ```ts
 import { z } from 'nestjs-zod/z'
 
-const CredentialsSchema = z.schema({
+const CredentialsSchema = z.object({
   username: z.string().describe('This is an username'),
   password: z.string().describe('This is a password'),
 })
