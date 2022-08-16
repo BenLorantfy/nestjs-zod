@@ -221,6 +221,13 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
       const isOptional = optionalTypes.includes(schema.constructor.name)
       if (!isOptional) object.required.push(key)
     }
+
+    if (
+      Object.keys(object.properties).length > 0 &&
+      object.required.length === 0
+    ) {
+      delete object.required
+    }
   }
 
   if (is(zodType, ZodRecord)) {

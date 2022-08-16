@@ -105,6 +105,28 @@ it('should serialize objects', () => {
   })
 })
 
+it('should serialize partial objects', () => {
+  const schema = z
+    .object({
+      prop1: z.string(),
+      prop2: z.string(),
+    })
+    .partial()
+  const openApiObject = zodToOpenAPI(schema)
+
+  expect(openApiObject).toEqual({
+    type: 'object',
+    properties: {
+      prop1: {
+        type: 'string',
+      },
+      prop2: {
+        type: 'string',
+      },
+    },
+  })
+})
+
 it('should serialize nullable types', () => {
   const schema = z.string().nullable()
   const openApiObject = zodToOpenAPI(schema)
