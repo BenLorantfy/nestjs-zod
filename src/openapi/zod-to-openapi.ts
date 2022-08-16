@@ -222,10 +222,7 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
       if (!isOptional) object.required.push(key)
     }
 
-    if (
-      Object.keys(object.properties).length > 0 &&
-      object.required.length === 0
-    ) {
+    if (object.required.length === 0) {
       delete object.required
     }
   }
