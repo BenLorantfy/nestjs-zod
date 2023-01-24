@@ -32,7 +32,7 @@ export function is<T extends Type<ZodTypeAny>>(
   input: ZodTypeAny,
   factory: T
 ): input is InstanceType<T> {
-  return factory.name === input.constructor.name
+  return factory.name === input._def.typeName
 }
 export function zodToOpenAPI(zodType: ZodTypeAny) {
   const object: SchemaObject = {}
