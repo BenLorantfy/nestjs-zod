@@ -8,8 +8,10 @@ import {
   ZodDateString,
   ZodDefault,
   ZodDiscriminatedUnion,
+  ZodEffects,
   ZodEnum,
   ZodIntersection,
+  ZodLazy,
   ZodLiteral,
   ZodNativeEnum,
   ZodNullable,
@@ -237,6 +239,16 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     const { left, right } = zodType._def
     const merged = mergeDeep(zodToOpenAPI(left), zodToOpenAPI(right))
     Object.assign(object, merged)
+  }
+
+  if (is(zodType, ZodEffects)) {
+    const { schema } = zodType._def
+    Object.assign(object, zodToOpenAPI(schema))
+  }
+
+  if (is(zodType, ZodLazy)) {
+    const { getter } = zodType._def
+    Object.assign(object, zodToOpenAPI(getter()))
   }
 
   return object

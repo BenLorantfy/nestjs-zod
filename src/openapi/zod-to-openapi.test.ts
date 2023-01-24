@@ -60,6 +60,18 @@ const overrideIntersectionSchema = z.intersection(
   })
 )
 
+const transformedSchema = z
+  .object({
+    seconds: z.number(),
+  })
+  .transform((value) => ({
+    seconds: value.seconds,
+    minutes: value.seconds / 60,
+    hours: value.seconds / 3600,
+  }))
+
+const lazySchema = z.lazy(() => z.string())
+
 it('should serialize a complex schema', () => {
   const openApiObject = zodToOpenAPI(complexTestSchema)
 
@@ -195,4 +207,26 @@ describe('scalar types', () => {
       })
     })
   }
+})
+
+it('should serialize transformed schema', () => {
+  const openApiObject = zodToOpenAPI(transformedSchema)
+
+  expect(openApiObject).toEqual({
+    type: 'object',
+    required: ['seconds'],
+    properties: {
+      seconds: {
+        type: 'number',
+      },
+    },
+  })
+})
+
+it('should serialize lazy schema', () => {
+  const openApiObject = zodToOpenAPI(lazySchema)
+
+  expect(openApiObject).toEqual({
+    type: 'string',
+  })
 })
