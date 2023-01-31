@@ -22,7 +22,7 @@ export function patchNestJsSwagger(
 
   const extendedExplore: SchemaObjectFactoryClass['exploreModelSchema'] =
     function exploreModelSchema(
-      this: SchemaObjectFactoryClass,
+      this: SchemaObjectFactoryClass | undefined,
       type,
       schemas,
       schemaRefsStack
@@ -31,7 +31,7 @@ export function patchNestJsSwagger(
         return type.name
       }
 
-      if (this['isLazyTypeFunc'](type)) {
+      if (this && this['isLazyTypeFunc'](type)) {
         const factory = type as () => Type<unknown>
         type = factory()
       }

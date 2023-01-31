@@ -11,7 +11,6 @@ import {
   ZodEffects,
   ZodEnum,
   ZodIntersection,
-  ZodLazy,
   ZodLiteral,
   ZodNativeEnum,
   ZodNullable,
@@ -244,11 +243,6 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
   if (is(zodType, ZodEffects)) {
     const { schema } = zodType._def
     Object.assign(object, zodToOpenAPI(schema))
-  }
-
-  if (is(zodType, ZodLazy)) {
-    const { getter } = zodType._def
-    Object.assign(object, zodToOpenAPI(getter()))
   }
 
   return object
