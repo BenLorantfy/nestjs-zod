@@ -3,6 +3,7 @@ import dts from 'rollup-plugin-dts'
 import esbuild from 'rollup-plugin-esbuild'
 import { terser } from 'rollup-plugin-terser'
 import bundleSize from 'rollup-plugin-bundle-size'
+import copy from 'rollup-plugin-copy'
 
 const src = (file) => `src/${file}`
 const dist = (file) => `dist/${file}`
@@ -52,7 +53,18 @@ const config = defineConfig([
     ],
   }),
   bundle(src('z/exports/only-override.ts'), {
-    plugins: [dts()],
+    plugins: [
+      dts(),
+      copy({
+        targets: [
+          {
+            src: './z.d.ts',
+            dest: 'dist',
+            transform: (contents) => contents.toString().replaceAll('./dist', '.'),
+          }
+        ],
+      }),
+    ],
     output: [
       {
         file: dist('z-only-override.d.ts'),
@@ -80,6 +92,10 @@ const config = defineConfig([
         file: root('frontend.d.ts'),
         format: 'es',
       },
+      {
+        file: dist('frontend.d.ts'),
+        format: 'es',
+      },
     ],
   }),
   bundle(src('dto.ts'), {
@@ -100,6 +116,10 @@ const config = defineConfig([
     output: [
       {
         file: root('dto.d.ts'),
+        format: 'es',
+      },
+      {
+        file: dist('dto.d.ts'),
         format: 'es',
       },
     ],
