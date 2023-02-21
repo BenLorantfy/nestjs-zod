@@ -12,8 +12,6 @@ function getSchemaObjectFactory(): Type<SchemaObjectFactoryClass> {
     .SchemaObjectFactory
 }
 
-let done: string[] = []
-
 export function patchNestJsSwagger(
   SchemaObjectFactory = getSchemaObjectFactory()
 ) {
@@ -27,10 +25,6 @@ export function patchNestJsSwagger(
       schemas,
       schemaRefsStack
     ) {
-      if (done.includes(type.name)) {
-        return type.name
-      }
-
       if (this && this['isLazyTypeFunc'](type)) {
         const factory = type as () => Type<unknown>
         type = factory()
@@ -41,7 +35,6 @@ export function patchNestJsSwagger(
       }
 
       schemas[type.name] = zodToOpenAPI(type.schema)
-      done = [...done, type.name]
       return type.name
     }
 
