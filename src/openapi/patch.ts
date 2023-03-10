@@ -20,12 +20,12 @@ export function patchNestJsSwagger(
 
   const extendedExplore: SchemaObjectFactoryClass['exploreModelSchema'] =
     function exploreModelSchema(
-      this: SchemaObjectFactoryClass,
+      this: SchemaObjectFactoryClass | undefined,
       type,
       schemas,
       schemaRefsStack
     ) {
-      if (this['isLazyTypeFunc'](type)) {
+      if (this && this['isLazyTypeFunc'](type)) {
         const factory = type as () => Type<unknown>
         type = factory()
       }
@@ -35,7 +35,6 @@ export function patchNestJsSwagger(
       }
 
       schemas[type.name] = zodToOpenAPI(type.schema)
-
       return type.name
     }
 
