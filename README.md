@@ -166,6 +166,7 @@ When the data is invalid - it throws [ZodValidationException](#validation-except
 
 ```ts
 import { ZodValidationPipe } from 'nestjs-zod'
+import { APP_PIPE } from '@nestjs/core'
 
 @Module({
   providers: [
