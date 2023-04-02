@@ -267,6 +267,18 @@ const MyZodGuard = createZodGuard({
 })
 ```
 
+## Create validation from scratch
+
+If you don't like `ZodGuard` and `ZodValidationPipe`, you can use `validate` function:
+
+```ts
+import { validate } from 'nestjs-zod'
+
+validate(wrongThing, UserDto, (zodError) => new MyException(zodError)) // throws MyException
+
+const validatedUser = validate(user, UserDto, (zodError) => new MyException(zodError)) // returns typed value when succeed
+```
+
 ## Validation Exceptions
 
 The default server response on validation error looks like that:
