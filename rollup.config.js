@@ -22,7 +22,7 @@ const bundle = (input, config) =>
 
 const config = defineConfig([
   bundle(src('index.ts'), {
-    plugins: [esbuild(), terser()],
+    plugins: [esbuild()],
     output: [
       {
         file: dist('index.js'),
@@ -40,7 +40,7 @@ const config = defineConfig([
     ],
   }),
   bundle(src('z/exports/everything.ts'), {
-    plugins: [esbuild(), terser()],
+    plugins: [esbuild()],
     output: [
       {
         file: dist('z.js'),
@@ -99,7 +99,7 @@ const config = defineConfig([
     ],
   }),
   bundle(src('dto.ts'), {
-    plugins: [esbuild(), terser()],
+    plugins: [esbuild()],
     output: [
       {
         file: dist('dto.mjs'),

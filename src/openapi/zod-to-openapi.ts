@@ -1,7 +1,7 @@
 import { Type } from '@nestjs/common'
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
 import mergeDeep from 'merge-deep'
-import * as z from '../z'
+import { z } from '../z'
 
 export function is<T extends Type<z.ZodTypeAny>>(
   input: z.ZodTypeAny,
