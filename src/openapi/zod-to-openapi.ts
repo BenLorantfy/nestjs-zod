@@ -27,13 +27,16 @@ import {
   ZodTypeAny,
   ZodUnion,
 } from '../z'
+import * as zImports from '../z'
 
 export function is<T extends Type<ZodTypeAny>>(
   input: ZodTypeAny,
   factory: T
 ): input is InstanceType<T> {
-  return factory.name === input._def.typeName
+  const factories = zImports as unknown as Record<string, Type<ZodTypeAny>>
+  return factory === factories[input._def.typeName]
 }
+
 export function zodToOpenAPI(zodType: ZodTypeAny) {
   const object: SchemaObject = {}
 
