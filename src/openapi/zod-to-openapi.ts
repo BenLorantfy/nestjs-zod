@@ -1,50 +1,24 @@
 import { Type } from '@nestjs/common'
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
 import mergeDeep from 'merge-deep'
-import {
-  ZodArray,
-  ZodBigInt,
-  ZodBoolean,
-  ZodDateString,
-  ZodDefault,
-  ZodDiscriminatedUnion,
-  ZodEffects,
-  ZodEnum,
-  ZodIntersection,
-  ZodLazy,
-  ZodLiteral,
-  ZodNativeEnum,
-  ZodNullable,
-  ZodNumber,
-  ZodObject,
-  ZodOptional,
-  ZodPassword,
-  ZodRecord,
-  ZodSet,
-  ZodString,
-  ZodTransformer,
-  ZodTuple,
-  ZodTypeAny,
-  ZodUnion,
-} from '../z'
-import * as zImports from '../z'
+import * as z from '../z'
 
-export function is<T extends Type<ZodTypeAny>>(
-  input: ZodTypeAny,
+export function is<T extends Type<z.ZodTypeAny>>(
+  input: z.ZodTypeAny,
   factory: T
 ): input is InstanceType<T> {
-  const factories = zImports as unknown as Record<string, Type<ZodTypeAny>>
+  const factories = z as unknown as Record<string, Type<z.ZodTypeAny>>
   return factory === factories[input._def.typeName]
 }
 
-export function zodToOpenAPI(zodType: ZodTypeAny) {
+export function zodToOpenAPI(zodType: z.ZodTypeAny) {
   const object: SchemaObject = {}
 
   if (zodType.description) {
     object.description = zodType.description
   }
 
-  if (is(zodType, ZodString)) {
+  if (is(zodType, z.ZodString)) {
     const { checks } = zodType._def
     object.type = 'string'
 
@@ -67,7 +41,7 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     }
   }
 
-  if (is(zodType, ZodPassword)) {
+  if (is(zodType, z.ZodPassword)) {
     const { checks } = zodType._def
     const regex = zodType.buildFullRegExp()
     object.type = 'string'
@@ -83,11 +57,11 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     }
   }
 
-  if (is(zodType, ZodBoolean)) {
+  if (is(zodType, z.ZodBoolean)) {
     object.type = 'boolean'
   }
 
-  if (is(zodType, ZodNumber)) {
+  if (is(zodType, z.ZodNumber)) {
     const { checks } = zodType._def
     object.type = 'number'
 
@@ -106,7 +80,7 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     }
   }
 
-  if (is(zodType, ZodDateString)) {
+  if (is(zodType, z.ZodDateString)) {
     const { checks } = zodType._def
     object.type = 'string'
 
@@ -117,12 +91,12 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     }
   }
 
-  if (is(zodType, ZodBigInt)) {
+  if (is(zodType, z.ZodBigInt)) {
     object.type = 'integer'
     object.format = 'int64'
   }
 
-  if (is(zodType, ZodArray)) {
+  if (is(zodType, z.ZodArray)) {
     const { minLength, maxLength, type } = zodType._def
     object.type = 'array'
     if (minLength) object.minItems = minLength.value
@@ -130,13 +104,13 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     object.items = zodToOpenAPI(type)
   }
 
-  if (is(zodType, ZodTuple)) {
+  if (is(zodType, z.ZodTuple)) {
     const { items } = zodType._def
     object.type = 'array'
     object.items = { oneOf: items.map(zodToOpenAPI) }
   }
 
-  if (is(zodType, ZodSet)) {
+  if (is(zodType, z.ZodSet)) {
     const { valueType, minSize, maxSize } = zodType._def
     object.type = 'array'
     if (minSize) object.minItems = minSize.value
@@ -145,12 +119,12 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     object.uniqueItems = true
   }
 
-  if (is(zodType, ZodUnion)) {
+  if (is(zodType, z.ZodUnion)) {
     const { options } = zodType._def
     object.oneOf = options.map(zodToOpenAPI)
   }
 
-  if (is(zodType, ZodDiscriminatedUnion)) {
+  if (is(zodType, z.ZodDiscriminatedUnion)) {
     const { options } = zodType._def
     object.oneOf = []
     for (const schema of options.values()) {
@@ -158,7 +132,7 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     }
   }
 
-  if (is(zodType, ZodLiteral)) {
+  if (is(zodType, z.ZodLiteral)) {
     const { value } = zodType._def
 
     if (typeof value === 'string') {
@@ -178,51 +152,51 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     }
   }
 
-  if (is(zodType, ZodEnum)) {
+  if (is(zodType, z.ZodEnum)) {
     const { values } = zodType._def
     object.type = 'string'
     object.enum = values
   }
 
-  if (is(zodType, ZodNativeEnum)) {
+  if (is(zodType, z.ZodNativeEnum)) {
     const { values } = zodType._def
     // this only supports enums with string literal values
     object.type = 'string'
     object.enum = Object.values(values)
   }
 
-  if (is(zodType, ZodTransformer)) {
+  if (is(zodType, z.ZodTransformer)) {
     const { schema } = zodType._def
     Object.assign(object, zodToOpenAPI(schema))
   }
 
-  if (is(zodType, ZodNullable)) {
+  if (is(zodType, z.ZodNullable)) {
     const { innerType } = zodType._def
     Object.assign(object, zodToOpenAPI(innerType))
     object.nullable = true
   }
 
-  if (is(zodType, ZodOptional)) {
+  if (is(zodType, z.ZodOptional)) {
     const { innerType } = zodType._def
     Object.assign(object, zodToOpenAPI(innerType))
   }
 
-  if (is(zodType, ZodDefault)) {
+  if (is(zodType, z.ZodDefault)) {
     const { defaultValue, innerType } = zodType._def
     Object.assign(object, zodToOpenAPI(innerType))
     object.default = defaultValue()
   }
 
-  if (is(zodType, ZodObject)) {
+  if (is(zodType, z.ZodObject)) {
     const { shape } = zodType._def
     object.type = 'object'
 
     object.properties = {}
     object.required = []
 
-    for (const [key, schema] of Object.entries<ZodTypeAny>(shape())) {
+    for (const [key, schema] of Object.entries<z.ZodTypeAny>(shape())) {
       object.properties[key] = zodToOpenAPI(schema)
-      const optionalTypes = [ZodOptional.name, ZodDefault.name]
+      const optionalTypes = [z.ZodOptional.name, z.ZodDefault.name]
       const isOptional = optionalTypes.includes(schema.constructor.name)
       if (!isOptional) object.required.push(key)
     }
@@ -232,24 +206,24 @@ export function zodToOpenAPI(zodType: ZodTypeAny) {
     }
   }
 
-  if (is(zodType, ZodRecord)) {
+  if (is(zodType, z.ZodRecord)) {
     const { valueType } = zodType._def
     object.type = 'object'
     object.additionalProperties = zodToOpenAPI(valueType)
   }
 
-  if (is(zodType, ZodIntersection)) {
+  if (is(zodType, z.ZodIntersection)) {
     const { left, right } = zodType._def
     const merged = mergeDeep(zodToOpenAPI(left), zodToOpenAPI(right))
     Object.assign(object, merged)
   }
 
-  if (is(zodType, ZodEffects)) {
+  if (is(zodType, z.ZodEffects)) {
     const { schema } = zodType._def
     Object.assign(object, zodToOpenAPI(schema))
   }
 
-  if (is(zodType, ZodLazy)) {
+  if (is(zodType, z.ZodLazy)) {
     const { getter } = zodType._def
     Object.assign(object, zodToOpenAPI(getter()))
   }
