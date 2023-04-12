@@ -3,6 +3,11 @@ import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.inte
 import mergeDeep from 'merge-deep'
 import { z } from '../z'
 
+interface ExtendedSchemaObject extends SchemaObject {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: `x-${string}`]: any
+}
+
 export function is<T extends Type<z.ZodTypeAny>>(
   input: z.ZodTypeAny,
   factory: T
@@ -12,7 +17,7 @@ export function is<T extends Type<z.ZodTypeAny>>(
 }
 
 export function zodToOpenAPI(zodType: z.ZodTypeAny) {
-  const object: SchemaObject = {}
+  const object: ExtendedSchemaObject = {}
 
   if (zodType.description) {
     object.description = zodType.description
@@ -163,6 +168,7 @@ export function zodToOpenAPI(zodType: z.ZodTypeAny) {
     // this only supports enums with string literal values
     object.type = 'string'
     object.enum = Object.values(values)
+    object['x-enumNames'] = Object.keys(values)
   }
 
   if (is(zodType, z.ZodTransformer)) {
