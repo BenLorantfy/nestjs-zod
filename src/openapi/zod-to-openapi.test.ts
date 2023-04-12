@@ -180,8 +180,9 @@ it('should serialize native enums', () => {
   const openApiObject = zodToOpenAPI(schema)
 
   expect(openApiObject).toEqual({
-    type: 'string',
-    enum: ['adama', 'kota'],
+    'type': 'string',
+    'enum': ['adama', 'kota'],
+    'x-enumNames': ['ADAMA', 'KOTA'],
   })
 })
 
