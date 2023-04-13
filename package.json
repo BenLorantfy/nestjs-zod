@@ -67,7 +67,7 @@
     "@nestjs/common": ">= 8.0.0",
     "@nestjs/core": ">= 8.0.0",
     "@nestjs/swagger": ">= 5.0.0",
-    "zod": ">= 3.21.4"
+    "zod": ">= 3.14.3"
   },
   "peerDependenciesMeta": {
     "@nestjs/common": {
