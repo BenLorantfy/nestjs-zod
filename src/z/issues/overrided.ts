@@ -10,20 +10,22 @@ export type ZodMinMaxValueType =
   | 'array'
   | 'string'
   | 'number'
+  | 'bigint'
   | 'set'
   | 'date_string_year'
+  | 'date'
   | 'password'
 
 export interface ZodTooSmallIssue extends ZodIssueBase {
   code: typeof ZodIssueCode.too_small
-  minimum: number
+  minimum: number | bigint
   inclusive: boolean
   type: ZodMinMaxValueType
 }
 
 export interface ZodTooBigIssue extends ZodIssueBase {
   code: typeof ZodIssueCode.too_big
-  maximum: number
+  maximum: number | bigint
   inclusive: boolean
   type: ZodMinMaxValueType
 }

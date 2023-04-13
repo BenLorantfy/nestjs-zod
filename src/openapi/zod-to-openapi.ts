@@ -16,7 +16,10 @@ export function is<T extends Type<z.ZodTypeAny>>(
   return factory === factories[input._def.typeName]
 }
 
-export function zodToOpenAPI(zodType: z.ZodTypeAny) {
+export function zodToOpenAPI(
+  zodType: z.ZodTypeAny,
+  visited: Set<any> = new Set()
+) {
   const object: ExtendedSchemaObject = {}
 
   if (zodType.description) {
@@ -106,13 +109,13 @@ export function zodToOpenAPI(zodType: z.ZodTypeAny) {
     object.type = 'array'
     if (minLength) object.minItems = minLength.value
     if (maxLength) object.maxItems = maxLength.value
-    object.items = zodToOpenAPI(type)
+    object.items = zodToOpenAPI(type, visited)
   }
 
   if (is(zodType, z.ZodTuple)) {
     const { items } = zodType._def
     object.type = 'array'
-    object.items = { oneOf: items.map(zodToOpenAPI) }
+    object.items = { oneOf: items.map((item) => zodToOpenAPI(item, visited)) }
   }
 
   if (is(zodType, z.ZodSet)) {
@@ -120,20 +123,20 @@ export function zodToOpenAPI(zodType: z.ZodTypeAny) {
     object.type = 'array'
     if (minSize) object.minItems = minSize.value
     if (maxSize) object.maxItems = maxSize.value
-    object.items = zodToOpenAPI(valueType)
+    object.items = zodToOpenAPI(valueType, visited)
     object.uniqueItems = true
   }
 
   if (is(zodType, z.ZodUnion)) {
     const { options } = zodType._def
-    object.oneOf = options.map(zodToOpenAPI)
+    object.oneOf = options.map((option) => zodToOpenAPI(option, visited))
   }
 
   if (is(zodType, z.ZodDiscriminatedUnion)) {
     const { options } = zodType._def
     object.oneOf = []
     for (const schema of options.values()) {
-      object.oneOf.push(zodToOpenAPI(schema))
+      object.oneOf.push(zodToOpenAPI(schema, visited))
     }
   }
 
@@ -173,23 +176,23 @@ export function zodToOpenAPI(zodType: z.ZodTypeAny) {
 
   if (is(zodType, z.ZodTransformer)) {
     const { schema } = zodType._def
-    Object.assign(object, zodToOpenAPI(schema))
+    Object.assign(object, zodToOpenAPI(schema, visited))
   }
 
   if (is(zodType, z.ZodNullable)) {
     const { innerType } = zodType._def
-    Object.assign(object, zodToOpenAPI(innerType))
+    Object.assign(object, zodToOpenAPI(innerType, visited))
     object.nullable = true
   }
 
   if (is(zodType, z.ZodOptional)) {
     const { innerType } = zodType._def
-    Object.assign(object, zodToOpenAPI(innerType))
+    Object.assign(object, zodToOpenAPI(innerType, visited))
   }
 
   if (is(zodType, z.ZodDefault)) {
     const { defaultValue, innerType } = zodType._def
-    Object.assign(object, zodToOpenAPI(innerType))
+    Object.assign(object, zodToOpenAPI(innerType, visited))
     object.default = defaultValue()
   }
 
@@ -201,7 +204,7 @@ export function zodToOpenAPI(zodType: z.ZodTypeAny) {
     object.required = []
 
     for (const [key, schema] of Object.entries<z.ZodTypeAny>(shape())) {
-      object.properties[key] = zodToOpenAPI(schema)
+      object.properties[key] = zodToOpenAPI(schema, visited)
       const optionalTypes = [z.ZodOptional.name, z.ZodDefault.name]
       const isOptional = optionalTypes.includes(schema.constructor.name)
       if (!isOptional) object.required.push(key)
@@ -215,23 +218,29 @@ export function zodToOpenAPI(zodType: z.ZodTypeAny) {
   if (is(zodType, z.ZodRecord)) {
     const { valueType } = zodType._def
     object.type = 'object'
-    object.additionalProperties = zodToOpenAPI(valueType)
+    object.additionalProperties = zodToOpenAPI(valueType, visited)
   }
 
   if (is(zodType, z.ZodIntersection)) {
     const { left, right } = zodType._def
-    const merged = mergeDeep(zodToOpenAPI(left), zodToOpenAPI(right))
+    const merged = mergeDeep(
+      zodToOpenAPI(left, visited),
+      zodToOpenAPI(right, visited)
+    )
     Object.assign(object, merged)
   }
 
   if (is(zodType, z.ZodEffects)) {
     const { schema } = zodType._def
-    Object.assign(object, zodToOpenAPI(schema))
+    Object.assign(object, zodToOpenAPI(schema, visited))
   }
 
   if (is(zodType, z.ZodLazy)) {
     const { getter } = zodType._def
-    Object.assign(object, zodToOpenAPI(getter()))
+    if (visited.has(getter)) return object
+
+    visited.add(getter)
+    Object.assign(object, zodToOpenAPI(getter(), visited))
   }
 
   return object
