@@ -537,7 +537,7 @@ const SignUpSchema = z.object({
   username: z.string().min(8).max(20),
   password: z.string().min(8).max(20),
   sex: z
-    .enum(['male', 'female', 'Apache Attack Helicopter'])
+    .enum(['male', 'female', 'nonbinary'])
     .describe('We respect your gender choice'),
   social: z.record(z.string().url()),
   birthDate: z.dateString().past(),
@@ -568,7 +568,7 @@ The output will be the following:
       "enum": [
         "male",
         "female",
-        "Apache Attack Helicopter"
+        "nonbinary"
       ]
     },
     "social": {
