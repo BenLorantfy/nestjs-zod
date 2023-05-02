@@ -50,16 +50,14 @@
 ## Installation
 
 ```
-yarn add nestjs-zod
+yarn add nestjs-zod zod
 ```
 
-Included dependencies:
-- `zod` -  `3.14.3`
-
 Peer dependencies:
-- `@nestjs/common` -  `^8.0.0` (required on server side)
-- `@nestjs/core` -  `^8.0.0` (required on server side)
-- `@nestjs/swagger` -  `^5.0.0` (only when using `patchNestJsSwagger`)
+- `zod` - `>= 3.14.3`
+- `@nestjs/common` -  `>= 8.0.0` (required on server side)
+- `@nestjs/core` -  `>= 8.0.0` (required on server side)
+- `@nestjs/swagger` -  `>= 5.0.0` (only when using `patchNestJsSwagger`)
 
 All peer dependencies are marked as optional for better client side usage, but you need to install required ones when using `nestjs-zod` on server side.
 
