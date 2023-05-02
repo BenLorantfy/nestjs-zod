@@ -31,7 +31,7 @@ export function patchNestJsSwagger(
       }
 
       if (!isZodDto(type)) {
-        return defaultExplore(type, schemas, schemaRefsStack)
+        return defaultExplore.call(this, type, schemas, schemaRefsStack)
       }
 
       schemas[type.name] = zodToOpenAPI(type.schema)
