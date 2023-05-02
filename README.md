@@ -23,10 +23,10 @@
 
 ## Ecosystem
 
-| Package | About |
-| :-- | :-- |
-| [nestjs-zod](https://github.com/risenforces/nestjs-zod) | A tools for integrating Zod into your NestJS application |
-| [nestjs-zod-prisma](https://github.com/risenforces/nestjs-zod-prisma) | Generate Zod schemas from your Prisma schema |
+| Package                                                               | About                                                    |
+| :-------------------------------------------------------------------- | :------------------------------------------------------- |
+| [nestjs-zod](https://github.com/risenforces/nestjs-zod)               | A tools for integrating Zod into your NestJS application |
+| [nestjs-zod-prisma](https://github.com/risenforces/nestjs-zod-prisma) | Generate Zod schemas from your Prisma schema             |
 
 ## Core library features
 
@@ -54,10 +54,11 @@ yarn add nestjs-zod zod
 ```
 
 Peer dependencies:
+
 - `zod` - `>= 3.14.3`
-- `@nestjs/common` -  `>= 8.0.0` (required on server side)
-- `@nestjs/core` -  `>= 8.0.0` (required on server side)
-- `@nestjs/swagger` -  `>= 5.0.0` (only when using `patchNestJsSwagger`)
+- `@nestjs/common` - `>= 8.0.0` (required on server side)
+- `@nestjs/core` - `>= 8.0.0` (required on server side)
+- `@nestjs/swagger` - `>= 5.0.0` (only when using `patchNestJsSwagger`)
 
 All peer dependencies are marked as optional for better client side usage, but you need to install required ones when using `nestjs-zod` on server side.
 
@@ -73,6 +74,7 @@ All peer dependencies are marked as optional for better client side usage, but y
 - [Using ZodGuard](#using-zodguard)
   - [Creating custom guard](#creating-custom-guard)
 - [Validation Exceptions](#validation-exceptions)
+- [Using ZodSerializerInterceptor](#using-zodserializerinterceptor-for-output-validation)
 - [Extended Zod](#extended-zod)
   - [ZodDateString](#zoddatestring)
   - [ZodPassword](#zodpassword)
@@ -103,7 +105,7 @@ const CredentialsSchema = z.object({
 Zod's classes and types are re-exported too, but under `/z` scope for more clarity:
 
 ```ts
-import { ZodString, ZodError, ZodIssue } from 'nestjs-zod/z' 
+import { ZodString, ZodError, ZodIssue } from 'nestjs-zod/z'
 ```
 
 ## Creating DTO from Zod schema
@@ -124,6 +126,7 @@ class CredentialsDto extends createZodDto(CredentialsSchema) {}
 ### Using DTO
 
 DTO does two things:
+
 - Provides a schema for `ZodValidationPipe`
 - Provides a type from Zod schema for you
 
@@ -218,7 +221,8 @@ import { createZodValidationPipe } from 'nestjs-zod'
 
 const MyZodValidationPipe = createZodValidationPipe({
   // provide custom validation exception factory
-  createValidationException: (error: ZodError) => new BadRequestException('Ooops')
+  createValidationException: (error: ZodError) =>
+    new BadRequestException('Ooops'),
 })
 ```
 
@@ -229,11 +233,13 @@ Sometimes, we need to validate user input before specific Guards. We can't use V
 The solution is `ZodGuard`. It works just like `ZodValidationPipe`, except for that is doesn't transform the input.
 
 It has 2 syntax forms:
+
 - `@UseGuards(new ZodGuard('body', CredentialsSchema))`
 - `@UseZodGuard('body', CredentialsSchema)`
 
 Parameters:
-1. The source - `'body' | 'query' | 'params'`  
+
+1. The source - `'body' | 'query' | 'params'`
 2. Zod Schema or DTO (just like `ZodValidationPipe`)
 
 When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
@@ -261,7 +267,8 @@ import { createZodGuard } from 'nestjs-zod'
 
 const MyZodGuard = createZodGuard({
   // provide custom validation exception factory
-  createValidationException: (error: ZodError) => new BadRequestException('Ooops')
+  createValidationException: (error: ZodError) =>
+    new BadRequestException('Ooops'),
 })
 ```
 
@@ -274,7 +281,11 @@ import { validate } from 'nestjs-zod'
 
 validate(wrongThing, UserDto, (zodError) => new MyException(zodError)) // throws MyException
 
-const validatedUser = validate(user, UserDto, (zodError) => new MyException(zodError)) // returns typed value when succeed
+const validatedUser = validate(
+  user,
+  UserDto,
+  (zodError) => new MyException(zodError)
+) // returns typed value when succeed
 ```
 
 ## Validation Exceptions
@@ -301,6 +312,7 @@ The default server response on validation error looks like that:
 The reason of this structure is default `ZodValidationException`.
 
 You can customize the exception by creating custom `nestjs-zod` entities using the factories:
+
 - [Validation Pipe](#creating-custom-validation-pipe)
 - [Guard](#creating-custom-guard)
 
@@ -320,6 +332,49 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
   }
 }
 ```
+
+## Using ZodSerializerInterceptor for output validation
+
+To ensure that a response conforms to a certain shape, you may use the `ZodSerializerInterceptor` interceptor.
+
+This would be especially useful in prevent accidental data leaks.
+
+This is similar to NestJs' `@ClassSerializerInterceptor` feature [here](https://docs.nestjs.com/techniques/serialization)
+
+### Include `@ZodSerializerInterceptor` in application root
+
+```ts
+@Module({
+  ...
+  providers: [
+    ...,
+    { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
+  ],
+})
+export class AppModule {}
+```
+
+### Use `@ZodResponseDto` to define the shape of the response for endpoint in controller
+
+```ts
+const UserSchema = z.object({ username: string() })
+
+export class UserDto extends createZodDto(UserSchema) {}
+```
+
+```ts
+@Controller('user')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  @ZodResponseDto(UserDto)
+  getUser(id: number) {
+    return this.userService.findOne(id) // --> The native service method returns { username: string, password: string by default }
+  }
+}
+```
+
+In the above example, despite the `userService.findOne` method returns `password`, the `password` property will be stripped out thanks to the `@ZodResponseDto` decorator.
 
 ## Extended Zod
 
@@ -365,9 +420,11 @@ z.dateString().weekend()
 ```
 
 Valid `date` format examples:
+
 - `2022-05-15`
 
 Valid `date-time` format examples:
+
 - `2022-05-02:08:33Z`
 - `2022-05-02:08:33.000Z`
 - `2022-05-02:08:33+00:00`
@@ -375,21 +432,25 @@ Valid `date-time` format examples:
 - `2022-05-02:08:33.000+00:00`
 
 Errors:
+
 - `invalid_date_string` - invalid date
 
 - `invalid_date_string_format` - wrong format
 
   Payload:
+
   - `expected` - `'date' | 'date-time'`
 
 - `invalid_date_string_direction` - not past/future
 
   Payload:
+
   - `expected` - `'past' | 'future'`
 
 - `invalid_date_string_day` - not weekDay/weekend
 
   Payload:
+
   - `expected` - `'weekDay' | 'weekend'`
 
 - `too_small` with `type === 'date_string_year'`
@@ -425,6 +486,7 @@ z.password().atLeastOne('special')
 ```
 
 Errors:
+
 - `invalid_password_no_digit`
 - `invalid_password_no_lowercase`
 - `invalid_password_no_uppercase`
@@ -458,18 +520,16 @@ Therefore, the error details is located inside `params` property:
 
 ```ts
 const error = {
-  "code": "custom",
-  "message": "Invalid date, expected it to be the past",
-  "params": {
-    "isNestJsZod": true,
-    "code": "invalid_date_string_direction",
+  code: 'custom',
+  message: 'Invalid date, expected it to be the past',
+  params: {
+    isNestJsZod: true,
+    code: 'invalid_date_string_direction',
 
     // payload is always located here in a flat view
-    "expected": "past"
+    expected: 'past',
   },
-  "path": [
-    "date"
-  ]
+  path: ['date'],
 }
 ```
 
@@ -477,7 +537,7 @@ const error = {
 
 Optionally, you can install `nestjs-zod` on the client side.
 
-The library provides you a `/frontend` scope, that can be used to detect custom NestJS Zod issues and process them the way you want. 
+The library provides you a `/frontend` scope, that can be used to detect custom NestJS Zod issues and process them the way you want.
 
 ```ts
 import { isNestJsZodIssue, NestJsZodIssue, ZodIssue } from 'nestjs-zod/frontend'
@@ -498,6 +558,7 @@ function mapToFormErrors(issues: ZodIssue[]) {
 ### Setup
 
 Prerequisites:
+
 - `@nestjs/swagger` with version `^5.0.0` installed
 
 Apply a patch:
@@ -563,11 +624,7 @@ The output will be the following:
     "sex": {
       "description": "We respect your gender choice",
       "type": "string",
-      "enum": [
-        "male",
-        "female",
-        "nonbinary"
-      ]
+      "enum": ["male", "female", "nonbinary"]
     },
     "social": {
       "type": "object",
@@ -581,13 +638,7 @@ The output will be the following:
       "format": "date-time"
     }
   },
-  "required": [
-    "username",
-    "password",
-    "sex",
-    "social",
-    "birthDate"
-  ]
+  "required": ["username", "password", "sex", "social", "birthDate"]
 }
 ```
 
