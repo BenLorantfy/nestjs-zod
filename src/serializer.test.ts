@@ -4,6 +4,7 @@ import { Reflector } from '@nestjs/core'
 import { lastValueFrom, of } from 'rxjs'
 import { z } from 'zod'
 import { createZodDto } from './dto'
+import { ZodValidationException } from './exception'
 import { ZodSerializerInterceptor } from './serializer'
 
 describe('ZodSerializerInterceptor', () => {
@@ -19,11 +20,12 @@ describe('ZodSerializerInterceptor', () => {
   }
 
   const context = createMock<ExecutionContext>()
-  const handler = createMock<CallHandler>({
-    handle: () => of(testUser),
-  })
 
   test('interceptor should strip out password', async () => {
+    const handler = createMock<CallHandler>({
+      handle: () => of(testUser),
+    })
+
     const reflector = createMock<Reflector>({
       getAllAndOverride: () => UserDto,
     })
@@ -37,11 +39,28 @@ describe('ZodSerializerInterceptor', () => {
     expect(user.username).toBe('test')
   })
 
+  test('wrong response shape should throw ZodValidationException', async () => {
+    const handler = createMock<CallHandler>({
+      handle: () => of({ user: 'test' }),
+    })
+
+    const reflector = createMock<Reflector>({
+      getAllAndOverride: () => UserDto,
+    })
+
+    const interceptor = new ZodSerializerInterceptor(reflector)
+
+    const userObservable = interceptor.intercept(context, handler)
+    expect(lastValueFrom(userObservable)).rejects.toBeInstanceOf(
+      ZodValidationException
+    )
+  })
+
   test('interceptor should not strip out password if no UserDto is defined', async () => {
-    const context = createMock<ExecutionContext>()
     const handler = createMock<CallHandler>({
       handle: () => of(testUser),
     })
+
     const reflector = createMock<Reflector>({
       getAllAndOverride: jest.fn(),
     })
