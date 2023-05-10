@@ -22,19 +22,19 @@ describe('password', () => {
   it('should validate at least one digit', () => {
     schema = password().atLeastOne('digit')
     is('sdfghfd4isugh', true)
-    is('aihsdgih', false)
+    is('Aihsdgih!', false)
   })
 
   it('should validate at least one lowercase', () => {
     schema = password().atLeastOne('lowercase')
     is('SDFUfFIDD', true)
-    is('DSIFHUSDHUF', false)
+    is('DSIFHUSDHUF!3', false)
   })
 
   it('should validate at least one uppercase', () => {
     schema = password().atLeastOne('uppercase')
     is('fdhgidUhfg', true)
-    is('dsifghfodih', false)
+    is('dsifghfodih!3', false)
   })
 
   it('should validate at least one special', () => {
@@ -46,7 +46,7 @@ describe('password', () => {
       is(`asfosd${char}sadfas`, true)
     }
 
-    is('aihsdgih', false)
+    is('Aihsdgih3', false)
   })
 
   const small = '213'
