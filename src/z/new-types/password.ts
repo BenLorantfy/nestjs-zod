@@ -48,7 +48,7 @@ const REGEXPS: Record<SymbolKind, RegExp> = {
   digit: /\d/,
   lowercase: /[a-z]/,
   uppercase: /[A-Z]/,
-  special: /[!?@#$%^&*{};.,:%№"|\\/()-_+=<>`~[\]'"]/,
+  special: /[!?@#$%^&*{};.,:%№"|\\/()\-_+=<>`~[\]'"]/,
 }
 
 function isSymbolCheck(
