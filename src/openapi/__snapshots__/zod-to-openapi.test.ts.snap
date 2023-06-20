@@ -189,6 +189,10 @@ Object {
         },
       ],
     },
+    "zodDateString": Object {
+      "format": "date-time",
+      "type": "string",
+    },
   },
   "required": Array [
     "stringMinMax",
@@ -205,6 +209,7 @@ Object {
     "record",
     "recordWithKeys",
     "dateString",
+    "zodDateString",
     "password",
     "passwordComplex",
   ],

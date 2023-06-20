@@ -382,7 +382,7 @@ As you learned in [Writing Zod Schemas](#writing-zod-schemas) section, `nestjs-z
 
 ### ZodDateString
 
-In HTTP, we always accept Dates as strings. But default Zod doesn't have methods to validate such type of strings. `ZodDateString` was created to address this issue.
+In HTTP, we always accept Dates as strings. But default Zod only has validations for full date-time strings. `ZodDateString` was created to address this issue.
 
 ```ts
 // 1. Expect user input to be a "string" type

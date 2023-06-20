@@ -45,6 +45,8 @@ export function zodToOpenAPI(
         object.format = 'cuid'
       } else if (check.kind === 'regex') {
         object.pattern = check.regex.source
+      } else if (check.kind === 'datetime') {
+        object.format = 'date-time'
       }
     }
   }
