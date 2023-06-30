@@ -1,4 +1,8 @@
-import { BadRequestException, HttpStatus } from '@nestjs/common'
+import {
+  BadRequestException,
+  HttpStatus,
+  InternalServerErrorException,
+} from '@nestjs/common'
 import { ZodError } from './z'
 
 export class ZodValidationException extends BadRequestException {
@@ -15,8 +19,22 @@ export class ZodValidationException extends BadRequestException {
   }
 }
 
+export class ZodSerializationException extends InternalServerErrorException {
+  constructor(private error: ZodError) {
+    super()
+  }
+
+  public getZodError() {
+    return this.error
+  }
+}
+
 export type ZodExceptionCreator = (error: ZodError) => Error
 
 export const createZodValidationException: ZodExceptionCreator = (error) => {
   return new ZodValidationException(error)
+}
+
+export const createZodSerializationException: ZodExceptionCreator = (error) => {
+  return new ZodSerializationException(error)
 }

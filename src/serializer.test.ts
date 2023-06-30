@@ -4,7 +4,7 @@ import { Reflector } from '@nestjs/core'
 import { lastValueFrom, of } from 'rxjs'
 import { z } from 'zod'
 import { createZodDto } from './dto'
-import { ZodValidationException } from './exception'
+import { ZodSerializationException } from './exception'
 import { ZodSerializerInterceptor } from './serializer'
 
 describe('ZodSerializerInterceptor', () => {
@@ -39,7 +39,7 @@ describe('ZodSerializerInterceptor', () => {
     expect(user.username).toBe('test')
   })
 
-  test('wrong response shape should throw ZodValidationException', async () => {
+  test('wrong response shape should throw ZodSerializationException', async () => {
     const handler = createMock<CallHandler>({
       handle: () => of({ user: 'test' }),
     })
@@ -52,7 +52,7 @@ describe('ZodSerializerInterceptor', () => {
 
     const userObservable = interceptor.intercept(context, handler)
     expect(lastValueFrom(userObservable)).rejects.toBeInstanceOf(
-      ZodValidationException
+      ZodSerializationException
     )
   })
 
