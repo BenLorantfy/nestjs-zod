@@ -354,7 +354,7 @@ This is similar to NestJs' `@ClassSerializerInterceptor` feature [here](https://
 export class AppModule {}
 ```
 
-### Use `@ZodResponseDto` to define the shape of the response for endpoint in controller
+### Use `@ZodSerializerDto` to define the shape of the response for endpoint in controller
 
 ```ts
 const UserSchema = z.object({ username: string() })
@@ -367,14 +367,14 @@ export class UserDto extends createZodDto(UserSchema) {}
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @ZodResponseDto(UserDto)
+  @ZodSerializerDto(UserDto)
   getUser(id: number) {
     return this.userService.findOne(id) // --> The native service method returns { username: string, password: string by default }
   }
 }
 ```
 
-In the above example, despite the `userService.findOne` method returns `password`, the `password` property will be stripped out thanks to the `@ZodResponseDto` decorator.
+In the above example, despite the `userService.findOne` method returns `password`, the `password` property will be stripped out thanks to the `@ZodSerializerDto` decorator.
 
 ## Extended Zod
 
