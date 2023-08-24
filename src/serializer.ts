@@ -11,6 +11,7 @@ import { map, Observable } from 'rxjs'
 import { ZodSchema } from 'zod'
 import { ZodDto } from './dto'
 import { validate } from './validate'
+import { createZodSerializationException } from './exception'
 
 // NOTE (external)
 // We need to deduplicate them here due to the circular dependency
@@ -35,8 +36,10 @@ export class ZodSerializerInterceptor implements NestInterceptor {
         if (typeof res !== 'object' || res instanceof StreamableFile) return res
 
         return Array.isArray(res)
-          ? res.map((item) => validate(item, responseSchema))
-          : validate(res, responseSchema)
+          ? res.map((item) =>
+              validate(item, responseSchema, createZodSerializationException)
+            )
+          : validate(res, responseSchema, createZodSerializationException)
       })
     )
   }
