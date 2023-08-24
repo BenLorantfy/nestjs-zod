@@ -28,6 +28,7 @@ const complexTestSchema = z.object({
   record: z.record(z.number()),
   recordWithKeys: z.record(z.number(), z.string()),
   dateString: z.dateString().cast().describe('My date string'),
+  zodDateString: z.string().datetime(),
   password: z.password(),
   passwordComplex: z
     .password()
