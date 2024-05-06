@@ -1,3 +1,6 @@
+> [!CAUTION]
+> I had to deprecate this package because I don't have enough time to support it, and moreover, I stopped using Nest. Sorry for the inconvenience caused.
+
 <p align="center">
   <img src="logo.svg" width="560px" align="center" alt="NestJS + Zod logo" style="max-width: 100%;" />
   <h1></h1>
