@@ -28,6 +28,9 @@ devDependencies:
   '@types/merge-deep':
     specifier: ^3.0.0
     version: 3.0.3
+  '@types/node':
+    specifier: ^22.7.5
+    version: 22.7.5
   esbuild:
     specifier: ^0.14.24
     version: 0.14.54
@@ -39,7 +42,7 @@ devDependencies:
     version: 5.10.0(effector@23.2.3)(eslint@8.57.1)(svelte@3.59.2)(typescript@4.6.3)
   jest:
     specifier: ^28.1.0
-    version: 28.1.3
+    version: 28.1.3(@types/node@22.7.5)
   reflect-metadata:
     specifier: ^0.1.13
     version: 0.1.14
@@ -3599,7 +3602,7 @@ packages:
       - supports-color
     dev: true
 
-  /jest-cli@28.1.3:
+  /jest-cli@28.1.3(@types/node@22.7.5):
     resolution: {integrity: sha512-roY3kvrv57Azn1yPgdTebPAXvdR2xfezaKKYzVxZ6It/5NCxzJym6tUI5P1zkdWhfUYkxEI9uZWcQdaFLo8mJQ==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     hasBin: true
@@ -3989,7 +3992,7 @@ packages:
       supports-color: 8.1.1
     dev: true
 
-  /jest@28.1.3:
+  /jest@28.1.3(@types/node@22.7.5):
     resolution: {integrity: sha512-N4GT5on8UkZgH0O5LUavMRV1EDEhNTL0KEfRmDIeZHSV7p2XgLoY9t9VDUgL6o+yfdgYHVxuz81G8oB9VG5uyA==}
     engines: {node: ^12.13.0 || ^14.15.0 || ^16.10.0 || >=17.0.0}
     hasBin: true
@@ -4002,7 +4005,7 @@ packages:
       '@jest/core': 28.1.3
       '@jest/types': 28.1.3
       import-local: 3.2.0
-      jest-cli: 28.1.3
+      jest-cli: 28.1.3(@types/node@22.7.5)
     transitivePeerDependencies:
       - '@types/node'
       - supports-color
@@ -5256,7 +5259,7 @@ packages:
       bs-logger: 0.2.6
       esbuild: 0.14.54
       fast-json-stable-stringify: 2.1.0
-      jest: 28.1.3
+      jest: 28.1.3(@types/node@22.7.5)
       jest-util: 28.1.3
       json5: 2.2.3
       lodash.memoize: 4.1.2
