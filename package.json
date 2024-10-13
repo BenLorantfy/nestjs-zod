@@ -28,7 +28,7 @@
   ],
   "sideEffects": false,
   "license": "MIT",
-  "repository": "git@github.com:risenforces/nestjs-zod.git",
+  "repository": "git@github.com:BenLorantfy/nestjs-zod.git",
   "author": "Evgeny Zakharov <to@risen.dev>",
   "publishConfig": {
     "access": "public"
