@@ -6,7 +6,7 @@ describe('dateString', () => {
   let result: SafeParseReturnType<unknown, unknown>
 
   function is(value: unknown, expected: boolean) {
-    console.log('timezone', process.env.TZ);
+    console.log('timezone', Intl.DateTimeFormat().resolvedOptions().timeZone);
     result = schema.safeParse(value)
     expect(result.success).toBe(expected)
     if (!result.success) {
