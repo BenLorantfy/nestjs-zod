@@ -1,90 +1,9 @@
 {
-  "name": "nestjs-zod",
-  "description": "All NestJS + Zod utilities you need",
-  "version": "0.0.0-set-by-ci",
-  "main": "./dist/index.js",
-  "exports": {
-    ".": "./dist/index.js",
-    "./z": {
-      "import": "./dist/z.mjs",
-      "default": "./dist/z.js"
-    },
-    "./frontend": {
-      "import": "./dist/frontend.mjs",
-      "default": "./dist/frontend.js"
-    },
-    "./dto": {
-      "import": "./dist/dto.mjs",
-      "default": "./dist/dto.js"
+    "name": "nestjs-zod-monorepo",
+    "description": "All NestJS + Zod utilities you need",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "syncpack": "^13.0.0"
     }
-  },
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
-  "files": [
-    "dist",
-    "z.d.ts",
-    "frontend.d.ts",
-    "dto.d.ts"
-  ],
-  "sideEffects": false,
-  "license": "MIT",
-  "repository": "git@github.com:BenLorantfy/nestjs-zod.git",
-  "author": "Evgeny Zakharov <to@risen.dev>",
-  "publishConfig": {
-    "access": "public"
-  },
-  "scripts": {
-    "dev": "vite",
-    "build": "rollup -c",
-    "test": "jest",
-    "lint": "eslint --ext .ts,.tsx src",
-    "lint:fix": "eslint --ext .ts,.tsx src --fix"
-  },
-  "devDependencies": {
-    "@golevelup/ts-jest": "^0.3.3",
-    "@nestjs/common": "8.0.0",
-    "@nestjs/core": "8.0.0",
-    "@nestjs/swagger": "^5.2.1",
-    "@types/jest": "^26.0.14",
-    "@types/merge-deep": "^3.0.0",
-    "@types/node": "^22.7.5",
-    "esbuild": "^0.14.24",
-    "eslint": "^8.18.0",
-    "eslint-kit": "^5.7.0",
-    "jest": "^28.1.0",
-    "reflect-metadata": "^0.1.13",
-    "rollup": "^2.69.0",
-    "rollup-plugin-bundle-size": "^1.0.3",
-    "rollup-plugin-copy": "^3.4.0",
-    "rollup-plugin-dts": "^4.1.0",
-    "rollup-plugin-esbuild": "^4.8.2",
-    "rollup-plugin-terser": "^7.0.2",
-    "rxjs": "^7.5.5",
-    "ts-jest": "^28.0.2",
-    "typescript": "4.6.3",
-    "zod": "3.21.4"
-  },
-  "peerDependencies": {
-    "@nestjs/common": ">= 8.0.0",
-    "@nestjs/core": ">= 8.0.0",
-    "@nestjs/swagger": ">= 5.0.0",
-    "zod": ">= 3.14.3"
-  },
-  "peerDependenciesMeta": {
-    "@nestjs/common": {
-      "optional": true
-    },
-    "@nestjs/core": {
-      "optional": true
-    },
-    "@nestjs/swagger": {
-      "optional": true
-    },
-    "zod": {
-      "optional": false
-    }
-  },
-  "dependencies": {
-    "merge-deep": "^3.0.3"
-  }
 }

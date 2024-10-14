@@ -30,6 +30,7 @@ export function createZodValidationPipe({
         return value
       }
 
+      console.log('hi');
       return validate(value, metatype.schema, createValidationException)
     }
   }
