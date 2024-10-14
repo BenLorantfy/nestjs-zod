@@ -1,53 +1,53 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`should serialize a complex schema 1`] = `
-Object {
-  "properties": Object {
-    "array": Object {
-      "items": Object {
+{
+  "properties": {
+    "array": {
+      "items": {
         "type": "string",
       },
       "maxItems": 3,
       "type": "array",
     },
-    "dateString": Object {
+    "dateString": {
       "description": "My date string",
       "format": "date-time",
       "type": "string",
     },
-    "discriminatedUnion": Object {
-      "oneOf": Array [
-        Object {
-          "properties": Object {
-            "age": Object {
+    "discriminatedUnion": {
+      "oneOf": [
+        {
+          "properties": {
+            "age": {
               "type": "number",
             },
-            "name": Object {
-              "enum": Array [
+            "name": {
+              "enum": [
                 "vasya",
               ],
               "type": "string",
             },
           },
-          "required": Array [
+          "required": [
             "name",
             "age",
           ],
           "type": "object",
         },
-        Object {
-          "properties": Object {
-            "age": Object {
+        {
+          "properties": {
+            "age": {
               "type": "number",
             },
-            "name": Object {
-              "enum": Array [
+            "name": {
+              "enum": [
                 "petya",
               ],
               "type": "string",
             },
           },
-          "required": Array [
+          "required": [
             "name",
             "age",
           ],
@@ -55,111 +55,111 @@ Object {
         },
       ],
     },
-    "enumDefault": Object {
+    "enumDefault": {
       "default": "buy-it-now",
-      "enum": Array [
+      "enum": [
         "buy-it-now",
         "auctions",
       ],
       "type": "string",
     },
-    "literalBoolean": Object {
+    "literalBoolean": {
       "type": "boolean",
     },
-    "literalNumber": Object {
+    "literalNumber": {
       "maximum": 123,
       "minimum": 123,
       "type": "number",
     },
-    "literalString": Object {
-      "enum": Array [
+    "literalString": {
+      "enum": [
         "123",
       ],
       "type": "string",
     },
-    "numberMinMax": Object {
+    "numberMinMax": {
       "exclusiveMaximum": false,
       "exclusiveMinimum": false,
       "maximum": 10,
       "minimum": 3,
       "type": "number",
     },
-    "numberMultipleOf": Object {
+    "numberMultipleOf": {
       "multipleOf": 10,
       "type": "number",
     },
-    "objectNested": Object {
-      "properties": Object {
-        "uuid": Object {
+    "objectNested": {
+      "properties": {
+        "uuid": {
           "format": "uuid",
           "type": "string",
         },
       },
-      "required": Array [
+      "required": [
         "uuid",
       ],
       "type": "object",
     },
-    "password": Object {
+    "password": {
       "format": "password",
       "pattern": "^.*$",
       "type": "string",
     },
-    "passwordComplex": Object {
+    "passwordComplex": {
       "format": "password",
       "maxLength": 100,
       "minLength": 8,
-      "pattern": "^(?:(?=.*\\\\d)(?=.*[A-Z]).*)$",
+      "pattern": "^(?:(?=.*\\d)(?=.*[A-Z]).*)$",
       "type": "string",
     },
-    "record": Object {
-      "additionalProperties": Object {
+    "record": {
+      "additionalProperties": {
         "type": "number",
       },
       "type": "object",
     },
-    "recordWithKeys": Object {
-      "additionalProperties": Object {
+    "recordWithKeys": {
+      "additionalProperties": {
         "type": "string",
       },
       "type": "object",
     },
-    "stringMinMax": Object {
+    "stringMinMax": {
       "maxLength": 15,
       "minLength": 5,
       "type": "string",
     },
-    "tuple": Object {
-      "items": Object {
-        "oneOf": Array [
-          Object {
+    "tuple": {
+      "items": {
+        "oneOf": [
+          {
             "type": "string",
           },
-          Object {
-            "properties": Object {
-              "name": Object {
-                "enum": Array [
+          {
+            "properties": {
+              "name": {
+                "enum": [
                   "Rudy",
                 ],
                 "type": "string",
               },
             },
-            "required": Array [
+            "required": [
               "name",
             ],
             "type": "object",
           },
-          Object {
-            "items": Object {
-              "oneOf": Array [
-                Object {
-                  "enum": Array [
+          {
+            "items": {
+              "oneOf": [
+                {
+                  "enum": [
                     "blue",
                   ],
                   "type": "string",
                 },
-                Object {
-                  "enum": Array [
+                {
+                  "enum": [
                     "red",
                   ],
                   "type": "string",
@@ -172,29 +172,29 @@ Object {
       },
       "type": "array",
     },
-    "union": Object {
+    "union": {
       "description": "Please choose topkek",
-      "oneOf": Array [
-        Object {
-          "enum": Array [
+      "oneOf": [
+        {
+          "enum": [
             "kek",
           ],
           "type": "string",
         },
-        Object {
-          "enum": Array [
+        {
+          "enum": [
             "topkek",
           ],
           "type": "string",
         },
       ],
     },
-    "zodDateString": Object {
+    "zodDateString": {
       "format": "date-time",
       "type": "string",
     },
   },
-  "required": Array [
+  "required": [
     "stringMinMax",
     "numberMinMax",
     "numberMultipleOf",
@@ -218,16 +218,16 @@ Object {
 `;
 
 exports[`should serialize an intersection of objects 1`] = `
-Object {
-  "properties": Object {
-    "one": Object {
+{
+  "properties": {
+    "one": {
       "type": "number",
     },
-    "two": Object {
+    "two": {
       "type": "number",
     },
   },
-  "required": Array [
+  "required": [
     "one",
     "two",
   ],
@@ -236,22 +236,22 @@ Object {
 `;
 
 exports[`should serialize an intersection of unions 1`] = `
-Object {
-  "oneOf": Array [
-    Object {
-      "enum": Array [
+{
+  "oneOf": [
+    {
+      "enum": [
         "123",
       ],
       "type": "string",
     },
-    Object {
+    {
       "type": "number",
     },
-    Object {
+    {
       "type": "boolean",
     },
-    Object {
-      "items": Object {
+    {
+      "items": {
         "type": "string",
       },
       "type": "array",
@@ -261,13 +261,13 @@ Object {
 `;
 
 exports[`should serialize an intersection with overrided fields 1`] = `
-Object {
-  "properties": Object {
-    "one": Object {
+{
+  "properties": {
+    "one": {
       "type": "string",
     },
   },
-  "required": Array [
+  "required": [
     "one",
   ],
   "type": "object",
