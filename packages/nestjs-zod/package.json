@@ -36,7 +36,7 @@
   "scripts": {
     "dev": "vite",
     "build": "rollup -c",
-    "test": "jest",
+    "test": "TZ=UTC jest",
     "lint": "eslint --ext .ts,.tsx src",
     "lint:fix": "eslint --ext .ts,.tsx src --fix"
   },
