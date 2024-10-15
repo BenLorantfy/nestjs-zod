@@ -1,4 +1,4 @@
-import { z, ZodTypeAny } from '../z'
+import { z, ZodTypeAny } from '@nestjs-zod/z'
 import { zodToOpenAPI } from './zod-to-openapi'
 
 const complexTestSchema = z.object({

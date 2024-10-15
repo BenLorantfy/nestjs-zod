@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ZodSchema, ZodTypeDef } from './z'
+import { ZodSchema, ZodTypeDef } from '@nestjs-zod/z'
 
 export interface ZodDto<
   TOutput = any,

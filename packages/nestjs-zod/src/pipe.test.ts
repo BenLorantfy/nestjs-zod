@@ -2,7 +2,7 @@ import { ArgumentMetadata } from '@nestjs/common'
 import { createZodDto } from './dto'
 import { ZodValidationException } from './exception'
 import { ZodValidationPipe } from './pipe'
-import { z } from './z'
+import { z } from '@nestjs-zod/z'
 
 describe('ZodValidationPipe', () => {
   const UserSchema = z.object({

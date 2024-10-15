@@ -1,5 +1,5 @@
 import { createZodDto } from './dto'
-import { z } from './z'
+import { z } from '@nestjs-zod/z'
 
 describe('createZodDto', () => {
   it('should correctly create DTO', () => {

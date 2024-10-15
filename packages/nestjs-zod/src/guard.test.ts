@@ -4,7 +4,7 @@ import { createZodDto } from './dto'
 import { ZodValidationException } from './exception'
 import { ZodGuard } from './guard'
 import { Source } from './shared/types'
-import { z } from './z'
+import { z } from '@nestjs-zod/z'
 
 describe('ZodGuard', () => {
   const UserSchema = z.object({

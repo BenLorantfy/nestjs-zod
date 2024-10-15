@@ -24,7 +24,8 @@
     "@nestjs/core": "^10.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^7.4.2",
-    "nestjs-zod": "0.0.0-set-by-ci",
+    "@nestjs-zod/z": "workspace:*",
+    "nestjs-zod": "workspace:*",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "zod": "^3.23.8"
