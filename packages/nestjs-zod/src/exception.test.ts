@@ -1,8 +1,13 @@
 import { BadRequestException, HttpStatus } from '@nestjs/common'
 import { ZodValidationException } from './exception'
-import { z } from '@nestjs-zod/z'
 
-describe('ZodValidationException', () => {
+import { z as actualZod } from 'zod'
+import { z as nestjsZod } from '@nestjs-zod/z'
+
+describe.each([
+  ['zod', actualZod],
+  ['@nestjs-zod/z', nestjsZod],
+])('ZodValidationException (using %s)', (description, z) => {
   it('should correctly create exception', () => {
     const UserSchema = z.object({
       username: z.string(),

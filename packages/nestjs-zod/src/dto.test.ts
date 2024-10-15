@@ -1,7 +1,11 @@
 import { createZodDto } from './dto'
-import { z } from '@nestjs-zod/z'
+import { z as actualZod } from 'zod'
+import { z as nestjsZod } from '@nestjs-zod/z'
 
-describe('createZodDto', () => {
+describe.each([
+  ['zod', actualZod],
+  ['@nestjs-zod/z', nestjsZod],
+])('createZodDto (using %s)', (description, z) => {
   it('should correctly create DTO', () => {
     const UserSchema = z.object({
       username: z.string(),
@@ -23,4 +27,5 @@ describe('createZodDto', () => {
       password: 'strong',
     })
   })
-})
+});
+

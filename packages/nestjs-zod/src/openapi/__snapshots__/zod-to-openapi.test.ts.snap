@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`should serialize a complex schema 1`] = `
+exports[`zodToOpenAPI (using @nestjs-zod/z) should serialize a complex schema 1`] = `
 {
   "properties": {
     "array": {
@@ -9,11 +9,6 @@ exports[`should serialize a complex schema 1`] = `
       },
       "maxItems": 3,
       "type": "array",
-    },
-    "dateString": {
-      "description": "My date string",
-      "format": "date-time",
-      "type": "string",
     },
     "discriminatedUnion": {
       "oneOf": [
@@ -99,18 +94,6 @@ exports[`should serialize a complex schema 1`] = `
         "uuid",
       ],
       "type": "object",
-    },
-    "password": {
-      "format": "password",
-      "pattern": "^.*$",
-      "type": "string",
-    },
-    "passwordComplex": {
-      "format": "password",
-      "maxLength": 100,
-      "minLength": 8,
-      "pattern": "^(?:(?=.*\\d)(?=.*[A-Z]).*)$",
-      "type": "string",
     },
     "record": {
       "additionalProperties": {
@@ -208,16 +191,13 @@ exports[`should serialize a complex schema 1`] = `
     "objectNested",
     "record",
     "recordWithKeys",
-    "dateString",
     "zodDateString",
-    "password",
-    "passwordComplex",
   ],
   "type": "object",
 }
 `;
 
-exports[`should serialize an intersection of objects 1`] = `
+exports[`zodToOpenAPI (using @nestjs-zod/z) should serialize an intersection of objects 1`] = `
 {
   "properties": {
     "one": {
@@ -235,7 +215,7 @@ exports[`should serialize an intersection of objects 1`] = `
 }
 `;
 
-exports[`should serialize an intersection of unions 1`] = `
+exports[`zodToOpenAPI (using @nestjs-zod/z) should serialize an intersection of unions 1`] = `
 {
   "oneOf": [
     {
@@ -260,7 +240,261 @@ exports[`should serialize an intersection of unions 1`] = `
 }
 `;
 
-exports[`should serialize an intersection with overrided fields 1`] = `
+exports[`zodToOpenAPI (using @nestjs-zod/z) should serialize an intersection with overrided fields 1`] = `
+{
+  "properties": {
+    "one": {
+      "type": "string",
+    },
+  },
+  "required": [
+    "one",
+  ],
+  "type": "object",
+}
+`;
+
+exports[`zodToOpenAPI (using zod) should serialize a complex schema 1`] = `
+{
+  "properties": {
+    "array": {
+      "items": {
+        "type": "string",
+      },
+      "maxItems": 3,
+      "type": "array",
+    },
+    "discriminatedUnion": {
+      "oneOf": [
+        {
+          "properties": {
+            "age": {
+              "type": "number",
+            },
+            "name": {
+              "enum": [
+                "vasya",
+              ],
+              "type": "string",
+            },
+          },
+          "required": [
+            "name",
+            "age",
+          ],
+          "type": "object",
+        },
+        {
+          "properties": {
+            "age": {
+              "type": "number",
+            },
+            "name": {
+              "enum": [
+                "petya",
+              ],
+              "type": "string",
+            },
+          },
+          "required": [
+            "name",
+            "age",
+          ],
+          "type": "object",
+        },
+      ],
+    },
+    "enumDefault": {
+      "default": "buy-it-now",
+      "enum": [
+        "buy-it-now",
+        "auctions",
+      ],
+      "type": "string",
+    },
+    "literalBoolean": {
+      "type": "boolean",
+    },
+    "literalNumber": {
+      "maximum": 123,
+      "minimum": 123,
+      "type": "number",
+    },
+    "literalString": {
+      "enum": [
+        "123",
+      ],
+      "type": "string",
+    },
+    "numberMinMax": {
+      "exclusiveMaximum": false,
+      "exclusiveMinimum": false,
+      "maximum": 10,
+      "minimum": 3,
+      "type": "number",
+    },
+    "numberMultipleOf": {
+      "multipleOf": 10,
+      "type": "number",
+    },
+    "objectNested": {
+      "properties": {
+        "uuid": {
+          "format": "uuid",
+          "type": "string",
+        },
+      },
+      "required": [
+        "uuid",
+      ],
+      "type": "object",
+    },
+    "record": {
+      "additionalProperties": {
+        "type": "number",
+      },
+      "type": "object",
+    },
+    "recordWithKeys": {
+      "additionalProperties": {
+        "type": "string",
+      },
+      "type": "object",
+    },
+    "stringMinMax": {
+      "maxLength": 15,
+      "minLength": 5,
+      "type": "string",
+    },
+    "tuple": {
+      "items": {
+        "oneOf": [
+          {
+            "type": "string",
+          },
+          {
+            "properties": {
+              "name": {
+                "enum": [
+                  "Rudy",
+                ],
+                "type": "string",
+              },
+            },
+            "required": [
+              "name",
+            ],
+            "type": "object",
+          },
+          {
+            "items": {
+              "oneOf": [
+                {
+                  "enum": [
+                    "blue",
+                  ],
+                  "type": "string",
+                },
+                {
+                  "enum": [
+                    "red",
+                  ],
+                  "type": "string",
+                },
+              ],
+            },
+            "type": "array",
+          },
+        ],
+      },
+      "type": "array",
+    },
+    "union": {
+      "description": "Please choose topkek",
+      "oneOf": [
+        {
+          "enum": [
+            "kek",
+          ],
+          "type": "string",
+        },
+        {
+          "enum": [
+            "topkek",
+          ],
+          "type": "string",
+        },
+      ],
+    },
+    "zodDateString": {
+      "format": "date-time",
+      "type": "string",
+    },
+  },
+  "required": [
+    "stringMinMax",
+    "numberMinMax",
+    "numberMultipleOf",
+    "tuple",
+    "union",
+    "discriminatedUnion",
+    "literalString",
+    "literalNumber",
+    "literalBoolean",
+    "array",
+    "objectNested",
+    "record",
+    "recordWithKeys",
+    "zodDateString",
+  ],
+  "type": "object",
+}
+`;
+
+exports[`zodToOpenAPI (using zod) should serialize an intersection of objects 1`] = `
+{
+  "properties": {
+    "one": {
+      "type": "number",
+    },
+    "two": {
+      "type": "number",
+    },
+  },
+  "required": [
+    "one",
+    "two",
+  ],
+  "type": "object",
+}
+`;
+
+exports[`zodToOpenAPI (using zod) should serialize an intersection of unions 1`] = `
+{
+  "oneOf": [
+    {
+      "enum": [
+        "123",
+      ],
+      "type": "string",
+    },
+    {
+      "type": "number",
+    },
+    {
+      "type": "boolean",
+    },
+    {
+      "items": {
+        "type": "string",
+      },
+      "type": "array",
+    },
+  ],
+}
+`;
+
+exports[`zodToOpenAPI (using zod) should serialize an intersection with overrided fields 1`] = `
 {
   "properties": {
     "one": {

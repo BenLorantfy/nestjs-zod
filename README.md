@@ -356,14 +356,14 @@ In the above example, despite the `userService.findOne` method returns `password
 
 ## Extended Zod
 
-> [!IMPORTANT]
+> [!CAUTION]
 > `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 `@nestjs-zod/z` provides a special version of Zod. It helps you to validate the user input more accurately by using our custom schemas and methods.
 
 ### ZodDateString
 
-> [!IMPORTANT]
+> [!CAUTION]
 > `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 In HTTP, we always accept Dates as strings. But default Zod only has validations for full date-time strings. `ZodDateString` was created to address this issue.
@@ -442,7 +442,7 @@ Errors:
 
 ### ZodPassword
 
-> [!IMPORTANT]
+> [!CAUTION]
 > `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 `ZodPassword` is a string-like type, just like the `ZodDateString`. As you might have guessed, it's intended to help you with password schemas definition.
@@ -483,7 +483,7 @@ Errors:
 
 ### Json Schema
 
-> [!IMPORTANT]
+> [!CAUTION]
 > `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 > Created for `nestjs-zod-prisma`
@@ -494,7 +494,7 @@ z.json()
 
 ### "from" function
 
-> [!IMPORTANT]
+> [!CAUTION]
 > `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 > Created for custom schemas in `nestjs-zod-prisma`
@@ -507,7 +507,7 @@ z.from(MySchema)
 
 ### Extended Zod Errors
 
-> [!IMPORTANT]
+> [!CAUTION]
 > `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 Currently, we use `custom` error code due to some Zod limitations (`errorMap` priorities)
@@ -531,7 +531,7 @@ const error = {
 
 ### Working with errors on the client side
 
-> [!IMPORTANT]
+> [!CAUTION]
 > `@nestjs-zod/z/frontend` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 

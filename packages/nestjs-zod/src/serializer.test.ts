@@ -2,12 +2,17 @@ import { createMock } from '@golevelup/ts-jest'
 import { CallHandler, ExecutionContext } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { lastValueFrom, of } from 'rxjs'
-import { z } from 'zod'
 import { createZodDto } from './dto'
 import { ZodSerializationException } from './exception'
 import { ZodSerializerInterceptor } from './serializer'
 
-describe('ZodSerializerInterceptor', () => {
+import { z as actualZod } from 'zod'
+import { z as nestjsZod } from '@nestjs-zod/z'
+
+describe.each([
+  ['zod', actualZod],
+  ['@nestjs-zod/z', nestjsZod],
+])('ZodSerializerInterceptor (using %s)', (description, z) => {
   const UserSchema = z.object({
     username: z.string(),
   })
