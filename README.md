@@ -2,31 +2,24 @@
   <img src="logo.svg" width="560px" align="center" alt="NestJS + Zod logo" style="max-width: 100%;" />
   <h1></h1>
   <p align="center">
-    ✨ A superior validation solution for your NestJS application ✨
+    ✨ A seamless validation solution for your NestJS application ✨
   </p>
 </p>
 <br/>
 <p align="center">
-  <a href="https://github.com/risenforces/nestjs-zod/actions?query=branch%3Amain">
-    <img src="https://github.com/risenforces/nestjs-zod/actions/workflows/test-and-build.yml/badge.svg?event=push&branch=main" alt="nestjs-zod CI Status" />
+  <a href="https://github.com/BenLorantfy/nestjs-zod/actions?query=branch%3Amain">
+    <img src="https://github.com/BenLorantfy/nestjs-zod/actions/workflows/test-and-build.yml/badge.svg?event=push&branch=main" alt="nestjs-zod CI Status" />
   </a>
   <a href="https://opensource.org/licenses/MIT" rel="nofollow">
-    <img src="https://img.shields.io/github/license/risenforces/nestjs-zod" alt="License">
+    <img src="https://img.shields.io/github/license/BenLorantfy/nestjs-zod" alt="License">
   </a>
   <a href="https://www.npmjs.com/package/nestjs-zod" rel="nofollow">
     <img src="https://img.shields.io/npm/dw/nestjs-zod.svg" alt="npm">
   </a>
   <a href="https://www.npmjs.com/package/nestjs-zod" rel="nofollow">
-    <img src="https://img.shields.io/github/stars/risenforces/nestjs-zod" alt="stars">
+    <img src="https://img.shields.io/github/stars/BenLorantfy/nestjs-zod" alt="stars">
   </a>
 </p>
-
-## Ecosystem
-
-| Package                                                               | About                                                    |
-| :-------------------------------------------------------------------- | :------------------------------------------------------- |
-| [nestjs-zod](https://github.com/risenforces/nestjs-zod)               | A tools for integrating Zod into your NestJS application |
-| [nestjs-zod-prisma](https://github.com/risenforces/nestjs-zod-prisma) | Generate Zod schemas from your Prisma schema             |
 
 ## Core library features
 
