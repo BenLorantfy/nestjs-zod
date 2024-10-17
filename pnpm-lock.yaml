@@ -14,7 +14,7 @@ importers:
 
   packages/example:
     dependencies:
-      '@nestjs-zod/z':
+      '@nest-zod/z':
         specifier: workspace:*
         version: link:../z
       '@nestjs/common':
@@ -108,7 +108,7 @@ importers:
 
   packages/nestjs-zod:
     dependencies:
-      '@nestjs-zod/z':
+      '@nest-zod/z':
         specifier: '*'
         version: link:../z
       merge-deep:

@@ -8,7 +8,7 @@ import { ZodDto } from './dto'
 import { ZodExceptionCreator } from './exception'
 import { Source } from './shared/types'
 import { validate } from './validate'
-import { ZodSchema } from '@nestjs-zod/z'
+import { ZodSchema } from '@nest-zod/z'
 
 interface ZodBodyGuardOptions {
   createValidationException?: ZodExceptionCreator

@@ -78,6 +78,6 @@
   },
   "dependencies": {
     "merge-deep": "^3.0.3",
-    "@nestjs-zod/z": "*"
+    "@nest-zod/z": "*"
   }
 }

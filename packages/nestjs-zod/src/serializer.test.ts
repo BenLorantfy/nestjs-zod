@@ -7,11 +7,11 @@ import { ZodSerializationException } from './exception'
 import { ZodSerializerInterceptor } from './serializer'
 
 import { z as actualZod } from 'zod'
-import { z as nestjsZod } from '@nestjs-zod/z'
+import { z as nestjsZod } from '@nest-zod/z'
 
 describe.each([
   ['zod', actualZod],
-  ['@nestjs-zod/z', nestjsZod],
+  ['@nest-zod/z', nestjsZod],
 ])('ZodSerializerInterceptor (using %s)', (description, z) => {
   const UserSchema = z.object({
     username: z.string(),

@@ -41,7 +41,7 @@
   - `@nestjs/swagger` integration using the patch
   - `zodToOpenAPI` - generate highly accurate Swagger Schema
   - Zod DTOs can be used in any `@nestjs/swagger` decorator
-- Extended Zod schemas for NestJS (`@nestjs-zod/z`)
+- Extended Zod schemas for NestJS (`@nest-zod/z`)
   - `dateString` for dates (supports casting to `Date`)
   - `password` for passwords (more complex string rules + OpenAPI conversion)
 - Customization - change exception format easily
@@ -357,14 +357,14 @@ In the above example, despite the `userService.findOne` method returns `password
 ## Extended Zod
 
 > [!CAUTION]
-> `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
-`@nestjs-zod/z` provides a special version of Zod. It helps you to validate the user input more accurately by using our custom schemas and methods.
+`@nest-zod/z` provides a special version of Zod. It helps you to validate the user input more accurately by using our custom schemas and methods.
 
 ### ZodDateString
 
 > [!CAUTION]
-> `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 In HTTP, we always accept Dates as strings. But default Zod only has validations for full date-time strings. `ZodDateString` was created to address this issue.
 
@@ -443,7 +443,7 @@ Errors:
 ### ZodPassword
 
 > [!CAUTION]
-> `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 `ZodPassword` is a string-like type, just like the `ZodDateString`. As you might have guessed, it's intended to help you with password schemas definition.
 
@@ -484,7 +484,7 @@ Errors:
 ### Json Schema
 
 > [!CAUTION]
-> `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 > Created for `nestjs-zod-prisma`
 
@@ -495,7 +495,7 @@ z.json()
 ### "from" function
 
 > [!CAUTION]
-> `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 > Created for custom schemas in `nestjs-zod-prisma`
 
@@ -508,7 +508,7 @@ z.from(MySchema)
 ### Extended Zod Errors
 
 > [!CAUTION]
-> `@nestjs-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 Currently, we use `custom` error code due to some Zod limitations (`errorMap` priorities)
 
@@ -532,15 +532,15 @@ const error = {
 ### Working with errors on the client side
 
 > [!CAUTION]
-> `@nestjs-zod/z/frontend` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `@nest-zod/z/frontend` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 
-Optionally, you can install `@nestjs-zod/z` on the client side.
+Optionally, you can install `@nest-zod/z` on the client side.
 
-The library provides you a `@nestjs-zod/z/frontend` entry point, that can be used to detect custom NestJS Zod issues and process them the way you want.
+The library provides you a `@nest-zod/z/frontend` entry point, that can be used to detect custom NestJS Zod issues and process them the way you want.
 
 ```ts
-import { isNestJsZodIssue, NestJsZodIssue, ZodIssue } from '@nestjs-zod/z/frontend'
+import { isNestJsZodIssue, NestJsZodIssue, ZodIssue } from '@nest-zod/z/frontend'
 
 function mapToFormErrors(issues: ZodIssue[]) {
   for (const issue of issues) {
@@ -551,7 +551,7 @@ function mapToFormErrors(issues: ZodIssue[]) {
 }
 ```
 
-> :warning: **If you use `zod` in your client-side application, and you want to install `@nestjs-zod/z` too, it may be better to completely switch to `@nestjs-zod/z` to prevent issues caused by mismatch between `zod` versions. `@nestjs-zod/z/frontend` doesn't use `zod` at the runtime, but it uses its types.**
+> :warning: **If you use `zod` in your client-side application, and you want to install `@nest-zod/z` too, it may be better to completely switch to `@nest-zod/z` to prevent issues caused by mismatch between `zod` versions. `@nest-zod/z/frontend` doesn't use `zod` at the runtime, but it uses its types.**
 
 ## OpenAPI (Swagger) support
 

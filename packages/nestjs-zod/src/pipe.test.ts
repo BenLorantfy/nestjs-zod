@@ -4,11 +4,11 @@ import { ZodValidationException } from './exception'
 import { ZodValidationPipe } from './pipe'
 
 import { z as actualZod } from 'zod'
-import { z as nestjsZod } from '@nestjs-zod/z'
+import { z as nestjsZod } from '@nest-zod/z'
 
 describe.each([
   ['zod', actualZod],
-  ['@nestjs-zod/z', nestjsZod],
+  ['@nest-zod/z', nestjsZod],
 ])('ZodValidationPipe (using %s)', (description, z) => {
   const UserSchema = z.object({
     username: z.string(),

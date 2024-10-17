@@ -1,11 +1,11 @@
 import { ZodTypeAny } from 'zod';
-import { z as actualZod } from '@nestjs-zod/z'
-import { z as nestjsZod } from '@nestjs-zod/z'
+import { z as actualZod } from '@nest-zod/z'
+import { z as nestjsZod } from '@nest-zod/z'
 import { zodToOpenAPI } from './zod-to-openapi'
 
 describe.each([
   ['zod', actualZod],
-  ['@nestjs-zod/z', nestjsZod],
+  ['@nest-zod/z', nestjsZod],
 ])('zodToOpenAPI (using %s)', (description, z) => {
   const complexTestSchema = z.object({
     stringMinMax: z.string().min(5).max(15),

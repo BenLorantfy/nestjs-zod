@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`zodToOpenAPI (using @nestjs-zod/z) should serialize a complex schema 1`] = `
+exports[`zodToOpenAPI (using @nest-zod/z) should serialize a complex schema 1`] = `
 {
   "properties": {
     "array": {
@@ -197,7 +197,7 @@ exports[`zodToOpenAPI (using @nestjs-zod/z) should serialize a complex schema 1`
 }
 `;
 
-exports[`zodToOpenAPI (using @nestjs-zod/z) should serialize an intersection of objects 1`] = `
+exports[`zodToOpenAPI (using @nest-zod/z) should serialize an intersection of objects 1`] = `
 {
   "properties": {
     "one": {
@@ -215,7 +215,7 @@ exports[`zodToOpenAPI (using @nestjs-zod/z) should serialize an intersection of 
 }
 `;
 
-exports[`zodToOpenAPI (using @nestjs-zod/z) should serialize an intersection of unions 1`] = `
+exports[`zodToOpenAPI (using @nest-zod/z) should serialize an intersection of unions 1`] = `
 {
   "oneOf": [
     {
@@ -240,7 +240,7 @@ exports[`zodToOpenAPI (using @nestjs-zod/z) should serialize an intersection of 
 }
 `;
 
-exports[`zodToOpenAPI (using @nestjs-zod/z) should serialize an intersection with overrided fields 1`] = `
+exports[`zodToOpenAPI (using @nest-zod/z) should serialize an intersection with overrided fields 1`] = `
 {
   "properties": {
     "one": {

@@ -1,7 +1,7 @@
 import { Type } from '@nestjs/common'
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
 import mergeDeep from 'merge-deep'
-import { z } from '@nestjs-zod/z'
+import { z } from '@nest-zod/z'
 
 interface ExtendedSchemaObject extends SchemaObject {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
