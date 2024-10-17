@@ -44,6 +44,11 @@ jobs:
           version: ${{ steps.version.outputs.tag }}
           package: 'packages/nestjs-zod'
 
+      - name: Copy README from root of project to nestjs-zod
+        run: |
+          cp logo.svg packages/nestjs-zod
+          cp README.md packages/nestjs-zod
+
       - name: Create NPM config
         run: cd packages/nestjs-zod && npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
         env:
