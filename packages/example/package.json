@@ -1,8 +1,8 @@
 {
   "name": "nestjs-zod-example",
   "version": "0.0.1",
-  "description": "",
-  "author": "",
+  "description": "Example app showing how to use nestjs-zod",
+  "author": "Ben Lorantfy <ben@lorantfy.com>",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
