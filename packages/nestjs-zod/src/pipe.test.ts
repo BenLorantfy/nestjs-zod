@@ -2,9 +2,14 @@ import { ArgumentMetadata } from '@nestjs/common'
 import { createZodDto } from './dto'
 import { ZodValidationException } from './exception'
 import { ZodValidationPipe } from './pipe'
-import { z } from './z'
 
-describe('ZodValidationPipe', () => {
+import { z as actualZod } from 'zod'
+import { z as nestjsZod } from '@nest-zod/z'
+
+describe.each([
+  ['zod', actualZod],
+  ['@nest-zod/z', nestjsZod],
+])('ZodValidationPipe (using %s)', (description, z) => {
   const UserSchema = z.object({
     username: z.string(),
     password: z.string(),

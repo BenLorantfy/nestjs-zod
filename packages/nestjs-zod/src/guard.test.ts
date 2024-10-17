@@ -4,9 +4,14 @@ import { createZodDto } from './dto'
 import { ZodValidationException } from './exception'
 import { ZodGuard } from './guard'
 import { Source } from './shared/types'
-import { z } from './z'
 
-describe('ZodGuard', () => {
+import { z as actualZod } from 'zod'
+import { z as nestjsZod } from '@nest-zod/z'
+
+describe.each([
+  ['zod', actualZod],
+  ['@nest-zod/z', nestjsZod],
+])('ZodGuard (using %s)', (description, z) => {
   const UserSchema = z.object({
     username: z.string(),
     password: z.string(),

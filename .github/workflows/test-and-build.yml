@@ -4,7 +4,7 @@ on:
   push:
     branches: ['main']
   pull_request:
-    branches: ['main', 'release/alpha', 'release/beta', 'release/next']
+    branches: ['main']
 
 jobs:
   test-and-build:
@@ -21,5 +21,15 @@ jobs:
           node-version: 20
           cache: 'pnpm'
       - run: pnpm install
-      - run: cd packages/nestjs-zod && pnpm test
-      - run: cd packages/nestjs-zod &&pnpm build
+      - name: Build z
+        run: cd packages/z && pnpm build
+      - name: Test z
+        run: cd packages/z && pnpm test
+      - name: Test nestjs-zod
+        run: cd packages/nestjs-zod && pnpm test
+      - name: Build nestjs-zod
+        run: cd packages/nestjs-zod && pnpm build
+      - name: Build example app
+        run: cd packages/example && pnpm run build
+      - name: Test example app
+        run: cd packages/example && pnpm run test:e2e

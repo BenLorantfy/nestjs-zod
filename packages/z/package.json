@@ -1,31 +1,30 @@
 {
-  "name": "nestjs-zod",
-  "description": "All NestJS + Zod utilities you need",
-  "version": "0.0.0-set-by-ci",
-  "main": "./dist/index.js",
+  "name": "@nest-zod/z",
+  "description": "Extended zod with a few additional types and helpers",
+  "version": "1.0.1",
+  "main": "./dist/z.js",
   "exports": {
-    ".": "./dist/index.js",
-    "./z": {
-      "import": "./dist/z.mjs",
+    ".": {
       "default": "./dist/z.js"
     },
-    "./dto": {
-      "import": "./dist/dto.mjs",
-      "default": "./dist/dto.js"
+    "./frontend": {
+      "import": "./dist/frontend.mjs",
+      "default": "./dist/frontend.js"
     }
   },
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "module": "./dist/z.js",
+  "types": "./dist/z.d.ts",
   "files": [
     "dist",
-    "dto.d.ts"
+    "z.d.ts",
+    "frontend.d.ts"
   ],
   "sideEffects": false,
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git@github.com:BenLorantfy/nestjs-zod.git",
-    "directory": "packages/nestjs-zod"
+    "directory": "packages/z"
   },
   "author": "Evgeny Zakharov <to@risen.dev>",
   "publishConfig": {
@@ -53,8 +52,10 @@
     "reflect-metadata": "^0.2.0",
     "rollup": "^2.69.0",
     "rollup-plugin-bundle-size": "^1.0.3",
+    "rollup-plugin-copy": "^3.4.0",
     "rollup-plugin-dts": "^4.1.0",
     "rollup-plugin-esbuild": "^4.8.2",
+    "rollup-plugin-terser": "^7.0.2",
     "rxjs": "^7.8.1",
     "ts-jest": "^29.1.0",
     "typescript": "^5.1.3",
@@ -79,9 +80,5 @@
     "zod": {
       "optional": false
     }
-  },
-  "dependencies": {
-    "merge-deep": "^3.0.3",
-    "@nest-zod/z": "*"
   }
 }
