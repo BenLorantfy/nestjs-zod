@@ -35,6 +35,7 @@
   - `zodToOpenAPI` - generate highly accurate Swagger Schema
   - Zod DTOs can be used in any `@nestjs/swagger` decorator
 - Extended Zod schemas for NestJS (`@nest-zod/z`)
+  - **Note:** _`@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information._
   - `dateString` for dates (supports casting to `Date`)
   - `password` for passwords (more complex string rules + OpenAPI conversion)
 - Customization - change exception format easily

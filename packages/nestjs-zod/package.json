@@ -18,6 +18,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "logo.svg",
     "dto.d.ts"
   ],
   "sideEffects": false,
@@ -81,7 +82,7 @@
     }
   },
   "dependencies": {
-    "merge-deep": "^3.0.3",
+    "deepmerge": "^4.3.1",
     "@nest-zod/z": "*"
   }
 }
