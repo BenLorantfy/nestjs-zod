@@ -18,6 +18,7 @@
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
+    "logo.svg",
     "dto.d.ts"
   ],
   "sideEffects": false,
