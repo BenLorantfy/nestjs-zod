@@ -555,15 +555,29 @@ Prerequisites:
 
 - `@nestjs/swagger` with version `^5.0.0` installed
 
-Apply a patch:
+Apply the patch `patchNestJsSwagger()` in your `bootstrap` function before setting up your swagger module:
 
 ```ts
-import { patchNestJsSwagger } from 'nestjs-zod'
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { patchNestJsSwagger } from 'nestjs-zod';
 
-patchNestJsSwagger()
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+  patchNestJsSwagger();
+
+  const config = new DocumentBuilder()
+    .setTitle('API')
+    .setDescription('The description of your API')
+    .setVersion('1.0')
+    .build();
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api-docs', app, document);
+}
 ```
 
-Then follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction).
+For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction).
 
 ### Writing more Swagger-compatible schemas
 
