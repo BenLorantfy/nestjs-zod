@@ -555,7 +555,7 @@ Prerequisites:
 
 - `@nestjs/swagger` with version `^5.0.0` installed
 
-Apply a patch:
+Apply the patch `patchNestJsSwagger()` in your `main.ts` file before setting up your swagger module:
 
 ```ts
 import { patchNestJsSwagger } from 'nestjs-zod'
@@ -563,7 +563,7 @@ import { patchNestJsSwagger } from 'nestjs-zod'
 patchNestJsSwagger()
 ```
 
-Then follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction).
+For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application guide [here](/packages/example/) .
 
 ### Writing more Swagger-compatible schemas
 
