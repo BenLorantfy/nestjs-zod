@@ -348,6 +348,18 @@ export class UserController {
 
 In the above example, despite the `userService.findOne` method returns `password`, the `password` property will be stripped out thanks to the `@ZodSerializerDto` decorator.
 
+### Logging serialization errors using `ZodSerializationException` 
+
+You can catch serialization errors using `ZodSerializationException` and log them using your preferred logger.
+
+```ts
+if (exception instanceof ZodSerializationException) {
+    const zodError = exception.getZodError();
+    this.logger.error(`ZodSerializationException: ${zodError.message}`);
+}
+```
+See the example app [here](/packages/example/src/http-exception.filter.ts) for more information.
+
 ## Extended Zod
 
 > [!CAUTION]

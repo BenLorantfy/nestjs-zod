@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post } from '@nestjs/common';
 import { ApiOkResponse } from '@nestjs/swagger';
-import { createZodDto } from 'nestjs-zod'
+import { createZodDto, ZodSerializerDto } from 'nestjs-zod'
 import { z } from 'zod'
 
 class PostDto extends createZodDto(z.object({
@@ -23,6 +23,7 @@ export class PostsController {
     }
 
     @Get(':id')
+    @ZodSerializerDto(PostDto)
     @ApiOkResponse({ type: PostDto, description: 'Get a post by ID' })
     getById(@Param('id') id: string) {
       return {
