@@ -94,7 +94,16 @@ describe.each([
   
     expect(openApiObject).toMatchSnapshot()
   })
-  
+
+  it('should serialize dates', () => {
+    const schema = z.date()
+    const openApiObject = zodToOpenAPI(schema)
+
+    expect(openApiObject).toEqual({
+      type: 'string',
+    })
+  });
+
   it('should serialize objects', () => {
     const schema = z.object({
       prop1: z.string(),
