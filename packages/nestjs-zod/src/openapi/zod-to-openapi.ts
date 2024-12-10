@@ -51,6 +51,10 @@ export function zodToOpenAPI(
     }
   }
 
+  if (is(zodType, z.ZodDate)) {
+    object.type = 'string'
+  }
+
   if (is(zodType, z.ZodPassword)) {
     const { checks } = zodType._def
     const regex = zodType.buildFullRegExp()
