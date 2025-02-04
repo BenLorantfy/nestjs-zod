@@ -1,7 +1,7 @@
 {
   "name": "@nest-zod/z",
   "description": "Extended zod with a few additional types and helpers",
-  "version": "1.0.1",
+  "version": "2.0.0",
   "main": "./dist/z.js",
   "exports": {
     ".": {
@@ -39,9 +39,9 @@
   },
   "devDependencies": {
     "@golevelup/ts-jest": "^0.3.3",
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/core": "^10.0.0",
-    "@nestjs/swagger": "^8.0.1",
+    "@nestjs/common": "^11.0.7",
+    "@nestjs/core": "^11.0.7",
+    "@nestjs/swagger": "^11.0.3",
     "@types/jest": "^29.5.2",
     "@types/merge-deep": "^3.0.0",
     "@types/node": "^22.7.5",
@@ -62,9 +62,9 @@
     "zod": "^3.23.8"
   },
   "peerDependencies": {
-    "@nestjs/common": "^10.0.0",
-    "@nestjs/core": "^10.0.0",
-    "@nestjs/swagger": "^7.4.2 || ^8.0.0",
+    "@nestjs/common": "^11.0.0",
+    "@nestjs/core": "^11.0.0",
+    "@nestjs/swagger": "^11.0.0",
     "zod": ">= 3.14.3"
   },
   "peerDependenciesMeta": {
