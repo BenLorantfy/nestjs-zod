@@ -83,6 +83,6 @@
   },
   "dependencies": {
     "deepmerge": "^4.3.1",
-    "@nest-zod/z": "workspace:*"
+    "@nest-zod/z": "*"
   }
 }
