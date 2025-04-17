@@ -19,6 +19,10 @@ type ZodGuardClass = new (
   schemaOrDto: ZodSchema | ZodDto
 ) => CanActivate
 
+/**
+ * @deprecated `createZodGuard` will be removed in a future version, since
+ * guards are not intended for validation purposes.
+ */
 export function createZodGuard({
   createValidationException,
 }: ZodBodyGuardOptions = {}): ZodGuardClass {

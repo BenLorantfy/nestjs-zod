@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ZodSchema, ZodTypeDef } from '@nest-zod/z'
+import { zodToOpenAPI } from './openapi/zod-to-openapi'
 
 export interface ZodDto<
   TOutput = any,
@@ -23,6 +24,10 @@ export function createZodDto<
 
     public static create(input: unknown) {
       return this.schema.parse(input)
+    }
+
+    public static _OPENAPI_METADATA_FACTORY() {
+      return zodToOpenAPI(this.schema).properties;
     }
   }
 
