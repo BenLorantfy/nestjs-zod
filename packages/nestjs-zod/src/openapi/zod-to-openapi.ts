@@ -16,6 +16,10 @@ export function is<T extends Type<z.ZodTypeAny>>(
   return factory === factories[input._def.typeName]
 }
 
+/**
+ * @deprecated `zodToOpenAPI` will be removed in a future version, since zod
+ * v4 adds built-in support for generating OpenAPI schemas from zod schemas.
+ */
 export function zodToOpenAPI(
   zodType: z.ZodTypeAny,
   visited: Set<any> = new Set()
