@@ -1,3 +1,5 @@
+import { ZodError } from 'zod'
+
 /**
  * Here we define our own minimal type for ZodSchema, so we don't need to depend
  * on zod directly.  This de-couples us from zod and allows users to bring any
@@ -5,5 +7,5 @@
  */
 export interface ZodSchema<TOutput> {
     parse(input: unknown): TOutput,
-    safeParse(input: unknown): { success: true, data: TOutput } | { success: false, error: { message: string,errors: unknown[] } }
+    safeParse(input: unknown): { success: true, data: TOutput } | { success: false, error: ZodError }
 }
