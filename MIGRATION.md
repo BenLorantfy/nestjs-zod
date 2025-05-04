@@ -1,6 +1,11 @@
 # Migration
 
 ## From version 4.x to 5.x
+### `patchNestJsSwagger` has been removed
+There is no need to call `patchNestJsSwagger` anymore.  The call to `patchNestJsSwagger` can simply be removed:
+```diff
+- patchNestJsSwagger()
+```
 
 ### Deprecated `createZodGuard`, `UseZodGuard`, and `ZodGuard`
 
