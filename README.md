@@ -25,21 +25,13 @@
 
 - `createZodDto` - create DTO classes from Zod schemas
 - `ZodValidationPipe` - validate `body` / `query` / `params` using Zod DTOs
-- `ZodGuard` - guard routes by validating `body` / `query` / `params`  
-  (it can be useful when you want to do that before other guards)
-- `UseZodGuard` - alias for `@UseGuards(new ZodGuard(source, schema))`
 - `ZodValidationException` - BadRequestException extended with Zod errors
 - `zodToOpenAPI` - create OpenAPI declarations from Zod schemas
 - OpenAPI support
   - `@nestjs/swagger` integration using the patch
   - `zodToOpenAPI` - generate highly accurate Swagger Schema
   - Zod DTOs can be used in any `@nestjs/swagger` decorator
-- Extended Zod schemas for NestJS (`@nest-zod/z`)
-  - **Note:** _`@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information._
-  - `dateString` for dates (supports casting to `Date`)
-  - `password` for passwords (more complex string rules + OpenAPI conversion)
 - Customization - change exception format easily
-- Useful helpers for client side error handling (`nestjs-zod/frontend`)
 
 ## Installation
 
@@ -52,7 +44,7 @@ Peer dependencies:
 - `zod` - `>= 3.14.3`
 - `@nestjs/common` - `>= 8.0.0` (required on server side)
 - `@nestjs/core` - `>= 8.0.0` (required on server side)
-- `@nestjs/swagger` - `>= 5.0.0` (only when using `patchNestJsSwagger`)
+- `@nestjs/swagger` - `>= 5.0.0`
 
 All peer dependencies are marked as optional for better client side usage, but you need to install required ones when using `nestjs-zod` on server side.
 
@@ -200,6 +192,9 @@ const MyZodValidationPipe = createZodValidationPipe({
 
 ## Using ZodGuard
 
+> [!CAUTION]
+> `ZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
+
 Sometimes, we need to validate user input before specific Guards. We can't use Validation Pipe since NestJS Pipes are always executed after Guards.
 
 The solution is `ZodGuard`. It works just like `ZodValidationPipe`, except for that is doesn't transform the input.
@@ -234,6 +229,9 @@ class MyController {
 
 ### Creating custom guard
 
+> [!CAUTION]
+> `createZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
+
 ```ts
 import { createZodGuard } from 'nestjs-zod'
 
@@ -245,6 +243,9 @@ const MyZodGuard = createZodGuard({
 ```
 
 ## Create validation from scratch
+
+> [!CAUTION]
+> `validate` is deprecated and will not be supported soon.  It is recommended to use `.parse` directly. See [MIGRATION.md](./MIGRATION.md) for more information.
 
 If you don't like `ZodGuard` and `ZodValidationPipe`, you can use `validate` function:
 
@@ -561,19 +562,13 @@ function mapToFormErrors(issues: ZodIssue[]) {
 
 ## OpenAPI (Swagger) support
 
-### Setup
+> [!Note]
+> There used to be a function called `patchNestJsSwagger`.  This function has been removed since it is no longer neccessary to call.  
 
-Prerequisites:
-
-- `@nestjs/swagger` with version `^5.0.0` installed
-
-Apply the patch `patchNestJsSwagger()` in your `main.ts` file before setting up your swagger module:
-
-```ts
-import { patchNestJsSwagger } from 'nestjs-zod'
-
-patchNestJsSwagger()
-```
+If you have `@nestjs/swagger` setup, documentation will automatically be generated for:
+- Request bodies, if you use `@Body() body: MyDto`
+- Response bodies, if you use `@ApiOkResponse({ type: MyDto })`
+- Query params, if you use `@Query() query: MyQueryParamsDto`
 
 For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application guide [here](/packages/example/) .
 
@@ -591,6 +586,9 @@ const CredentialsSchema = z.object({
 ```
 
 ### Using zodToOpenAPI
+
+> [!CAUTION]
+> `zodToOpenAPI` is deprecated and will not be supported soon, since zod v4 adds built-in support for generating OpenAPI schemas from zod scehams.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 You can convert any Zod schema to an OpenAPI JSON object:
 

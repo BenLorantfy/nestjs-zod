@@ -3,7 +3,7 @@ import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.inte
 import { z } from '@nest-zod/z'
 import deepmerge from 'deepmerge'
 
-interface ExtendedSchemaObject extends SchemaObject {
+export interface ExtendedSchemaObject extends SchemaObject {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: `x-${string}`]: any
 }
@@ -16,6 +16,10 @@ export function is<T extends Type<z.ZodTypeAny>>(
   return factory === factories[input._def.typeName]
 }
 
+/**
+ * @deprecated `zodToOpenAPI` will be removed in a future version, since zod
+ * v4 adds built-in support for generating OpenAPI schemas from zod schemas.
+ */
 export function zodToOpenAPI(
   zodType: z.ZodTypeAny,
   visited: Set<any> = new Set()

@@ -2,6 +2,10 @@ import { ZodSchema, ZodTypeDef } from 'zod'
 import { isZodDto, ZodDto } from './dto'
 import { createZodValidationException, ZodExceptionCreator } from './exception'
 
+/**
+ * @deprecated `validate` will be removed in a future version.  It is
+ * recommended to use `.parse` directly
+ */
 export function validate<
   TOutput = any, // eslint-disable-line @typescript-eslint/no-explicit-any
   TDef extends ZodTypeDef = ZodTypeDef,

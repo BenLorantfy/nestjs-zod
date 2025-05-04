@@ -1,7 +1,8 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOkResponse } from '@nestjs/swagger';
 import { createZodDto, ZodSerializerDto } from 'nestjs-zod'
 import { z } from 'zod'
+import { Logger } from '@nestjs/common';
 
 class PostDto extends createZodDto(z.object({
   title: z.string().describe('The title of the post'),
@@ -9,8 +10,14 @@ class PostDto extends createZodDto(z.object({
   authorId: z.number().describe('The ID of the author of the post'),
 })) {}
 
+class PostQueryParams extends createZodDto(z.object({
+  title: z.string(),
+})) {}
+
 @Controller('posts')
 export class PostsController {
+    private readonly logger = new Logger(PostsController.name);
+
     @Post()
     createPost(@Body() body: PostDto) {
         return body;
@@ -18,7 +25,8 @@ export class PostsController {
 
     @Get()
     @ApiOkResponse({ type: [PostDto], description: 'Get all posts' })
-    getAll() {
+    getAll(@Query() query: PostQueryParams) {
+      this.logger.log('getAll', query);
       return [];
     }
 

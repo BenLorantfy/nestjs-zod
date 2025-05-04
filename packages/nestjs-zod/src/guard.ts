@@ -19,6 +19,10 @@ type ZodGuardClass = new (
   schemaOrDto: ZodSchema | ZodDto
 ) => CanActivate
 
+/**
+ * @deprecated `createZodGuard` will be removed in a future version, since
+ * guards are not intended for validation purposes.
+ */
 export function createZodGuard({
   createValidationException,
 }: ZodBodyGuardOptions = {}): ZodGuardClass {
@@ -41,7 +45,15 @@ export function createZodGuard({
   return ZodGuard
 }
 
+/**
+ * @deprecated `ZodGuard` will be removed in a future version, since guards
+ * are not intended for validation purposes.
+ */
 export const ZodGuard = createZodGuard()
 
+/**
+ * @deprecated `UseZodGuard` will be removed in a future version, since guards
+ * are not intended for validation purposes.
+ */
 export const UseZodGuard = (source: Source, schemaOrDto: ZodSchema | ZodDto) =>
   UseGuards(new ZodGuard(source, schemaOrDto))
