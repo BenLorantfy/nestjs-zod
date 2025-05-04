@@ -3,7 +3,10 @@ import {
   HttpStatus,
   InternalServerErrorException,
 } from '@nestjs/common'
-import { ZodError } from '@nest-zod/z'
+
+type ZodError = {
+  errors: unknown[]
+}
 
 export class ZodValidationException extends BadRequestException {
   constructor(private error: ZodError) {

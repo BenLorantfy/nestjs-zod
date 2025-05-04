@@ -8,11 +8,10 @@ import {
   StreamableFile,
 } from '@nestjs/common'
 import { map, Observable } from 'rxjs'
-import { ZodSchema } from 'zod'
 import { ZodDto } from './dto'
 import { validate } from './validate'
 import { createZodSerializationException } from './exception'
-
+import { ZodSchema } from './types'
 // NOTE (external)
 // We need to deduplicate them here due to the circular dependency
 // between core and common packages
@@ -20,7 +19,7 @@ const REFLECTOR = 'Reflector'
 
 export const ZodSerializerDtoOptions = 'ZOD_SERIALIZER_DTO_OPTIONS' as const
 
-export const ZodSerializerDto = (dto: ZodDto | ZodSchema) =>
+export const ZodSerializerDto = (dto: ZodDto<unknown, ZodSchema<unknown>> | ZodSchema<unknown>) =>
   SetMetadata(ZodSerializerDtoOptions, dto)
 
 @Injectable()
@@ -46,7 +45,7 @@ export class ZodSerializerInterceptor implements NestInterceptor {
 
   protected getContextResponseSchema(
     context: ExecutionContext
-  ): ZodDto | ZodSchema | undefined {
+  ): ZodDto<unknown, ZodSchema<unknown>> | ZodSchema<unknown> | undefined {
     return this.reflector.getAllAndOverride(ZodSerializerDtoOptions, [
       context.getHandler(),
       context.getClass(),

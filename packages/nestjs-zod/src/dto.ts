@@ -1,24 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ZodSchema, ZodTypeDef } from '@nest-zod/z'
-import { ExtendedSchemaObject, zodToOpenAPI } from './openapi/zod-to-openapi'
+import { zodToOpenAPI } from './openapi/zod-to-openapi'
+import { ZodSchema } from './types'
 
 export interface ZodDto<
-  TOutput = any,
-  TDef extends ZodTypeDef = ZodTypeDef,
-  TInput = TOutput
+  TOutput,
+  TSchema extends ZodSchema<TOutput>
 > {
   new (): TOutput
   isZodDto: true
-  schema: ZodSchema<TOutput, TDef, TInput>
+  schema: TSchema
   create(input: unknown): TOutput
   _OPENAPI_METADATA_FACTORY(): unknown
 }
 
 export function createZodDto<
   TOutput = any,
-  TDef extends ZodTypeDef = ZodTypeDef,
-  TInput = TOutput
->(schema: ZodSchema<TOutput, TDef, TInput>) {
+  TSchema extends ZodSchema<TOutput> = ZodSchema<TOutput>
+>(schema: TSchema) {
   class AugmentedZodDto {
     public static isZodDto = true
     public static schema = schema
@@ -28,12 +26,13 @@ export function createZodDto<
     }
 
     public static _OPENAPI_METADATA_FACTORY() {
+      // @ts-expect-error `zodToOpenAPI` only works with v3 schemas
       const schemaObject = zodToOpenAPI(this.schema);
       return markRequiredPropertiesAsRequired(schemaObject).properties;
     }
   }
 
-  return AugmentedZodDto as unknown as ZodDto<TOutput, TDef, TInput>
+  return AugmentedZodDto as unknown as ZodDto<TOutput, TSchema>
 }
 
 /**
@@ -57,7 +56,10 @@ export function createZodDto<
  * _OPENAPI_METADATA_FACTORY expects, by adding `selfRequired: true` or
  * `required: true` where needed, based of  the top-level `required` array.
  */
-export function markRequiredPropertiesAsRequired(schema: ExtendedSchemaObject) {
+export function markRequiredPropertiesAsRequired(schema: {
+  properties?: Record<string, {}>;
+  required?: string[];
+}) {
   if (!schema.properties) return schema;
   return {
     ...schema,
@@ -86,8 +88,6 @@ export function markRequiredPropertiesAsRequired(schema: ExtendedSchemaObject) {
   }
 }
 
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isZodDto(metatype: any): metatype is ZodDto<unknown> {
-  return metatype?.isZodDto
+export function isZodDto(metatype: unknown): metatype is ZodDto<unknown, ZodSchema<unknown>> {
+  return Boolean(metatype && (typeof metatype === 'object' || typeof metatype === 'function') && 'isZodDto' in metatype && metatype.isZodDto);
 }

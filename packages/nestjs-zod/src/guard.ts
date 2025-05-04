@@ -6,9 +6,10 @@ import {
 } from '@nestjs/common'
 import { ZodDto } from './dto'
 import { ZodExceptionCreator } from './exception'
-import { Source } from './shared/types'
 import { validate } from './validate'
-import { ZodSchema } from '@nest-zod/z'
+import { ZodSchema } from './types'
+
+export type Source = 'body' | 'query' | 'params'
 
 interface ZodBodyGuardOptions {
   createValidationException?: ZodExceptionCreator
@@ -16,7 +17,7 @@ interface ZodBodyGuardOptions {
 
 type ZodGuardClass = new (
   source: Source,
-  schemaOrDto: ZodSchema | ZodDto
+  schemaOrDto: ZodSchema<unknown> | ZodDto<unknown, ZodSchema<unknown>>
 ) => CanActivate
 
 /**
@@ -30,7 +31,7 @@ export function createZodGuard({
   class ZodGuard {
     constructor(
       private source: Source,
-      private schemaOrDto: ZodSchema | ZodDto
+      private schemaOrDto: ZodSchema<unknown> | ZodDto<unknown, ZodSchema<unknown>>
     ) {}
 
     canActivate(context: ExecutionContext) {
@@ -55,5 +56,5 @@ export const ZodGuard = createZodGuard()
  * @deprecated `UseZodGuard` will be removed in a future version, since guards
  * are not intended for validation purposes.
  */
-export const UseZodGuard = (source: Source, schemaOrDto: ZodSchema | ZodDto) =>
+export const UseZodGuard = (source: Source, schemaOrDto: ZodSchema<unknown> | ZodDto<unknown, ZodSchema<unknown>>) =>
   UseGuards(new ZodGuard(source, schemaOrDto))

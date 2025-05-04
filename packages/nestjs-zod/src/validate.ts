@@ -1,18 +1,14 @@
-import { ZodSchema, ZodTypeDef } from 'zod'
 import { isZodDto, ZodDto } from './dto'
 import { createZodValidationException, ZodExceptionCreator } from './exception'
+import { ZodSchema } from './types'
 
 /**
  * @deprecated `validate` will be removed in a future version.  It is
  * recommended to use `.parse` directly
  */
-export function validate<
-  TOutput = any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  TDef extends ZodTypeDef = ZodTypeDef,
-  TInput = TOutput
->(
+export function validate<TOutput, TSchema extends ZodSchema<TOutput>>(
   value: unknown,
-  schemaOrDto: ZodSchema<TOutput, TDef, TInput> | ZodDto<TOutput, TDef, TInput>,
+  schemaOrDto: TSchema | ZodDto<TOutput, TSchema>,
   createValidationException: ZodExceptionCreator = createZodValidationException
 ) {
   const schema = isZodDto(schemaOrDto) ? schemaOrDto.schema : schemaOrDto
