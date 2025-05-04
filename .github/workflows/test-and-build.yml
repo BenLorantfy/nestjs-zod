@@ -33,7 +33,16 @@ jobs:
         run: cd packages/example && pnpm run build
       - name: Test example app
         run: cd packages/example && pnpm run test
+      - name: Cache Playwright Browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('packages/example/package.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
       - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: cd packages/example && pnpm exec playwright install --with-deps
       - name: Test example app swagger
         run: |
