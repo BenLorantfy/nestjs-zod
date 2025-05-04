@@ -1,5 +1,55 @@
 # Migration
 
+## From version 4.x to 5.x
+### `patchNestJsSwagger` has been removed
+There is no need to call `patchNestJsSwagger` anymore.  The call to `patchNestJsSwagger` can simply be removed:
+```diff
+- patchNestJsSwagger()
+```
+
+### Deprecated `createZodGuard`, `UseZodGuard`, and `ZodGuard`
+
+`createZodGuard` and friends have been deprecated.  This was a mistake to add to the library, for a few reasons:
+1. It clearly states in the nestjs documentation that guards are only meant for authorization, not for validation:
+
+> Guards have a single responsibility. They determine whether a given request will be handled by the route handler or not, depending on certain conditions (like permissions, roles, ACLs, etc.) present at run-time. This is often referred to as authorization
+
+2. `createZodGuard` uses `validate` which is also deprecated 
+3. `createZodGuard` didn't do anything special.  You can create your own guard that does the same thing with very few lines of code.  However, it's recommended to use guards for authorization, not exclusively validation.  That's not to say you can't use zod inside a guard, but the main purpose of the guard should be authorization.
+
+### Deprecated `validate`
+`validate` was a redudant and confusingly named function (it should have been called `parse` if we wanted to keep it).  You can simply use the `.parse` function that is attached to the zod schema:
+
+```ts
+const MySchema = z.object(...);
+const knownData = MySchema.parse(unknownData);
+```
+
+Or if you have a DTO:
+```ts
+class PostDto extends createZodDto(...) {}
+PostDto.schema.parse(...)
+```
+
+### Deprecated `zodToOpenAPI`
+[Zod v4](https://v4.zod.dev/v4#json-schema-conversion) introduces a built-in method of converting zod schemas to OpenAPI, so this function is no longer needed.
+
+```ts
+import * as z from "zod";
+ 
+const mySchema = z.object({name: z.string(), points: z.number()});
+ 
+z.toJSONSchema(mySchema);
+// => {
+//   type: "object",
+//   properties: {
+//     name: {type: "string"},
+//     points: {type: "number"},
+//   },
+//   required: ["name", "points"],
+// }
+```
+
 ## From version 3.x to 4.x
 
 ### `nestjs-zod/z` is now `@nest-zod/z`
