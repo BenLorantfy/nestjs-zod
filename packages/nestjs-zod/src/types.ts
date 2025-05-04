@@ -5,5 +5,5 @@
  */
 export interface ZodSchema<TOutput> {
     parse(input: unknown): TOutput,
-    safeParse(input: unknown): { success: true, data: TOutput } | { success: false, error: { errors: unknown[] } }
+    safeParse(input: unknown): { success: true, data: TOutput } | { success: false, error: { message: string,errors: unknown[] } }
 }
