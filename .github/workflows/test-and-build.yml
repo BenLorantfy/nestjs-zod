@@ -36,5 +36,7 @@ jobs:
       - name: Install Playwright Browsers
         run: cd packages/example && pnpm exec playwright install --with-deps
       - name: Test example app swagger
-        run: cd packages/example && pnpm run test:swagger
+        run: |
+          cd packages/example && pnpm run start &
+          cd packages/example && pnpm run test:swagger
 
