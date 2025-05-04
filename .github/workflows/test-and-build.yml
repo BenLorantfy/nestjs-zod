@@ -32,4 +32,7 @@ jobs:
       - name: Build example app
         run: cd packages/example && pnpm run build
       - name: Test example app
-        run: cd packages/example && pnpm run test:e2e
+        run: cd packages/example && pnpm run test
+      - name: Test example app swagger
+        run: cd packages/example && pnpm run test:swagger
+
