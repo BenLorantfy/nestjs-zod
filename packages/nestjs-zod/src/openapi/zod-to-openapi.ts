@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common'
-import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
-import { z } from 'zod'
+import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
+import { z } from 'zod/v3';
 import deepmerge from 'deepmerge'
 
 export interface ExtendedSchemaObject extends SchemaObject {

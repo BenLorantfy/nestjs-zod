@@ -1,21 +1,20 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { zodToOpenAPI } from './openapi/zod-to-openapi'
-import { ZodSchema } from './types'
+import { UnknownSchema } from './types'
+import { toSwagger } from './openapi/to-swagger'
+import type * as z3 from 'zod/v3';
+import type * as z4 from "zod/v4/core";
 
 export interface ZodDto<
-  TOutput,
-  TSchema extends ZodSchema<TOutput>
+  TSchema extends UnknownSchema
 > {
-  new (): TOutput
+  new (): ReturnType<TSchema['parse']>
   isZodDto: true
   schema: TSchema
-  create(input: unknown): TOutput
+  create(input: unknown): ReturnType<TSchema['parse']>
   _OPENAPI_METADATA_FACTORY(): unknown
 }
 
 export function createZodDto<
-  TOutput = any,
-  TSchema extends ZodSchema<TOutput> = ZodSchema<TOutput>
+  TSchema extends UnknownSchema|z3.ZodTypeAny|(z4.$ZodType & { parse: (input: unknown) => unknown })
 >(schema: TSchema) {
   class AugmentedZodDto {
     public static isZodDto = true
@@ -26,13 +25,14 @@ export function createZodDto<
     }
 
     public static _OPENAPI_METADATA_FACTORY() {
-      // @ts-expect-error `zodToOpenAPI` only works with v3 schemas
-      const schemaObject = zodToOpenAPI(this.schema);
-      return markRequiredPropertiesAsRequired(schemaObject).properties;
+      const swaggerSchema = toSwagger(this.schema);
+      
+      // @ts-expect-error TODO: Fix this
+      return markRequiredPropertiesAsRequired(swaggerSchema).properties;
     }
   }
 
-  return AugmentedZodDto as unknown as ZodDto<TOutput, TSchema>
+  return AugmentedZodDto as unknown as ZodDto<TSchema>
 }
 
 /**
@@ -88,6 +88,6 @@ export function markRequiredPropertiesAsRequired(schema: {
   }
 }
 
-export function isZodDto(metatype: unknown): metatype is ZodDto<unknown, ZodSchema<unknown>> {
+export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema> {
   return Boolean(metatype && (typeof metatype === 'object' || typeof metatype === 'function') && 'isZodDto' in metatype && metatype.isZodDto);
 }

@@ -7,7 +7,7 @@ import {
 import { ZodDto } from './dto'
 import { ZodExceptionCreator } from './exception'
 import { validate } from './validate'
-import { ZodSchema } from './types'
+import { UnknownSchema } from './types'
 
 export type Source = 'body' | 'query' | 'params'
 
@@ -17,7 +17,7 @@ interface ZodBodyGuardOptions {
 
 type ZodGuardClass = new (
   source: Source,
-  schemaOrDto: ZodSchema<unknown> | ZodDto<unknown, ZodSchema<unknown>>
+  schemaOrDto: UnknownSchema | ZodDto<UnknownSchema>
 ) => CanActivate
 
 /**
@@ -31,7 +31,7 @@ export function createZodGuard({
   class ZodGuard {
     constructor(
       private source: Source,
-      private schemaOrDto: ZodSchema<unknown> | ZodDto<unknown, ZodSchema<unknown>>
+      private schemaOrDto: UnknownSchema | ZodDto<UnknownSchema>
     ) {}
 
     canActivate(context: ExecutionContext) {
@@ -56,5 +56,5 @@ export const ZodGuard = createZodGuard()
  * @deprecated `UseZodGuard` will be removed in a future version, since guards
  * are not intended for validation purposes.
  */
-export const UseZodGuard = (source: Source, schemaOrDto: ZodSchema<unknown> | ZodDto<unknown, ZodSchema<unknown>>) =>
+export const UseZodGuard = (source: Source, schemaOrDto: UnknownSchema | ZodDto<UnknownSchema>) =>
   UseGuards(new ZodGuard(source, schemaOrDto))

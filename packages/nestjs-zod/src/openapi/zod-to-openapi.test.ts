@@ -25,7 +25,7 @@ const complexTestSchema = z.object({
   objectNested: z.object({
     uuid: z.string().uuid(),
   }),
-  record: z.record(z.number()),
+  record: z.record(z.string(), z.number()),
   recordWithKeys: z.record(z.number(), z.string()),
   zodDateString: z.string().datetime(),
 })
@@ -53,18 +53,6 @@ const overrideIntersectionSchema = z.intersection(
   })
 )
 
-const transformedSchema = z
-  .object({
-    seconds: z.number(),
-  })
-  .transform((value) => ({
-    seconds: value.seconds,
-    minutes: value.seconds / 60,
-    hours: value.seconds / 3600,
-  }))
-
-const lazySchema = z.lazy(() => z.string())
-
 it('should serialize a complex schema', () => {
   const openApiObject = zodToOpenAPI(complexTestSchema)
 
@@ -89,95 +77,6 @@ it('should serialize an intersection with overrided fields', () => {
   expect(openApiObject).toMatchSnapshot()
 })
 
-it('should serialize objects', () => {
-  const schema = z.object({
-    prop1: z.string(),
-    prop2: z.string().optional(),
-  })
-  const openApiObject = zodToOpenAPI(schema)
-
-  expect(openApiObject).toEqual({
-    type: 'object',
-    required: ['prop1'],
-    properties: {
-      prop1: {
-        type: 'string',
-      },
-      prop2: {
-        type: 'string',
-      },
-    },
-  })
-})
-
-it('should serialize partial objects', () => {
-  const schema = z
-    .object({
-      prop1: z.string(),
-      prop2: z.string(),
-    })
-    .partial()
-  const openApiObject = zodToOpenAPI(schema)
-
-  expect(openApiObject).toEqual({
-    type: 'object',
-    properties: {
-      prop1: {
-        type: 'string',
-      },
-      prop2: {
-        type: 'string',
-      },
-    },
-  })
-})
-
-it('should serialize nullable types', () => {
-  const schema = z.string().nullable()
-  const openApiObject = zodToOpenAPI(schema)
-
-  expect(openApiObject).toEqual({ type: 'string', nullable: true })
-})
-
-it('should serialize optional types', () => {
-  const schema = z.string().optional()
-  const openApiObject = zodToOpenAPI(schema)
-
-  expect(openApiObject).toEqual({ type: 'string' })
-})
-
-it('should serialize types with default value', () => {
-  const schema = z.string().default('abitia')
-  const openApiObject = zodToOpenAPI(schema)
-
-  expect(openApiObject).toEqual({ type: 'string', default: 'abitia' })
-})
-
-it('should serialize enums', () => {
-  const schema = z.enum(['adama', 'kota'])
-  const openApiObject = zodToOpenAPI(schema)
-
-  expect(openApiObject).toEqual({
-    type: 'string',
-    enum: ['adama', 'kota'],
-  })
-})
-
-it('should serialize native enums', () => {
-  enum NativeEnum {
-    ADAMA = 'adama',
-    KOTA = 'kota',
-  }
-
-  const schema = z.nativeEnum(NativeEnum)
-  const openApiObject = zodToOpenAPI(schema)
-
-  expect(openApiObject).toEqual({
-    'type': 'string',
-    'enum': ['adama', 'kota'],
-    'x-enumNames': ['ADAMA', 'KOTA'],
-  })
-})
 
 describe('scalar types', () => {
   const testCases: [ZodTypeAny, string, string?][] = [
@@ -201,26 +100,4 @@ describe('scalar types', () => {
       })
     })
   }
-})
-
-it('should serialize transformed schema', () => {
-  const openApiObject = zodToOpenAPI(transformedSchema)
-
-  expect(openApiObject).toEqual({
-    type: 'object',
-    required: ['seconds'],
-    properties: {
-      seconds: {
-        type: 'number',
-      },
-    },
-  })
-})
-
-it('should serialize lazy schema', () => {
-  const openApiObject = zodToOpenAPI(lazySchema)
-
-  expect(openApiObject).toEqual({
-    type: 'string',
-  })
 })

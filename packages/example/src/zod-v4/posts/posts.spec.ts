@@ -1,7 +1,9 @@
+// TODO: de-duplciate this test with zod-v3/posts/posts.spec.ts
+
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import * as request from 'supertest';
-import { AppModule } from './../app.module';
+import request from 'supertest';
+import { AppModule } from '../../app.module';
 
 describe('PostsController (e2e)', () => {
   let app: INestApplication;
@@ -14,31 +16,37 @@ describe('PostsController (e2e)', () => {
     const validPost = {
       title: 'Test Post',
       content: 'This is a test post content.',
-      authorId: 1
+      authorId: 1,
+      visibility: 'public',
+      nullableField: null
     };
 
     const invalidPost = {
       title: 'Test Post',
       content: 'This is a test post content.',
-      authorId: 'not a number' // Should be a number
+      authorId: 'not a number', // Should be a number
+      visibility: 'public',
+      nullableField: null
     };
 
     // Test with valid data
     await request(app.getHttpServer())
-      .post('/posts')
+      .post('/zod-v4/posts')
       .send(validPost)
       .expect(201) // Assuming 201 is returned on successful creation
       .expect((res) => {
         expect(res.body).toEqual({
           title: validPost.title,
           content: validPost.content,
-          authorId: validPost.authorId
+          authorId: validPost.authorId,
+          visibility: validPost.visibility,
+          nullableField: validPost.nullableField
         })
       });
 
     // Test with invalid data
     await request(app.getHttpServer())
-      .post('/posts')
+      .post('/zod-v4/posts')
       .send(invalidPost)
       .expect(400) // Bad request due to validation failure
       .expect((res) => {
@@ -46,13 +54,12 @@ describe('PostsController (e2e)', () => {
           statusCode: 400,
           message: 'Validation failed',
           errors: [
-            {
+            expect.objectContaining({
               code: 'invalid_type',
               expected: 'number',
-              received: 'string',
               path: ['authorId'],
-              message: 'Expected number, received string'
-            }
+              message: expect.stringContaining('xpected number, received string')
+            })
           ]
         });
       });

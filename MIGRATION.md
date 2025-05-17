@@ -28,7 +28,7 @@ const knownData = MySchema.parse(unknownData);
 Or if you have a DTO:
 ```ts
 class PostDto extends createZodDto(...) {}
-PostDto.schema.parse(...)
+const post = PostDto.schema.parse(...)
 ```
 
 ### Deprecated `zodToOpenAPI`
@@ -48,6 +48,33 @@ z.toJSONSchema(mySchema);
 //   },
 //   required: ["name", "points"],
 // }
+```
+
+### `getZodError` on `ZodValidationException` / `ZodSerializationException` returns `unknown` instead of `ZodError`
+
+In order to support both zod v3 and zod v4, which have different error classes, `getZodError` was changed to return `unknown`.  This means you'll have to use an `instanceof` check after calling `getZodError()`
+
+```ts
+import { ZodError as ZodErrorV3 } from 'zod/v3';
+import { ZodError as ZodErrorV4 } from 'zod/v4';
+
+@Catch(HttpException)
+export class HttpExceptionFilter extends BaseExceptionFilter {
+    private readonly logger = new Logger(HttpExceptionFilter.name);
+
+    catch(exception: HttpException, host: ArgumentsHost) {
+        if (exception instanceof ZodSerializationException) {
+            const zodError = exception.getZodError();
+            if (zodError instanceof ZodErrorV3) {
+                this.logger.error(`ZodSerializationException: ${zodError.message}`);
+            } else if (zodError instanceof ZodErrorV4) {
+                this.logger.error(`ZodSerializationException: ${zodError.message}`);
+            }
+        }
+
+        super.catch(exception, host);
+    }
+}
 ```
 
 ## From version 3.x to 4.x

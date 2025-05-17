@@ -11,7 +11,7 @@ import { map, Observable } from 'rxjs'
 import { ZodDto } from './dto'
 import { validate } from './validate'
 import { createZodSerializationException } from './exception'
-import { ZodSchema } from './types'
+import { UnknownSchema } from './types'
 // NOTE (external)
 // We need to deduplicate them here due to the circular dependency
 // between core and common packages
@@ -19,7 +19,7 @@ const REFLECTOR = 'Reflector'
 
 export const ZodSerializerDtoOptions = 'ZOD_SERIALIZER_DTO_OPTIONS' as const
 
-export const ZodSerializerDto = (dto: ZodDto<unknown, ZodSchema<unknown>> | ZodSchema<unknown>) =>
+export const ZodSerializerDto = (dto: ZodDto<UnknownSchema> | UnknownSchema) =>
   SetMetadata(ZodSerializerDtoOptions, dto)
 
 @Injectable()
@@ -45,7 +45,7 @@ export class ZodSerializerInterceptor implements NestInterceptor {
 
   protected getContextResponseSchema(
     context: ExecutionContext
-  ): ZodDto<unknown, ZodSchema<unknown>> | ZodSchema<unknown> | undefined {
+  ): ZodDto<UnknownSchema> | UnknownSchema | undefined {
     return this.reflector.getAllAndOverride(ZodSerializerDtoOptions, [
       context.getHandler(),
       context.getClass(),
