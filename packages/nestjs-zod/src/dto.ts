@@ -26,8 +26,6 @@ export function createZodDto<
 
     public static _OPENAPI_METADATA_FACTORY() {
       const swaggerSchema = toSwagger(this.schema);
-      
-      // @ts-expect-error TODO: Fix this
       return markRequiredPropertiesAsRequired(swaggerSchema).properties;
     }
   }

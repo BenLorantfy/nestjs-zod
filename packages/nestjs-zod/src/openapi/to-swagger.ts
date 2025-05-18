@@ -1,12 +1,12 @@
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, type $ZodType } from 'zod/v4/core';
-import { zodToOpenAPI } from './zod-to-openapi';
+import { type ExtendedSchemaObject, zodToOpenAPI } from './zod-to-openapi';
 
 /**
  * Convert a zod schema to a swagger schema.  Converts to JSONSchema and then
  * tweaks the schema to work well with swagger, which has some quirks.
  */
-export function toSwagger(schema: { parse: (data: unknown) => unknown }|z3.ZodTypeAny|$ZodType) {
+export function toSwagger(schema: { parse: (data: unknown) => unknown }|z3.ZodTypeAny|$ZodType): ExtendedSchemaObject {
     if ('_zod' in schema) {
         return toJSONSchema(schema, {
             io: 'input',

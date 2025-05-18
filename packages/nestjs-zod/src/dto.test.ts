@@ -1,6 +1,7 @@
 import { createZodDto } from './dto'
 import * as z4 from 'zod/v4'
 import * as z3 from 'zod/v3';
+import * as zodMini from 'zod/v4-mini';
 
 describe.each([
   { name: 'v4', z: z4 },
@@ -54,9 +55,16 @@ describe.each([
   })
 })
 
-describe('not zod', () => {
-  it('works correctly for any schema that has a parse method', () => {
-    const UserSchema = {
+describe.each([
+  {
+    name: 'zod mini',
+    schema: zodMini.object({
+      username: zodMini.string(),
+      password: zodMini.string(),
+    })
+  },
+  {
+     name: 'just a plain object with a parse method', schema:  {
       parse: (input: unknown): { username: string, password: string } => {
         if(typeof input === 'object' && input !== null && 'username' in input && 'password' in input && typeof input.username === 'string' && typeof input.password === 'string') {
           return input as any;
@@ -65,11 +73,13 @@ describe('not zod', () => {
         throw new Error('Invalid input');
       },
     }
-
-    class UserDto extends createZodDto(UserSchema) {}
+  }
+])('$name', ({ schema }: { schema: { parse: (input: unknown) => { username: string, password: string } } }) => {
+  it('parses correctly', () => {
+    class UserDto extends createZodDto(schema) {}
     
     expect(UserDto.isZodDto).toBe(true)
-    expect(UserDto.schema).toBe(UserSchema)
+    expect(UserDto.schema).toBe(schema)
   
     const user = UserDto.create({
       username: 'vasya',
