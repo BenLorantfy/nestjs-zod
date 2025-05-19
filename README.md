@@ -585,6 +585,75 @@ const CredentialsSchema = z.object({
 })
 ```
 
+### Reusable Swagger schemas
+
+> [!Note]
+> This feature is only available if using `zod/v4`
+
+Sometimes you want to define schemas once and reference them across multiple APIs, instead of duplicating the OpenAPI schema definitions.  This is possible in `nestjs-zod` by:
+1. Calling `.meta({ id: <schema name> })` to register the schema with `zod`
+2. Calling `registerZodDto` to register the DTO with `nestjs-zod`
+
+Here is an example:
+```ts
+const Author = z.object({
+  name: z.string(),
+}).meta({ id: 'AuthorDto' });
+
+registerZodDto(class AuthorDto extends createZodDto(Author) {})
+
+class PostDto extends createZodDto(z.object({
+  title: z.string().meta({ description: 'The title of the post' }),
+  author: Author
+})) {}
+```
+Once this is done, `nestjs-zod` will reuse the OpenAPI definition for the DTO whenever it encounters it.  The above example looks like this in your browser:
+
+![Reusable schemas example](img/reusable-schemas.png)
+
+And it produces this openapi spec:
+
+```yaml
+openapi: 3.0.0
+paths:
+  /posts:
+    post:
+      operationId: PostsController_createPost
+      parameters: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostDto'
+      responses:
+        '201':
+          description: ''
+      tags:
+        - Posts
+components:
+  schemas:
+    AuthorDto:
+      type: object
+      properties:
+        name:
+          type: string
+      required:
+        - name
+    PostDto:
+      type: object
+      properties:
+        title:
+          description: The title of the post
+          type: string
+        author:
+          $ref: '#/components/schemas/AuthorDto'
+      required:
+        - title
+        - author
+```
+
+
 ### Using zodToOpenAPI
 
 > [!CAUTION]

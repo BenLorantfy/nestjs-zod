@@ -1,6 +1,6 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { ApiOkResponse } from '@nestjs/swagger';
-import { createZodDto, ZodSerializerDto } from 'nestjs-zod'
+import { createZodDto, registerZodDto, ZodSerializerDto } from 'nestjs-zod'
 import { z } from 'zod/v4'
 import { Logger } from '@nestjs/common';
 
@@ -9,12 +9,19 @@ enum Visibility {
   PRIVATE = 'private',
 }
 
+const Author = z.object({
+  name: z.string(),
+}).meta({ id: 'Author' });
+
+registerZodDto(class AuthorDto extends createZodDto(Author) {})
+
 class PostDto extends createZodDto(z.object({
   title: z.string().describe('The title of the post'),
   content: z.string().describe('The content of the post'),
   authorId: z.number().describe('The ID of the author of the post'),
   visibility: z.nativeEnum(Visibility).describe('The visibility of the post'),
   // nullableField: z.string().nullable().describe('A nullable field'),
+  author: Author
 })) {}
 
 class PostQueryParams extends createZodDto(z.object({
@@ -48,3 +55,4 @@ export class PostsController {
       };
     }
 }
+

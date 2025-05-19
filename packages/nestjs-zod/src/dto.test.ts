@@ -1,4 +1,4 @@
-import { createZodDto } from './dto'
+import { createZodDto, registerZodDto } from './dto'
 import * as z4 from 'zod/v4'
 import * as z3 from 'zod/v3';
 import * as zodMini from 'zod/v4-mini';
@@ -29,31 +29,241 @@ describe.each([
       password: 'strong',
     })
   })
-  
-  it('should generate correct OpenAPI metadata', () => {
-    const UserSchema = z.object({
-      username: z.string(),
-      password: z.string(),
-      nestedObject: z.object({
-        nestedProperty: z.string(),
-      }),
+
+  const transformedSchema = z
+    .object({
+        seconds: z.number(),
     })
-  
-    class UserDto extends createZodDto(UserSchema) {}
-  
-    expect(UserDto._OPENAPI_METADATA_FACTORY()).toEqual({
-      username: { type: 'string', required: true },
-      password: { type: 'string', required: true },
-      nestedObject: { 
-        type: 'object', 
-        selfRequired: true,
-        required: ['nestedProperty'],
-        properties: {
-          nestedProperty: { type: 'string' },
-        },
+    .transform((value) => ({
+        seconds: value.seconds,
+        minutes: value.seconds / 60,
+        hours: value.seconds / 3600,
+    }))
+
+  it('should serialize objects', () => {
+    const schema = z.object({
+      prop1: z.string(),
+      prop2: z.string().optional(),
+      prop3: z.number(),
+      prop4: z.boolean(),
+    })
+
+    class SchemaDto extends createZodDto(schema) {}
+
+    expect(SchemaDto._OPENAPI_METADATA_FACTORY()).toEqual({
+      prop1: {
+        type: 'string',
+        required: true,
+      },
+      prop2: {
+        type: 'string',
+        required: false,
+      },
+      prop3: {
+        type: 'number',
+        required: true,
+      },
+      prop4: {
+        type: 'boolean',
+        required: true,
+      }
+    })
+  })
+
+  it('should serialize transformed schema', () => {  
+    class SchemaDto extends createZodDto(transformedSchema) {}
+
+    expect(SchemaDto._OPENAPI_METADATA_FACTORY()).toEqual({
+      seconds: {
+        type: 'number',
+        required: true,
       },
     })
   })
+
+  it('should serialize enums', () => {
+    const schema = z.object({
+      myEnum: z.enum(['adama', 'kota'])
+    })
+
+    class SchemaDto extends createZodDto(schema) {}
+  
+    expect(SchemaDto._OPENAPI_METADATA_FACTORY()).toEqual({
+      myEnum: expect.objectContaining({
+        enum: ['adama', 'kota'],
+        required: true,
+      }),
+    })
+  })
+
+  it('should serialize native enums', () => {
+    enum NativeEnum {
+      ADAMA = 'adama',
+      KOTA = 'kota',
+    }
+  
+    const schema = z.object({
+      myEnum: z.nativeEnum(NativeEnum)
+    })   
+
+    class SchemaDto extends createZodDto(schema) {}
+
+    expect(SchemaDto._OPENAPI_METADATA_FACTORY()).toEqual({
+      myEnum: expect.objectContaining({
+        enum: ['adama', 'kota'],
+        required: true,
+      }),
+    })
+  })
+
+  it('should serialize types with default value', () => {
+    const schema = z.object({
+      myStr: z.string().default('abitia')
+    })   
+
+    class SchemaDto extends createZodDto(schema) {}
+
+    expect(SchemaDto._OPENAPI_METADATA_FACTORY()).toEqual({
+      myStr: {
+        type: 'string',
+        default: 'abitia',
+        required: false
+      },
+    })
+  })
+
+  it('should serialize optional types', () => {
+    const schema = z.object({
+      myStr: z.string().optional()
+    })
+
+    class SchemaDto extends createZodDto(schema) {}
+
+    expect(SchemaDto._OPENAPI_METADATA_FACTORY()).toEqual({
+      myStr: {
+        type: 'string',
+        required: false,
+      },
+    })
+  })
+
+  it('should serialize partial objects', () => {
+    const schema = z
+      .object({
+        prop1: z.string(),
+        prop2: z.string(),
+      })
+      .partial()
+
+    class SchemaDto extends createZodDto(schema) {}
+      
+    expect(SchemaDto._OPENAPI_METADATA_FACTORY()).toEqual({
+      prop1: {
+        type: 'string',
+        required: false,
+      },
+      prop2: {
+        type: 'string',
+        required: false,
+      },
+    });
+  })
+
+  it('should serialize lazy schema', () => {
+    const schema = z.object({
+      myLazy: z.lazy(() => z.string())
+    })
+    class SchemaDto extends createZodDto(schema) {}
+    expect(SchemaDto._OPENAPI_METADATA_FACTORY()).toEqual({ 
+      myLazy: {
+        type: 'string',
+        required: true,
+      }
+    })
+  })
+
+
+
+  if (z === z4) {
+    it('should create reusable DTOs', () => {
+      const Author = z.object({
+        name: z.string(),
+      }).meta({ id: 'Author' });
+    
+      class AuthorDto extends createZodDto(Author) {}
+
+      registerZodDto(AuthorDto)
+
+      const Post = z.object({
+        title: z.string(),
+        author: Author,
+      });
+
+      class PostDto extends createZodDto(Post) {}
+
+      expect(PostDto._OPENAPI_METADATA_FACTORY()).toEqual({
+        title: { type: 'string', required: true },
+        author: { type: AuthorDto, required: true }
+      });
+    });
+
+    it('should create reusable DTOs when nested', () => {
+      const Author = z.object({
+        name: z.string(),
+      }).meta({ id: 'Author2' });
+    
+      class AuthorDto extends createZodDto(Author) {}
+
+      registerZodDto(AuthorDto)
+
+      const Post = z.object({
+        title: z.string(),
+        info: z.object({
+          author: Author,
+        }),
+      });
+
+      class PostDto extends createZodDto(Post) {}
+
+      expect(PostDto._OPENAPI_METADATA_FACTORY()).toEqual({
+        title: { type: 'string', required: true },
+        info: { 
+          type: 'object', 
+          selfRequired: true, 
+          required: ['author'],
+          properties: {
+            author: { type: AuthorDto }
+          } 
+        }
+      });
+    });
+
+    it('should create reusable DTOs when in array', () => {
+      const Author = z.object({
+        name: z.string(),
+      }).meta({ id: 'Author3' });
+    
+      class AuthorDto extends createZodDto(Author) {}
+
+      registerZodDto(AuthorDto)
+
+      const Post = z.object({
+        title: z.string(),
+        authors: z.array(Author),
+      });
+
+      class PostDto extends createZodDto(Post) {}
+
+      expect(PostDto._OPENAPI_METADATA_FACTORY()).toEqual({
+        title: { type: 'string', required: true },
+        authors: { 
+          type: 'array', 
+          items: { type: AuthorDto },
+          required: true,
+        }
+      });
+    });
+  }
 })
 
 describe.each([
