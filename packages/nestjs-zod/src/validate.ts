@@ -1,27 +1,21 @@
-import { ZodSchema, ZodTypeDef } from 'zod'
 import { isZodDto, ZodDto } from './dto'
 import { createZodValidationException, ZodExceptionCreator } from './exception'
+import { UnknownSchema } from './types'
 
 /**
  * @deprecated `validate` will be removed in a future version.  It is
  * recommended to use `.parse` directly
  */
-export function validate<
-  TOutput = any, // eslint-disable-line @typescript-eslint/no-explicit-any
-  TDef extends ZodTypeDef = ZodTypeDef,
-  TInput = TOutput
->(
+export function validate<TSchema extends UnknownSchema>(
   value: unknown,
-  schemaOrDto: ZodSchema<TOutput, TDef, TInput> | ZodDto<TOutput, TDef, TInput>,
+  schemaOrDto: TSchema | ZodDto<TSchema>,
   createValidationException: ZodExceptionCreator = createZodValidationException
-) {
+): ReturnType<TSchema['parse']> {
   const schema = isZodDto(schemaOrDto) ? schemaOrDto.schema : schemaOrDto
 
-  const result = schema.safeParse(value)
-
-  if (!result.success) {
-    throw createValidationException(result.error)
+  try {
+    return schema.parse(value) as ReturnType<TSchema['parse']>
+  } catch (error) {
+    throw createValidationException(error)
   }
-
-  return result.data
 }

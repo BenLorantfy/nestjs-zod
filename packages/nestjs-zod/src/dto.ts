@@ -1,24 +1,21 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { ZodSchema, ZodTypeDef } from '@nest-zod/z'
-import { ExtendedSchemaObject, zodToOpenAPI } from './openapi/zod-to-openapi'
+import { UnknownSchema } from './types'
+import { toSwagger } from './openapi/to-swagger'
+import type * as z3 from 'zod/v3';
+import type * as z4 from "zod/v4/core";
 
 export interface ZodDto<
-  TOutput = any,
-  TDef extends ZodTypeDef = ZodTypeDef,
-  TInput = TOutput
+  TSchema extends UnknownSchema
 > {
-  new (): TOutput
+  new (): ReturnType<TSchema['parse']>
   isZodDto: true
-  schema: ZodSchema<TOutput, TDef, TInput>
-  create(input: unknown): TOutput
+  schema: TSchema
+  create(input: unknown): ReturnType<TSchema['parse']>
   _OPENAPI_METADATA_FACTORY(): unknown
 }
 
 export function createZodDto<
-  TOutput = any,
-  TDef extends ZodTypeDef = ZodTypeDef,
-  TInput = TOutput
->(schema: ZodSchema<TOutput, TDef, TInput>) {
+  TSchema extends UnknownSchema|z3.ZodTypeAny|(z4.$ZodType & { parse: (input: unknown) => unknown })
+>(schema: TSchema) {
   class AugmentedZodDto {
     public static isZodDto = true
     public static schema = schema
@@ -28,12 +25,12 @@ export function createZodDto<
     }
 
     public static _OPENAPI_METADATA_FACTORY() {
-      const schemaObject = zodToOpenAPI(this.schema);
-      return markRequiredPropertiesAsRequired(schemaObject).properties;
+      const swaggerSchema = toSwagger(this.schema);
+      return markRequiredPropertiesAsRequired(swaggerSchema).properties;
     }
   }
 
-  return AugmentedZodDto as unknown as ZodDto<TOutput, TDef, TInput>
+  return AugmentedZodDto as unknown as ZodDto<TSchema>
 }
 
 /**
@@ -57,7 +54,10 @@ export function createZodDto<
  * _OPENAPI_METADATA_FACTORY expects, by adding `selfRequired: true` or
  * `required: true` where needed, based of  the top-level `required` array.
  */
-export function markRequiredPropertiesAsRequired(schema: ExtendedSchemaObject) {
+export function markRequiredPropertiesAsRequired(schema: {
+  properties?: Record<string, {}>;
+  required?: string[];
+}) {
   if (!schema.properties) return schema;
   return {
     ...schema,
@@ -86,8 +86,6 @@ export function markRequiredPropertiesAsRequired(schema: ExtendedSchemaObject) {
   }
 }
 
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function isZodDto(metatype: any): metatype is ZodDto<unknown> {
-  return metatype?.isZodDto
+export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema> {
+  return Boolean(metatype && (typeof metatype === 'object' || typeof metatype === 'function') && 'isZodDto' in metatype && metatype.isZodDto);
 }
