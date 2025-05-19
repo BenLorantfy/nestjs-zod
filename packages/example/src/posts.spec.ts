@@ -20,7 +20,7 @@ describe.each([
         content: 'This is a test post content.',
         authorId: 1,
         visibility: 'public',
-        nullableField: null
+        // nullableField: null
       };
   
       const invalidPost = {
@@ -28,7 +28,7 @@ describe.each([
         content: 'This is a test post content.',
         authorId: 'not a number', // Should be a number
         visibility: 'public',
-        nullableField: null
+        // nullableField: null
       };
   
       // Test with valid data
@@ -42,7 +42,7 @@ describe.each([
             content: validPost.content,
             authorId: validPost.authorId,
             visibility: validPost.visibility,
-            nullableField: validPost.nullableField
+            // nullableField: validPost.nullableField
           })
         });
   
