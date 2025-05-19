@@ -1,6 +1,6 @@
 import { Type } from '@nestjs/common'
-import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
-import { z } from '@nest-zod/z'
+import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
+import { z } from 'zod/v3';
 import deepmerge from 'deepmerge'
 
 export interface ExtendedSchemaObject extends SchemaObject {
@@ -55,22 +55,6 @@ export function zodToOpenAPI(
     }
   }
 
-  if (is(zodType, z.ZodPassword)) {
-    const { checks } = zodType._def
-    const regex = zodType.buildFullRegExp()
-    object.type = 'string'
-    object.format = 'password'
-    object.pattern = regex.source
-
-    for (const check of checks) {
-      if (check.kind === 'minLength') {
-        object.minLength = check.value
-      } else if (check.kind === 'maxLength') {
-        object.maxLength = check.value
-      }
-    }
-  }
-
   if (is(zodType, z.ZodBoolean)) {
     object.type = 'boolean'
   }
@@ -90,17 +74,6 @@ export function zodToOpenAPI(
         object.exclusiveMaximum = !check.inclusive
       } else if (check.kind === 'multipleOf') {
         object.multipleOf = check.value
-      }
-    }
-  }
-
-  if (is(zodType, z.ZodDateString)) {
-    const { checks } = zodType._def
-    object.type = 'string'
-
-    for (const check of checks) {
-      if (check.kind === 'format') {
-        object.format = check.value
       }
     }
   }
