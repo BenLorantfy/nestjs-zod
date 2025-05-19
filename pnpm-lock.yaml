@@ -14,9 +14,6 @@ importers:
 
   packages/example:
     dependencies:
-      '@nest-zod/z':
-        specifier: workspace:*
-        version: link:../z
       '@nestjs/common':
         specifier: ^11.0.0
         version: 11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -39,8 +36,8 @@ importers:
         specifier: ^7.8.1
         version: 7.8.2
       zod:
-        specifier: ^3.24.1
-        version: 3.24.3
+        specifier: 3.25.0-beta.20250516T215113
+        version: 3.25.0-beta.20250516T215113
     devDependencies:
       '@nestjs/cli':
         specifier: ^11.0.0
@@ -111,9 +108,6 @@ importers:
 
   packages/nestjs-zod:
     dependencies:
-      '@nest-zod/z':
-        specifier: '*'
-        version: 2.0.0(@nestjs/common@11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.0)(@nestjs/swagger@11.1.6(@nestjs/common@11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.0)(reflect-metadata@0.2.2))(zod@3.24.3)
       deepmerge:
         specifier: ^4.3.1
         version: 4.3.1
@@ -121,6 +115,9 @@ importers:
       '@golevelup/ts-jest':
         specifier: ^0.3.3
         version: 0.3.8
+      '@nest-zod/z':
+        specifier: workspace:*
+        version: link:../z
       '@nestjs/common':
         specifier: ^11.0.6
         version: 11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -176,8 +173,8 @@ importers:
         specifier: ^5.1.3
         version: 5.8.3
       zod:
-        specifier: ^3.24.1
-        version: 3.24.3
+        specifier: 3.25.0-beta.20250516T215113
+        version: 3.25.0-beta.20250516T215113
 
   packages/z:
     devDependencies:
@@ -785,21 +782,6 @@ packages:
 
   '@microsoft/tsdoc@0.15.1':
     resolution: {integrity: sha512-4aErSrCR/On/e5G2hDP0wjooqDdauzEbIq8hIkIe5pXV0rtWJZvdCEKL0ykZxex+IxIwBp0eGeV48hQN07dXtw==}
-
-  '@nest-zod/z@2.0.0':
-    resolution: {integrity: sha512-OqmJUZlpcx9ECzPYSIjaR/q/xLKrm9FkV+0FIWLEb9MVc9YeP21GmnQJBxE1dPRlLJ1kybNFBlt4D/PB8YAPkA==}
-    peerDependencies:
-      '@nestjs/common': ^10.0.0 || ^11.0.0
-      '@nestjs/core': ^10.0.0 || ^11.0.0
-      '@nestjs/swagger': ^7.4.2 || ^8.0.0 || ^11.0.0
-      zod: '>= 3.14.3'
-    peerDependenciesMeta:
-      '@nestjs/common':
-        optional: true
-      '@nestjs/core':
-        optional: true
-      '@nestjs/swagger':
-        optional: true
 
   '@nestjs/cli@11.0.7':
     resolution: {integrity: sha512-svrP8j1R0/lQVJ8ZI3BlDtuZxmkvVJokUJSB04sr6uibunk2wHeVDDVLZvYBUorCdGU/RHJl1IufhqUBM91vAQ==}
@@ -4385,6 +4367,9 @@ packages:
   zod@3.24.3:
     resolution: {integrity: sha512-HhY1oqzWCQWuUqvBFnsyrtZRhyPeR7SUGv+C4+MsisMuVfSPx8HpwWqH8tRahSlt6M3PiFAcoeFhZAqIXTxoSg==}
 
+  zod@3.25.0-beta.20250516T215113:
+    resolution: {integrity: sha512-BaGbYpG5cPp1ykFDPsrmfBHp7fAhJVCnOUw8eZVwQhx7uDhr7BSc0N8C17Mv6BcB74BRiDkpLLbATnnREC9X6w==}
+
 snapshots:
 
   '@ampproject/remapping@2.3.0':
@@ -5085,14 +5070,6 @@ snapshots:
   '@lukeed/csprng@1.1.0': {}
 
   '@microsoft/tsdoc@0.15.1': {}
-
-  '@nest-zod/z@2.0.0(@nestjs/common@11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.0)(@nestjs/swagger@11.1.6(@nestjs/common@11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.0)(reflect-metadata@0.2.2))(zod@3.24.3)':
-    dependencies:
-      zod: 3.24.3
-    optionalDependencies:
-      '@nestjs/common': 11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/core': 11.1.0(@nestjs/common@11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.0)(reflect-metadata@0.2.2)(rxjs@7.8.2)
-      '@nestjs/swagger': 11.1.6(@nestjs/common@11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.0)(reflect-metadata@0.2.2)
 
   '@nestjs/cli@11.0.7(@types/node@22.15.3)':
     dependencies:
@@ -6494,7 +6471,7 @@ snapshots:
     dependencies:
       eslint: 8.57.1
 
-  eslint-import-resolver-custom-alias@1.3.2(eslint-plugin-import@2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1)):
+  eslint-import-resolver-custom-alias@1.3.2(eslint-plugin-import@2.26.0):
     dependencies:
       eslint-plugin-import: 2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@2.7.1)(eslint@8.57.1)
       glob-parent: 6.0.2
@@ -6514,7 +6491,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  eslint-import-resolver-typescript@2.7.1(eslint-plugin-import@2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1):
+  eslint-import-resolver-typescript@2.7.1(eslint-plugin-import@2.26.0)(eslint@8.57.1):
     dependencies:
       debug: 4.4.0
       eslint: 8.57.1
@@ -6536,9 +6513,9 @@ snapshots:
       '@typescript-eslint/parser': 5.30.7(eslint@8.57.1)(typescript@5.8.3)
       babel-preset-solid: 1.9.6(@babel/core@7.27.1)
       eslint: 8.57.1
-      eslint-import-resolver-custom-alias: 1.3.2(eslint-plugin-import@2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))
+      eslint-import-resolver-custom-alias: 1.3.2(eslint-plugin-import@2.26.0)
       eslint-import-resolver-jsconfig: 1.1.0
-      eslint-import-resolver-typescript: 2.7.1(eslint-plugin-import@2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-import-resolver-typescript: 2.7.1(eslint-plugin-import@2.26.0)(eslint@8.57.1)
       eslint-plugin-effector: 0.6.0(effector@23.3.0)(eslint@8.57.1)
       eslint-plugin-import: 2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@2.7.1)(eslint@8.57.1)
       eslint-plugin-jsx-a11y: 6.5.1(eslint@8.57.1)
@@ -6562,14 +6539,14 @@ snapshots:
       - svelte
       - typescript
 
-  eslint-module-utils@2.12.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@2.7.1(eslint-plugin-import@2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1):
+  eslint-module-utils@2.12.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@2.7.1)(eslint@8.57.1):
     dependencies:
       debug: 3.2.7
     optionalDependencies:
       '@typescript-eslint/parser': 5.30.7(eslint@8.57.1)(typescript@5.8.3)
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-import-resolver-typescript: 2.7.1(eslint-plugin-import@2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-import-resolver-typescript: 2.7.1(eslint-plugin-import@2.26.0)(eslint@8.57.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -6587,7 +6564,7 @@ snapshots:
       doctrine: 2.1.0
       eslint: 8.57.1
       eslint-import-resolver-node: 0.3.9
-      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@2.7.1(eslint-plugin-import@2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint@8.57.1))(eslint@8.57.1))(eslint@8.57.1)
+      eslint-module-utils: 2.12.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-node@0.3.9)(eslint-import-resolver-typescript@2.7.1)(eslint@8.57.1)
       has: 1.0.4
       is-core-module: 2.16.1
       is-glob: 4.0.3
@@ -9233,3 +9210,5 @@ snapshots:
   yoctocolors-cjs@2.1.2: {}
 
   zod@3.24.3: {}
+
+  zod@3.25.0-beta.20250516T215113: {}
