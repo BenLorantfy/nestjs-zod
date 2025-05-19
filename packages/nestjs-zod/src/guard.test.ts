@@ -4,45 +4,52 @@ import { createZodDto } from './dto'
 import { ZodValidationException } from './exception'
 import { ZodGuard, Source } from './guard'
 
-import { z } from 'zod'
+import * as z3 from 'zod/v3'
+import * as z4 from 'zod/v4'
 
-const UserSchema = z.object({
-  username: z.string(),
-  password: z.string(),
-})
+describe.each([
+  { name: 'v4', z: z4 },
+  { name: 'v3', z: z3 as unknown as typeof z4 }
+])('$name', ({ z }) => {
 
-const UserDto = class Dto extends createZodDto(UserSchema) {}
-
-const contextMock = createMock<ExecutionContext>()
-
-function mockSource(source: Source, value: unknown) {
-  contextMock.switchToHttp().getRequest.mockReturnValue({ [source]: value })
-}
-
-it('should work with any source and with Schema or DTO', () => {
-  const sources: Source[] = ['body', 'params', 'query']
-
-  for (const source of sources) {
-    for (const schemaOrDto of [UserSchema, UserDto]) {
-      const guard = new ZodGuard(source, schemaOrDto)
-
-      const valid = {
-        username: 'vasya',
-        password: '123',
-      }
-
-      const invalid = {
-        username: 'vasya',
-        password: 123,
-      }
-
-      mockSource(source, valid)
-      expect(guard.canActivate(contextMock)).toBe(true)
-
-      mockSource(source, invalid)
-      expect(() => guard.canActivate(contextMock)).toThrowError(
-        ZodValidationException
-      )
-    }
+  const UserSchema = z.object({
+    username: z.string(),
+    password: z.string(),
+  })
+  
+  const UserDto = class Dto extends createZodDto(UserSchema) {}
+  
+  const contextMock = createMock<ExecutionContext>()
+  
+  function mockSource(source: Source, value: unknown) {
+    contextMock.switchToHttp().getRequest.mockReturnValue({ [source]: value })
   }
-})
+  
+  it('should work with any source and with Schema or DTO', () => {
+    const sources: Source[] = ['body', 'params', 'query']
+  
+    for (const source of sources) {
+      for (const schemaOrDto of [UserSchema, UserDto]) {
+        const guard = new ZodGuard(source, schemaOrDto)
+  
+        const valid = {
+          username: 'vasya',
+          password: '123',
+        }
+  
+        const invalid = {
+          username: 'vasya',
+          password: 123,
+        }
+  
+        mockSource(source, valid)
+        expect(guard.canActivate(contextMock)).toBe(true)
+  
+        mockSource(source, invalid)
+        expect(() => guard.canActivate(contextMock)).toThrowError(
+          ZodValidationException
+        )
+      }
+    }
+  })
+});

@@ -14,9 +14,6 @@ importers:
 
   packages/example:
     dependencies:
-      '@nest-zod/z':
-        specifier: workspace:*
-        version: link:../z
       '@nestjs/common':
         specifier: ^11.0.0
         version: 11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -118,6 +115,9 @@ importers:
       '@golevelup/ts-jest':
         specifier: ^0.3.3
         version: 0.3.8
+      '@nest-zod/z':
+        specifier: workspace:*
+        version: link:../z
       '@nestjs/common':
         specifier: ^11.0.6
         version: 11.1.0(reflect-metadata@0.2.2)(rxjs@7.8.2)

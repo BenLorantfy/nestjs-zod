@@ -76,6 +76,9 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
     }
 }
 ```
+### `z.password()` and `z.dateString()` from `@nest-zod/z` are no longer supported
+
+The `@nest-zod/z` package has been deprecated since version 4.x.  In 5.x `z.password()` and `z.dateString()` are no longer supported, specifically regarding the automatic swagger documentation generation
 
 ## From version 3.x to 4.x
 
