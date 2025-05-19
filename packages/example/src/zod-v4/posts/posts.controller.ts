@@ -14,7 +14,7 @@ class PostDto extends createZodDto(z.object({
   content: z.string().describe('The content of the post'),
   authorId: z.number().describe('The ID of the author of the post'),
   visibility: z.nativeEnum(Visibility).describe('The visibility of the post'),
-  nullableField: z.string().nullable().describe('A nullable field'),
+  // nullableField: z.string().nullable().describe('A nullable field'),
 })) {}
 
 class PostQueryParams extends createZodDto(z.object({
