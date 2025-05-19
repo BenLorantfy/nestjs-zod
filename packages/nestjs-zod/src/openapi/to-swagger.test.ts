@@ -22,7 +22,7 @@ describe.each([
         prop2: z.string().optional(),
       })
   
-      expect(toSwagger(schema)).toEqual({
+      expect(omit(toSwagger(schema), ['$schema'])).toEqual({
         type: 'object',
         required: ['prop1'],
         properties: {
@@ -37,7 +37,7 @@ describe.each([
     })
   
     it('should serialize transformed schema', () => {  
-      expect(toSwagger(transformedSchema)).toEqual({
+      expect(omit(toSwagger(transformedSchema), ['$schema'])).toEqual({
         type: 'object',
         required: ['seconds'],
         properties: {
@@ -51,7 +51,7 @@ describe.each([
     it('should serialize enums', () => {
       const schema = z.enum(['adama', 'kota'])
     
-      expect(toSwagger(schema)).toEqual(expect.objectContaining({
+      expect(omit(toSwagger(schema), ['$schema'])).toEqual(expect.objectContaining({
         enum: ['adama', 'kota'],
       }))
     })
@@ -63,28 +63,28 @@ describe.each([
       }
     
       const schema = z.nativeEnum(NativeEnum)    
-      expect(toSwagger(schema)).toEqual(expect.objectContaining({
+      expect(omit(toSwagger(schema), ['$schema'])).toEqual(expect.objectContaining({
         enum: ['adama', 'kota']
       }))
     })
 
     it('should serialize types with default value', () => {
       const schema = z.string().default('abitia')    
-      expect(toSwagger(schema)).toEqual({ type: 'string', default: 'abitia' })
+      expect(omit(toSwagger(schema), ['$schema'])).toEqual({ type: 'string', default: 'abitia' })
     })
 
     it('should serialize optional types', () => {
       const schema = z.string().optional()
       const openApiObject = toSwagger(schema)
     
-      expect(openApiObject).toEqual({ type: 'string' })
+      expect(omit(openApiObject, ['$schema'])).toEqual({ type: 'string' })
     })
 
     it('should serialize nullable types', () => {
       const schema = z.string().nullable()
       const openApiObject = toSwagger(schema)
     
-      expect(openApiObject).toEqual({ type: 'string', nullable: true })
+      expect(omit(openApiObject, ['$schema'])).toEqual({ type: 'string', nullable: true })
     })
 
     it('should serialize partial objects', () => {
@@ -114,24 +114,32 @@ describe.each([
 
     it('should serialize lazy schema', () => {
       const schema = z.lazy(() => z.string())
-      expect(toSwagger(schema)).toEqual({ type: 'string' })
+      expect(omit(toSwagger(schema), ['$schema'])).toEqual({ type: 'string' })
     })
 
     describe('scalar types', () => {
       it('should serialize string', () => {
         const schema = z.string()
-        expect(toSwagger(schema)).toEqual({ type: 'string' })
+        expect(omit(toSwagger(schema), ['$schema'])).toEqual({ type: 'string' })
       })
 
       it('should serialize number', () => {
         const schema = z.number()
-        expect(toSwagger(schema)).toEqual({ type: 'number' })
+        expect(omit(toSwagger(schema), ['$schema'])).toEqual({ type: 'number' })
       });
 
       it('should serialize boolean', () => {
         const schema = z.boolean()
-        expect(toSwagger(schema)).toEqual({ type: 'boolean' })
+        expect(omit(toSwagger(schema), ['$schema'])).toEqual({ type: 'boolean' })
       });
     })
   })
   
+function omit<T extends object>(obj: T, keys: string[]): T {
+  const result = { ...obj };
+  // @ts-expect-error
+  keys.forEach(key => delete result[key]);
+  return result;
+}
+
+
