@@ -60,6 +60,4 @@ jobs:
           cd packages/nestjs-zod
           npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
           npm publish --tag next --no-git-checks --access public --new-version "5.0.0-beta.${{ steps.date.outputs.date }}"
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
