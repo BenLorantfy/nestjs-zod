@@ -1,10 +1,10 @@
-name: Test and Build
+name: v5
 
 on:
   push:
-    branches: ['main']
+    branches: ['v5']
   pull_request:
-    branches: ['main']
+    branches: ['v5']
 
 jobs:
   test-and-build:
@@ -48,4 +48,18 @@ jobs:
         run: |
           cd packages/example && pnpm run start &
           cd packages/example && pnpm run test:swagger
+      - name: Get current date
+        if: github.ref == 'refs/heads/v5'
+        id: date
+        run: echo "date=$(date -u +'%Y%m%dT%H%M%S')" >> $GITHUB_OUTPUT
+      - name: Publish beta version
+        if: github.ref == 'refs/heads/v5'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/nestjs-zod
+          npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
+          npm publish --tag next --no-git-checks --access public --new-version "5.0.0-beta.${{ steps.date.outputs.date }}"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
