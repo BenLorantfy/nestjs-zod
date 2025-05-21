@@ -150,18 +150,20 @@ function convertDefRefsToDtoType(jsonSchema: JSONSchema.Schema): unknown {
       // @ts-expect-error
       convertDefRefsToDtoType(schema);
     }
+  } else if (jsonSchema.type === 'array' && typeof jsonSchema.items === 'object' && !Array.isArray(jsonSchema.items) && jsonSchema.items.$ref) {
+    const dto = getTypeDtoFromRef(jsonSchema.items.$ref);
+    if (dto) {
+      // @ts-expect-error
+      jsonSchema.type = [dto];
+      delete jsonSchema.items;
+    }
+
   } else if (jsonSchema.type === 'array') {
     // @ts-expect-error
     convertDefRefsToDtoType(jsonSchema.items);
   } else if (jsonSchema.$ref) {
-    const parts = jsonSchema.$ref.split('/');
-    if (parts.length === 3 && parts[0] === '#' && parts[1] === '$defs') {
-      const schemaId = parts[2];
-      const dto = schemaRegistry.get(schemaId);
-      if (!dto) {
-        throw new Error(`[nestjs-zod] No dto found for schema id: ${schemaId}.  Please ensure you have called registerZodDto with the schema`);
-      }
-
+    const dto = getTypeDtoFromRef(jsonSchema.$ref);
+    if (dto) {
       delete jsonSchema.$ref;
       // @ts-expect-error
       jsonSchema.type = dto;
@@ -169,6 +171,22 @@ function convertDefRefsToDtoType(jsonSchema: JSONSchema.Schema): unknown {
   }
 
   return jsonSchema;
+}
+
+function getTypeDtoFromRef(ref: string) {
+  const parts = ref.split('/');
+
+  if (parts.length === 3 && parts[0] === '#' && parts[1] === '$defs') {
+    const schemaId = parts[2];
+    const dto = schemaRegistry.get(schemaId);
+    if (!dto) {
+      throw new Error(`[nestjs-zod] No dto found for schema id: ${schemaId}.  Please ensure you have called registerZodDto with the schema`);
+    }
+
+    return dto;
+  }
+
+  return null;
 }
 
 /**

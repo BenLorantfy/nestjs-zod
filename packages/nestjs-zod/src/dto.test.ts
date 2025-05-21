@@ -257,8 +257,7 @@ describe.each([
       expect(PostDto._OPENAPI_METADATA_FACTORY()).toEqual({
         title: { type: 'string', required: true },
         authors: { 
-          type: 'array', 
-          items: { type: AuthorDto },
+          type: [AuthorDto],
           required: true,
         }
       });
