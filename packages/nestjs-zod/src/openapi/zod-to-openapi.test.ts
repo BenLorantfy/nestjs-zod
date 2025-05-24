@@ -1,3 +1,4 @@
+import { ZodTypeAny } from 'zod';
 import { z as actualZod } from '@nest-zod/z'
 import { z as nestjsZod } from '@nest-zod/z'
 import { zodToOpenAPI } from './zod-to-openapi'
