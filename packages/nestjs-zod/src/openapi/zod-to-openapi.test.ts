@@ -35,7 +35,7 @@ describe.each([
     recordWithKeys: z.record(z.number(), z.string()),
     zodDateString: z.string().datetime(),
   })
-  
+
   const intersectedObjectsSchema = z.intersection(
     z.object({
       one: z.number(),
@@ -44,12 +44,12 @@ describe.each([
       two: z.number(),
     })
   )
-  
+
   const intersectedUnionsSchema = z.intersection(
     z.union([z.literal('123'), z.number()]),
     z.union([z.boolean(), z.array(z.string())])
   )
-  
+
   const overrideIntersectionSchema = z.intersection(
     z.object({
       one: z.number(),
@@ -58,7 +58,7 @@ describe.each([
       one: z.string(),
     })
   )
-  
+
   const transformedSchema = z
     .object({
       seconds: z.number(),
@@ -68,40 +68,40 @@ describe.each([
       minutes: value.seconds / 60,
       hours: value.seconds / 3600,
     }))
-  
+
   const lazySchema = z.lazy(() => z.string())
-  
+
   it('should serialize a complex schema', () => {
     const openApiObject = zodToOpenAPI(complexTestSchema)
-  
+
     expect(openApiObject).toMatchSnapshot()
   })
-  
+
   it('should serialize an intersection of objects', () => {
     const openApiObject = zodToOpenAPI(intersectedObjectsSchema)
-  
+
     expect(openApiObject).toMatchSnapshot()
   })
-  
+
   it('should serialize an intersection of unions', () => {
     const openApiObject = zodToOpenAPI(intersectedUnionsSchema)
-  
+
     expect(openApiObject).toMatchSnapshot()
   })
-  
+
   it('should serialize an intersection with overrided fields', () => {
     const openApiObject = zodToOpenAPI(overrideIntersectionSchema)
-  
+
     expect(openApiObject).toMatchSnapshot()
   })
-  
+
   it('should serialize objects', () => {
     const schema = z.object({
       prop1: z.string(),
       prop2: z.string().optional(),
     })
     const openApiObject = zodToOpenAPI(schema)
-  
+
     expect(openApiObject).toEqual({
       type: 'object',
       required: ['prop1'],
@@ -115,7 +115,7 @@ describe.each([
       },
     })
   })
-  
+
   it('should serialize partial objects', () => {
     const schema = z
       .object({
@@ -124,7 +124,7 @@ describe.each([
       })
       .partial()
     const openApiObject = zodToOpenAPI(schema)
-  
+
     expect(openApiObject).toEqual({
       type: 'object',
       properties: {
@@ -137,54 +137,54 @@ describe.each([
       },
     })
   })
-  
+
   it('should serialize nullable types', () => {
     const schema = z.string().nullable()
     const openApiObject = zodToOpenAPI(schema)
-  
+
     expect(openApiObject).toEqual({ type: 'string', nullable: true })
   })
-  
+
   it('should serialize optional types', () => {
     const schema = z.string().optional()
     const openApiObject = zodToOpenAPI(schema)
-  
+
     expect(openApiObject).toEqual({ type: 'string' })
   })
-  
+
   it('should serialize types with default value', () => {
     const schema = z.string().default('abitia')
     const openApiObject = zodToOpenAPI(schema)
-  
+
     expect(openApiObject).toEqual({ type: 'string', default: 'abitia' })
   })
-  
+
   it('should serialize enums', () => {
     const schema = z.enum(['adama', 'kota'])
     const openApiObject = zodToOpenAPI(schema)
-  
+
     expect(openApiObject).toEqual({
       type: 'string',
       enum: ['adama', 'kota'],
     })
   })
-  
+
   it('should serialize native enums', () => {
     enum NativeEnum {
       ADAMA = 'adama',
       KOTA = 'kota',
     }
-  
+
     const schema = z.nativeEnum(NativeEnum)
     const openApiObject = zodToOpenAPI(schema)
-  
+
     expect(openApiObject).toEqual({
       'type': 'string',
       'enum': ['adama', 'kota'],
       'x-enumNames': ['ADAMA', 'KOTA'],
     })
   })
-  
+
   describe('scalar types', () => {
     const testCases: [ZodTypeAny, string, string?][] = [
       // [zod type, expected open api type, expected format]
@@ -195,12 +195,12 @@ describe.each([
       // [z.null(), 'null'], <- Needs OpenApi 3.1 to be represented correctly
       // [z.undefined(), 'undefined'], <- TBD, probably the property should be removed from schema
     ]
-  
+
     for (const [zodType, expectedType, expectedFormat] of testCases) {
       // eslint-disable-next-line no-loop-func
       it(expectedType, () => {
         const openApiObject = zodToOpenAPI(zodType)
-  
+
         expect(openApiObject).toEqual({
           type: expectedType,
           format: expectedFormat ?? undefined,
@@ -208,10 +208,10 @@ describe.each([
       })
     }
   })
-  
+
   it('should serialize transformed schema', () => {
     const openApiObject = zodToOpenAPI(transformedSchema)
-  
+
     expect(openApiObject).toEqual({
       type: 'object',
       required: ['seconds'],
@@ -222,10 +222,10 @@ describe.each([
       },
     })
   })
-  
+
   it('should serialize lazy schema', () => {
     const openApiObject = zodToOpenAPI(lazySchema)
-  
+
     expect(openApiObject).toEqual({
       type: 'string',
     })
@@ -277,4 +277,57 @@ describe('special types', () => {
       type: 'object'
     });
   })
+});
+
+describe('should serialize branded schemas', () => {
+  const testCases: [string, ZodTypeAny, ReturnType<typeof zodToOpenAPI>][] = [
+    // [zod schema, expected open api type]
+    ['string', nestjsZod.string().brand<'Brand'>(), { type: 'string' }],
+    ['number', nestjsZod.number().brand<'Brand'>(), { type: 'number' }],
+    ['boolean', nestjsZod.boolean().brand<'Brand'>(), { type: 'boolean' }],
+    [
+      'bigint',
+      nestjsZod.bigint().brand<'Brand'>(),
+      { type: 'integer', format: 'int64' },
+    ],
+    [
+      'object',
+      nestjsZod
+        .object({
+          prop1: nestjsZod.string(),
+          prop2: nestjsZod.number().optional(),
+        })
+        .brand<'Brand'>(),
+      {
+        type: 'object',
+        required: ['prop1'],
+        properties: {
+          prop1: { type: 'string' },
+          prop2: { type: 'number' },
+        },
+      },
+    ],
+    [
+      'nested branded schema',
+      nestjsZod.object({
+        branded: nestjsZod.string().brand<'Brand'>(),
+      }),
+      {
+        type: 'object',
+        required: ['branded'],
+        properties: {
+          branded: {
+            type: 'string',
+          },
+        },
+      },
+    ],
+  ]
+
+  for (const [zodType, zodSchema, expectedOpenApiSchema] of testCases) {
+    // eslint-disable-next-line no-loop-func
+    it(zodType, () => {
+      expect(zodToOpenAPI(zodSchema)).toEqual(expectedOpenApiSchema)
+    })
+  }
 });
