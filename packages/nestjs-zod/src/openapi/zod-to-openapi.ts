@@ -211,9 +211,7 @@ export function zodToOpenAPI(
       const walk = (schema: z.ZodTypeAny) => {
         if (is(schema, z.ZodEffects)) {
           walk(schema._def.schema)
-        } else if (is(schema, z.ZodOptional)) {
-          isOptional = true
-        } else if (is(schema, z.ZodDefault)) {
+        } else if (is(schema, z.ZodOptional) || is(schema, z.ZodDefault)) {
           isOptional = true
         }
       }
