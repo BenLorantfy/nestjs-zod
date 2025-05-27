@@ -36,6 +36,7 @@
     "dev": "vite",
     "build": "rollup -c",
     "test": "TZ=UTC jest",
+    "test:debug": "TZ=UTC node --inspect ./node_modules/jest/bin/jest.js --runInBand",
     "lint": "eslint --ext .ts,.tsx src",
     "lint:fix": "eslint --ext .ts,.tsx src --fix"
   },

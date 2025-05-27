@@ -278,3 +278,162 @@ describe('special types', () => {
     });
   })
 });
+
+describe('effects and required', () => {
+  test('effects and non optional schema properties are required', () => {
+    const z = nestjsZod
+    const schema = z.object({
+      name: z.string(),
+      document: z.preprocess(
+        (value) => value,
+        z.object({
+          kind: z.string(),
+          number: z.number(),
+        }),
+      ),
+    });
+    const openApiObject = zodToOpenAPI(schema);
+    expect(openApiObject).toEqual({
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+        },
+        document: {
+          type: 'object',
+          properties: {
+            kind: {
+              type: 'string',
+            },
+            number: {
+              type: 'number',
+            },
+          },
+          required: ['kind', 'number'],
+        },
+      },
+      required: ['name', 'document'],
+    });
+  });
+
+  test('effects and optional schema properties are not required', () => {
+    const z = nestjsZod;
+    const schema = z.object({
+      name: z.string(),
+      document: z.preprocess(
+        (value) => value,
+        z
+          .object({
+            kind: z.string(),
+            number: z.number(),
+          })
+          .optional(),
+      ),
+    });
+    const openApiObject = zodToOpenAPI(schema);
+    expect(openApiObject).toEqual({
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+        },
+        document: {
+          type: 'object',
+          properties: {
+            kind: {
+              type: 'string',
+            },
+            number: {
+              type: 'number',
+            },
+          },
+          required: ['kind', 'number'],
+        },
+      },
+      required: ['name'],
+    });
+  });
+
+  test('effects and schema properties with default are not required', () => {
+    const z = nestjsZod;
+    const schema = z.object({
+      name: z.string(),
+      document: z.preprocess(
+        (value) => value,
+        z
+          .object({
+            kind: z.string(),
+            number: z.number(),
+          })
+          .default({ kind: '', number: 1 }),
+      ),
+    });
+    const openApiObject = zodToOpenAPI(schema);
+    expect(openApiObject).toEqual({
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+        },
+        document: {
+          type: 'object',
+          properties: {
+            kind: {
+              type: 'string',
+            },
+            number: {
+              type: 'number',
+            },
+          },
+          required: ['kind', 'number'],
+          default: {
+            kind: '',
+            number: 1,
+          },
+        },
+      },
+      required: ['name'],
+    });
+  });
+
+  test('effects and nullish schema properties with default are not required', () => {
+    const z = nestjsZod;
+    const schema = z.object({
+      name: z.string(),
+      document: z.preprocess(
+        (value) => value,
+        z
+          .object({
+            kind: z.string(),
+            number: z.number(),
+          })
+          .nullish()
+          .default(null),
+      ),
+    });
+    const openApiObject = zodToOpenAPI(schema);
+    expect(openApiObject).toEqual({
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+        },
+        document: {
+          type: 'object',
+          properties: {
+            kind: {
+              type: 'string',
+            },
+            number: {
+              type: 'number',
+            },
+          },
+          required: ['kind', 'number'],
+          nullable: true,
+          default: null,
+        },
+      },
+      required: ['name'],
+    });
+  });
+});

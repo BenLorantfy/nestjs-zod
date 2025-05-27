@@ -207,8 +207,17 @@ export function zodToOpenAPI(
 
     for (const [key, schema] of Object.entries<z.ZodTypeAny>(shape())) {
       object.properties[key] = zodToOpenAPI(schema, visited)
-      const optionalTypes = [z.ZodOptional.name, z.ZodDefault.name]
-      const isOptional = optionalTypes.includes(schema.constructor.name)
+      let isOptional = false
+      const walk = (schema: z.ZodTypeAny) => {
+        if (is(schema, z.ZodEffects)) {
+          walk(schema._def.schema)
+        } else if (is(schema, z.ZodOptional)) {
+          isOptional = true
+        } else if (is(schema, z.ZodDefault)) {
+          isOptional = true
+        }
+      }
+      walk(schema)
       if (!isOptional) object.required.push(key)
     }
 
