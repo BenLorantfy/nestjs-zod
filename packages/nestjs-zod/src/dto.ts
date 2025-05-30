@@ -1,7 +1,9 @@
 import { UnknownSchema } from './types'
-import { toSwagger } from './openapi/to-swagger'
 import type * as z3 from 'zod/v3';
 import type * as z4 from "zod/v4/core";
+import { type JSONSchema, toJSONSchema, globalRegistry } from 'zod/v4/core';
+import { zodToOpenAPI } from './openapi';
+import { walkJsonSchema } from './walkJsonSchema';
 
 export interface ZodDto<
   TSchema extends UnknownSchema
@@ -25,12 +27,142 @@ export function createZodDto<
     }
 
     public static _OPENAPI_METADATA_FACTORY() {
-      const swaggerSchema = toSwagger(this.schema);
-      return markRequiredPropertiesAsRequired(swaggerSchema).properties;
+      if ('_zod' in this.schema) {
+        const meta = globalRegistry.get(this.schema);
+
+        const baseSchema = toJSONSchema(this.schema, {
+          io: 'input',
+          // override: (ctx) => {
+          //     // nullable
+          //     if (Object.keys(ctx.jsonSchema).length === 1 && ctx.jsonSchema.anyOf && ctx.jsonSchema.anyOf.length === 2 && ctx.jsonSchema.anyOf[1].type === 'null' && typeof ctx.jsonSchema.anyOf?.[0] === 'object') {
+          //         // Note: nestjs/swagger doesn't like how zod generates nullable types like this:
+          //         // {
+          //         //     "anyOf": [
+          //         //         { "type": "object" },
+          //         //         { "type": "null" }
+          //         //     ]
+          //         // }
+          //         // It outputs the following error:
+          //         // ```
+          //         // Error: A circular dependency has been detected
+          //         // ```
+          //         // So we need to convert it to a more swagger-friendly format:
+          //         // {
+          //         //     "type": "object",
+          //         //     "nullable": true
+          //         // }
+                  
+          //         const firstType = ctx.jsonSchema.anyOf[0];
+          //         delete ctx.jsonSchema.anyOf;
+          //         Object.assign(ctx.jsonSchema, firstType);
+          //         ctx.jsonSchema.nullable = true;
+          //     }
+          // }
+        })
+
+        // @ts-expect-error
+        const withParentSchemaId = addSchemaIdToAllProperties(meta?.id, baseSchema);
+
+        const withZodRefMarker = temporarilyRemoveZodRefs(withParentSchemaId);
+
+        // @ts-expect-error
+        return markRequiredPropertiesAsRequired(withZodRefMarker).properties;
+      }
+
+      if ('_def' in this.schema) {
+        return markRequiredPropertiesAsRequired(zodToOpenAPI(this.schema)).properties;
+      }
+
+      return {};
     }
   }
 
   return AugmentedZodDto as unknown as ZodDto<TSchema>
+}
+
+
+function addSchemaIdToAllProperties(schemaId: string|undefined, schema: JSONSchema.Schema) {
+  if (!schemaId) {
+    return schema;
+  }
+  if (schema.type === 'object' && 'properties' in schema) {
+    const properties = schema.properties || {};
+    for (const [key, value] of Object.entries(properties)) {
+      properties[key]['x-__nestjs-zod__parent-schema-id'] = schemaId;
+    }
+  }
+  return schema;
+}
+
+/**
+ * Registers a zod DTO so that it can be reused and referenced in other schemas.
+ * This is only needed if you're trying to reuse a schema instead of duplicating
+ * it in the outputted OpenAPI spec.
+ * 
+ * @param dto - A zod DTO returned by `createZodDto`
+ */
+export function registerZodDto(dto: ZodDto<UnknownSchema>) {
+  // if (!('_zod' in dto.schema)) {
+  //   throw new Error('[nestjs-zod/registerZodDto] Only zod v4 schemas are supported');
+  // }
+
+  // // @ts-expect-error
+  // const schemaMetadata = globalRegistry.get(dto.schema);
+  // if (!schemaMetadata) {
+  //   throw new Error('[nestjs-zod/registerZodDto] Only zod schemas that have meta({ id: ... }) called on them are supported');
+  // }
+
+  // const schemaId = schemaMetadata.id;
+  // if (!schemaId) {
+  //   throw new Error('[nestjs-zod/registerZodDto] Please ensure `meta` is called on the zod schema with `id`. E.g. `meta({ id: "MySchemaId" })`');
+  // }
+
+  // schemaRegistry.set(schemaId, dto);
+}
+
+/**
+ * When we call `z.toJSONSchema` on a zod schema that has a nested schema with
+ * `meta({ id: 'Author' })`, it generates a structure that looks like this:
+ * ```ts
+ * {
+ *   properties: {
+ *     author: {
+ *       $ref: '#/$defs/Author',
+ *     },
+ *     title: {
+ *       type: 'string',
+ *     }
+ *   },
+ *   $defs: {
+ *     Author: {
+ *       type: 'object',
+ *       properties: {
+ *         name: { type: 'string' },
+ *       },
+ *     }
+ *   }
+ * }
+ * ```
+ * 
+ * But nestjs/swagger throws an error when it sees `$ref` and no `type`.  This
+ * function temporarily converts `$ref` to `x-zod-ref`, and then adds `type:
+ * object` so nestjs/swagger can understand it.  The `cleanupOpenApiDoc`
+ * function restores the original `$ref` and also adds to the components section
+ * 
+ * @note This function mutates the input.
+ */
+function temporarilyRemoveZodRefs(jsonSchema: JSONSchema.Schema) {
+  return walkJsonSchema(jsonSchema, (schema) => {
+    if (schema.$ref && schema.$ref.startsWith('#/$defs/')) {
+      const { $ref, ...rest } = schema;
+      return {
+        ...rest,
+        type: rest.type || 'object',
+        'x-zod-ref': $ref
+      }
+    }
+    return schema;
+  });
 }
 
 /**

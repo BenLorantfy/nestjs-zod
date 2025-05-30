@@ -3,6 +3,7 @@ import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { V3Module } from './zod-v3/v3.module';
 import { V4Module } from './zod-v4/v4.module';
+import { cleanupOpenApiDoc } from 'nestjs-zod';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -18,7 +19,7 @@ async function bootstrap() {
       include: [V3Module],
     }
   );
-  SwaggerModule.setup('api/zod-v3', app, zodV3Document);
+  SwaggerModule.setup('api/zod-v3', app, cleanupOpenApiDoc(zodV3Document));
 
   // Setup zod v4 example
   const zodV4Document = SwaggerModule.createDocument(app, 
@@ -31,7 +32,7 @@ async function bootstrap() {
       include: [V4Module],
     }
   );
-  SwaggerModule.setup('api/zod-v4', app, zodV4Document);
+  SwaggerModule.setup('api/zod-v4', app, cleanupOpenApiDoc(zodV4Document));
 
   await app.listen(3000);
 }

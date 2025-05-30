@@ -9,11 +9,19 @@ enum Visibility {
   PRIVATE = 'private',
 }
 
+const Author = z.object({
+  name: z.string(),
+}).meta({ id: 'Author' })
+
+class AuthorDto extends createZodDto(Author) {}
+
+
 class PostDto extends createZodDto(z.object({
   title: z.string().describe('The title of the post'),
   content: z.string().describe('The content of the post'),
   authorId: z.number().describe('The ID of the author of the post'),
   visibility: z.nativeEnum(Visibility).describe('The visibility of the post'),
+  author: Author,
   // nullableField: z.string().nullable().describe('A nullable field'),
 })) {}
 

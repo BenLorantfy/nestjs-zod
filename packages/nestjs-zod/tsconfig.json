@@ -12,7 +12,7 @@
       "esnext"
     ],
     "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "nodenext",
     "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -24,7 +24,8 @@
     "outDir": "./dist",
     "typeRoots": [
       "./node_modules/@types"
-    ]
+    ],
+    "emitDecoratorMetadata": true
   },
   "exclude": [
     "./node_modules",
