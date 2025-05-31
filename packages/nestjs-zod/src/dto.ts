@@ -95,32 +95,6 @@ function addSchemaIdToAllProperties(schemaId: string|undefined, schema: JSONSche
 }
 
 /**
- * Registers a zod DTO so that it can be reused and referenced in other schemas.
- * This is only needed if you're trying to reuse a schema instead of duplicating
- * it in the outputted OpenAPI spec.
- * 
- * @param dto - A zod DTO returned by `createZodDto`
- */
-export function registerZodDto(dto: ZodDto<UnknownSchema>) {
-  // if (!('_zod' in dto.schema)) {
-  //   throw new Error('[nestjs-zod/registerZodDto] Only zod v4 schemas are supported');
-  // }
-
-  // // @ts-expect-error
-  // const schemaMetadata = globalRegistry.get(dto.schema);
-  // if (!schemaMetadata) {
-  //   throw new Error('[nestjs-zod/registerZodDto] Only zod schemas that have meta({ id: ... }) called on them are supported');
-  // }
-
-  // const schemaId = schemaMetadata.id;
-  // if (!schemaId) {
-  //   throw new Error('[nestjs-zod/registerZodDto] Please ensure `meta` is called on the zod schema with `id`. E.g. `meta({ id: "MySchemaId" })`');
-  // }
-
-  // schemaRegistry.set(schemaId, dto);
-}
-
-/**
  * When we call `z.toJSONSchema` on a zod schema that has a nested schema with
  * `meta({ id: 'Author' })`, it generates a structure that looks like this:
  * ```ts
