@@ -574,6 +574,59 @@ describe('cleanupOpenApiDoc', () => {
             })
         }));
     })
+
+    it('properly handles nullish', async () => {
+        class BookDto extends createZodDto(z.object({
+            title: z.string(),
+            author: z.string().nullish()
+        })) {}
+
+        @Controller()
+        class BookController {
+            constructor() {}
+
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        expect(await getSwaggerDoc(BookController)).toEqual(expect.objectContaining({
+            components: {
+                schemas: {
+                    BookDto: {
+                        type: 'object',
+                        properties: {
+                            title: {
+                                type: 'string'
+                            },
+                            author: {
+                                type: 'string',
+                                nullable: true
+                            }
+                        },
+                        required: ['title']
+                    }
+                }
+            },
+            paths: {
+                '/': expect.objectContaining({
+                    post: expect.objectContaining({
+                        requestBody: {
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        $ref: '#/components/schemas/BookDto'
+                                    }
+                                }
+                            },
+                            required: true
+                        }
+                    })
+                })
+            }
+        }));
+    })
 });
 
 async function getSwaggerDoc(controllerClass: Type<unknown>) {
