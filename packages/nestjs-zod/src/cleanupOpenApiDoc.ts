@@ -5,6 +5,7 @@ import deepmerge from 'deepmerge';
 
 type DtoSchema = Exclude<Exclude<OpenAPIObject['components'], undefined>['schemas'], undefined>[string];
 
+
 export function cleanupOpenApiDoc(d: OpenAPIObject): OpenAPIObject {
     const doc = deepmerge<typeof d>(d, {});
 
@@ -17,12 +18,15 @@ export function cleanupOpenApiDoc(d: OpenAPIObject): OpenAPIObject {
     // TODO: Only add compnents that are used
 
     let foundSchemaIds = new Set<string>();
+    let foundOutputSchemaIds = new Set<string>();
 
     const dtoSchemas = {};
     const dtoRenames: Record<string, string> = {};
 
     for (let [key, value] of Object.entries(doc.components?.schemas || {})) {
         const schemaId = getSchemaIdFromDtoSchema(value) || key;
+        const io = getSchemaIOFromDtoSchema(value) || 'input';
+
         if (schemaId !== key) {
             dtoRenames[key] = schemaId;
         }
@@ -36,8 +40,13 @@ export function cleanupOpenApiDoc(d: OpenAPIObject): OpenAPIObject {
                     schemaRefId = dtoRenames[schemaRefId];
                 }
 
-                foundSchemaIds.add(schemaRefId);
-                schema.$ref = `#/components/schemas/${schemaRefId}`;
+                if (io === 'output') {
+                    foundOutputSchemaIds.add(schemaRefId);
+                    schema.$ref = `#/components/schemas/${schemaRefId}Output`;
+                } else {
+                    foundSchemaIds.add(schemaRefId);
+                    schema.$ref = `#/components/schemas/${schemaRefId}`;
+                }
                 delete schema['x-__nestjs-zod__-ref'];
                 // @ts-expect-error
                 delete schema['type'];
@@ -78,6 +87,7 @@ export function cleanupOpenApiDoc(d: OpenAPIObject): OpenAPIObject {
 
     const zodRegistrySchemas = toJSONSchema(globalRegistry, {
         io: 'input',
+        uri: (id) => `#/components/schemas/${id}`,
     })
 
     const foundSchemas: { schemas: Record<string, JSONSchema.BaseSchema> } = { schemas: {} }
@@ -85,10 +95,8 @@ export function cleanupOpenApiDoc(d: OpenAPIObject): OpenAPIObject {
     for (let schemaId of foundSchemaIds) {
         // @ts-expect-error
         const newSchema = walkJsonSchema(zodRegistrySchemas.schemas[schemaId], (schema) => {
-            if (schema.$ref?.startsWith('#/$defs/')) {
-                // TODO: make sure this is right
-                schema.$ref = schema.$ref.replace('#/$defs/', '#/components/schemas/');
-                foundSchemaIds.add(schema.$ref.replace('#/$defs/', ''));
+            if (schema.$ref && schema.$ref.startsWith('#/components/schemas/')) {
+                foundSchemaIds.add(schema.$ref.replace('#/components/schemas/', ''));
             }
             return schema;
         }, { clone: true });
@@ -97,6 +105,56 @@ export function cleanupOpenApiDoc(d: OpenAPIObject): OpenAPIObject {
             foundSchemas.schemas[schemaId] = newSchema;
         }
     }
+
+    const aaa = toJSONSchema(globalRegistry, {
+        io: 'output',
+        uri: (id) => `#/components/schemas/${id}Output`,
+    })
+
+    const zodRegistrySchemasOutput: {
+        schemas: Record<string, JSONSchema.BaseSchema>;
+    } = {
+        schemas: {}
+    };
+    for (let [key, value] of Object.entries(aaa.schemas)) {
+        zodRegistrySchemasOutput.schemas[`${key}Output`] = value;
+    }
+
+    for (let schemaId of foundOutputSchemaIds) {
+        // @ts-expect-error
+        const newSchema = walkJsonSchema(zodRegistrySchemasOutput.schemas[schemaId], (schema) => {
+            if (schema.$ref && schema.$ref.startsWith('#/components/schemas/')) {
+                foundSchemaIds.add(schema.$ref.replace('#/components/schemas/', ''));
+            }
+            return schema;
+        }, { clone: true });
+
+        if (!foundSchemas.schemas[schemaId]) {
+            foundSchemas.schemas[schemaId] = newSchema;
+        }
+    }
+
+    console.log('zodRegistrySchemasOutput', JSON.stringify(zodRegistrySchemasOutput, null, 2));
+    // console.log('zodRegistrySchemasOutput', zodRegistrySchemasOutput);
+
+    // const foundSchemasOutput: { schemas: Record<string, JSONSchema.BaseSchema> } = { schemas: {} }
+
+    // for (let schemaId of foundOutputSchemaIds) {
+    //     // @ts-expect-error
+    //     const newSchema = walkJsonSchema(zodRegistrySchemasOutput.schemas[schemaId], (schema) => {
+    //         if (schema.$ref?.startsWith('#/$defs/')) {
+    //             const newSchemaId = `${schema.$ref.replace('#/$defs/', '')}Output`;
+    //             // TODO: make sure this is right
+    //             schema.$ref = `#/components/schemas/${newSchemaId}`;
+    //             foundOutputSchemaIds.add(newSchemaId);
+    //         }
+    //         return schema;
+    //     }, { clone: true });
+
+    //     if (!foundSchemasOutput.schemas[schemaId]) {
+    //         foundSchemasOutput.schemas[schemaId] = newSchema;
+    //     }
+    // }
 
     for (let [path, value] of Object.entries(doc.paths)) {
         for (let method of ['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace'] as const) {
@@ -150,11 +208,15 @@ export function cleanupOpenApiDoc(d: OpenAPIObject): OpenAPIObject {
                 }
             }
 
-            // Remove x-__nestjs-zod__parent-schema-id from parameters
+            // Remove x-__nestjs-zod__parent-schema-id and x-__nestjs-zod__io from parameters
             if (operationObject?.parameters) {
                 for (let [paramName, paramValue] of Object.entries(operationObject?.parameters)) {
                     if (paramValue && 'x-__nestjs-zod__parent-schema-id' in paramValue) {
                         delete paramValue['x-__nestjs-zod__parent-schema-id'];
+                    }
+
+                    if (paramValue && 'x-__nestjs-zod__io' in paramValue) {
+                        delete paramValue['x-__nestjs-zod__io'];
                     }
                 }
             }
@@ -187,4 +249,19 @@ function getSchemaIdFromDtoSchema(dtoSchema: DtoSchema) {
     }
     
     return schemaId;
+}
+
+function getSchemaIOFromDtoSchema(dtoSchema: DtoSchema) {
+    let io: 'input'|'output' | undefined;
+    if ('properties' in dtoSchema) {
+        const properties = dtoSchema.properties || {};
+        for (let value of Object.values(properties)) {
+            if('x-__nestjs-zod__io' in value && (value['x-__nestjs-zod__io'] === 'input' || value['x-__nestjs-zod__io'] === 'output')) {
+                io = value['x-__nestjs-zod__io'];
+                delete value['x-__nestjs-zod__io'];
+            }
+        }
+    }
+    
+    return io;
 }

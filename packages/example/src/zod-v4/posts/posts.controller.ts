@@ -47,7 +47,7 @@ export class PostsController {
 
     @Get(':id')
     @ZodSerializerDto(PostDto)
-    @ApiOkResponse({ type: PostDto, description: 'Get a post by ID' })
+    @ApiOkResponse({ type: PostDto.Output, description: 'Get a post by ID' })
     getById(@Param('id') id: string) {
       return {
         title: 'Hello',

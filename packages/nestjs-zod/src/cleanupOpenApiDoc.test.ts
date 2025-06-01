@@ -11,11 +11,11 @@ describe('cleanupOpenApiDoc', () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string(),
-        })) {}
+        })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Post()
             createBook(@Body() book: BookDto) {
@@ -67,11 +67,11 @@ describe('cleanupOpenApiDoc', () => {
             myNull: z.null(),
             myRecord: z.record(z.string(), z.number()),
             myTuple: z.tuple([z.string(), z.string()]),
-        })) {}
+        })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Post()
             createBook(@Body() book: BookDto) {
@@ -161,11 +161,11 @@ describe('cleanupOpenApiDoc', () => {
                 z.number(),
                 z.string(),
             ])
-        })) {}
+        })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Post()
             createBook(@Body() book: BookDto) {
@@ -227,11 +227,11 @@ describe('cleanupOpenApiDoc', () => {
                     name: z.literal('zach'),
                 }),
             ])
-        })) {}
+        })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Post()
             createBook(@Body() book: BookDto) {
@@ -301,11 +301,11 @@ describe('cleanupOpenApiDoc', () => {
                 z.string(),
                 z.literal('hello')
             )
-        })) {}
+        })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Post()
             createBook(@Body() book: BookDto) {
@@ -361,11 +361,11 @@ describe('cleanupOpenApiDoc', () => {
     test('constant', async () => {
         class BookDto extends createZodDto(z.object({
             myConstant: z.literal('hello')
-        })) {}
+        })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Post()
             createBook(@Body() book: BookDto) {
@@ -415,11 +415,11 @@ describe('cleanupOpenApiDoc', () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string(),
-        })) {}
+        })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Post()
             @ApiBody({ type: [BookDto] })
@@ -454,7 +454,7 @@ describe('cleanupOpenApiDoc', () => {
                                     schema: {
                                         type: 'array',
                                         items: {
-                                            $ref: '#/components/schemas/BookDto'       
+                                            $ref: '#/components/schemas/BookDto'
                                         }
                                     }
                                 }
@@ -471,11 +471,11 @@ describe('cleanupOpenApiDoc', () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string(),
-        }).meta({ id: 'Book' })) {}
+        }).meta({ id: 'Book' })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Get()
             getBook(@Body() book: BookDto) {
@@ -643,11 +643,11 @@ describe('cleanupOpenApiDoc', () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string(),
-        }).meta({ id: 'Book2' })) {}
+        }).meta({ id: 'Book2' })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Post()
             @ApiBody({ type: [BookDto] })
@@ -683,7 +683,7 @@ describe('cleanupOpenApiDoc', () => {
                                     schema: {
                                         type: 'array',
                                         items: {
-                                            $ref: '#/components/schemas/Book2'       
+                                            $ref: '#/components/schemas/Book2'
                                         }
                                     }
                                 }
@@ -718,11 +718,11 @@ describe('cleanupOpenApiDoc', () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             author: Author,
-        })) {}
+        })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Post()
             createBook(@Body() book: BookDto) {
@@ -783,11 +783,11 @@ describe('cleanupOpenApiDoc', () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             visibility: Visibility,
-        })) {}
+        })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Post()
             createBook(@Body() book: BookDto) {
@@ -836,15 +836,94 @@ describe('cleanupOpenApiDoc', () => {
         }));
     })
 
+    test('schema with registered property that references another registered schema', async () => {
+        const Size = z.enum(['small', 'medium', 'large']).meta({ id: 'Size' })
+
+        const Tail = z.object({
+            size: Size,
+        }).meta({ id: 'Tail' })
+
+        class AnimalDto extends createZodDto(z.object({
+            title: z.string(),
+            tail: Tail,
+        }).meta({ id: 'Animal' })) { }
+
+        @Controller()
+        class AnimalController {
+            constructor() { }
+
+            @Post()
+            createAnimal(@Body() animal: AnimalDto) {
+                return animal;
+            }
+        }
+
+        expect(await getSwaggerDoc(AnimalController)).toEqual(expect.objectContaining({
+            components: {
+                schemas: {
+                    "Animal": expect.objectContaining({
+                        "type": "object",
+                        "properties": {
+                            "title": {
+                                "type": "string"
+                            },
+                            "tail": {
+                                "$ref": "#/components/schemas/Tail"
+                            }
+                        },
+                        "required": [
+                            "title",
+                            "tail"
+                        ]
+                    }),
+                    "Size": expect.objectContaining({
+                        "enum": [
+                            "small",
+                            "medium",
+                            "large"
+                        ]
+                    }),
+                    "Tail": expect.objectContaining({
+                        "type": "object",
+                        "properties": {
+                            "size": {
+                                "$ref": "#/components/schemas/Size"
+                            }
+                        },
+                        "required": [
+                            "size"
+                        ]
+                    }),
+                }
+            },
+            paths: {
+                '/': expect.objectContaining({
+                    post: expect.objectContaining({
+                        requestBody: {
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        $ref: '#/components/schemas/Animal'
+                                    }
+                                }
+                            },
+                            required: true
+                        }
+                    })
+                })
+            }
+        }));
+    })
+
     test('query parameter dto with schema with id', async () => {
         class BookQueryParametersDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string(),
-        }).meta({ id: 'BookQueryParameters' })) {}
+        }).meta({ id: 'BookQueryParameters' })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Get()
             getBook(@Query() queryParams: BookQueryParametersDto) {
@@ -889,11 +968,11 @@ describe('cleanupOpenApiDoc', () => {
     test('path parameter dto with schema with id', async () => {
         class BookParametersDto extends createZodDto(z.object({
             id: z.string(),
-        }).meta({ id: 'BookParameters' })) {}
+        }).meta({ id: 'BookParameters' })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Get(':id')
             getBook(@Param() params: BookParametersDto) {
@@ -931,11 +1010,11 @@ describe('cleanupOpenApiDoc', () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string().nullish()
-        })) {}
+        })) { }
 
         @Controller()
         class BookController {
-            constructor() {}
+            constructor() { }
 
             @Post()
             createBook(@Body() book: BookDto) {
@@ -979,6 +1058,209 @@ describe('cleanupOpenApiDoc', () => {
             }
         }));
     })
+
+    test('uses same DTO for output if input is same as output', async () => {
+        class BookDto extends createZodDto(z.object({
+            title: z.string(),
+            author: z.string(),
+        })) { }
+
+        expect(BookDto).toEqual(BookDto.Output);
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Get()
+            @ApiResponse({ status: 200, type: BookDto.Output })
+            getBook() {
+                return {};
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        expect(JSON.stringify(doc, null, 2)).not.toContain('__nestjs-zod__');
+
+        expect(doc).toEqual(expect.objectContaining({
+            components: {
+                schemas: {
+                    BookDto: {
+                        type: 'object',
+                        properties: {
+                            title: {
+                                type: 'string'
+                            },
+                            author: {
+                                type: 'string',
+                            }
+                        },
+                        required: ['title', 'author']
+                    }
+                }
+            },
+            paths: {
+                '/': expect.objectContaining({
+                    get: expect.objectContaining({
+                        responses: expect.objectContaining({
+                            '200': expect.objectContaining({
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            $ref: '#/components/schemas/BookDto'
+                                        }
+                                    }
+                                }
+                            })
+                        })
+                    })
+                })
+            }
+        }));
+    })
+
+    test('uses output jsonschema when used in serializer', async () => {
+        class BookDto extends createZodDto(z.object({
+            title: z.string(),
+            author: z.string().optional().default('Unknown Author'),
+        })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Get()
+            @ApiResponse({ status: 200, type: BookDto.Output })
+            getBook() {
+                return {};
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        expect(JSON.stringify(doc, null, 2)).not.toContain('__nestjs-zod__');
+
+        expect(doc).toEqual(expect.objectContaining({
+            components: {
+                schemas: {
+                    BookDtoOutput: {
+                        type: 'object',
+                        properties: {
+                            title: {
+                                type: 'string'
+                            },
+                            author: {
+                                type: 'string',
+                                default: 'Unknown Author'
+                            }
+                        },
+                        required: ['title', 'author']
+                    }
+                }
+            },
+            paths: {
+                '/': expect.objectContaining({
+                    get: expect.objectContaining({
+                        responses: expect.objectContaining({
+                            '200': expect.objectContaining({
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            $ref: '#/components/schemas/BookDtoOutput'
+                                        }
+                                    }
+                                }
+                            })
+                        })
+                    })
+                })
+            }
+        }));
+
+    })
+
+    test.only('uses nested output jsonschema when used in serializer', async () => {
+
+        const Color = z.enum(['red', 'blue', 'green']).optional().default('blue').meta({ id: 'Color' })
+
+        const Droid = z.object({
+            name: z.string().optional().default('Unknown Name'),
+            color: Color,
+        }).meta({ id: 'Droid' })
+
+
+        class CharachterDto extends createZodDto(z.object({
+            name: z.string(),
+            droid: Droid
+        }).meta({ id: 'Charachter' })) { }
+
+        @Controller()
+        class CharachterController {
+            constructor() { }
+
+            @Get()
+            @ApiResponse({ status: 200, type: CharachterDto.Output })
+            getCharachter() {
+                return {};
+            }
+        }
+
+        const doc = await getSwaggerDoc(CharachterController);
+        expect(JSON.stringify(doc, null, 2)).not.toContain('__nestjs-zod__');
+
+        expect(doc).toEqual(expect.objectContaining({
+            components: {
+                schemas: {
+                    ColorOutput: {
+                        type: 'string',
+                        enum: ['red', 'blue', 'green'],
+                        default: 'blue'
+                    },
+                    DroidOutput: {
+                        type: 'object',
+                        properties: {
+                            name: {
+                                type: 'string',
+                                default: 'Unknown Name'
+                            },
+                            color: {
+                                $ref: '#/components/schemas/Color'
+                            }
+                        },
+                        required: ['name', 'color']
+                    },
+                    CharachterDtoOutput: {
+                        type: 'object',
+                        properties: {
+                            name: {
+                                type: 'string'
+                            },
+                            droid: {
+                                $ref: '#/components/schemas/Droid'
+                            }
+                        },
+                        required: ['name', 'droid']
+                    }
+                }
+            },
+            paths: {
+                '/': expect.objectContaining({
+                    get: expect.objectContaining({
+                        responses: expect.objectContaining({
+                            '200': expect.objectContaining({
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            $ref: '#/components/schemas/CharachterDtoOutput'
+                                        }
+                                    }
+                                }
+                            })
+                        })
+                    })
+                })
+            }
+        }));
+
+    })
 });
 
 async function getSwaggerDoc(controllerClass: Type<unknown>) {
@@ -987,7 +1269,7 @@ async function getSwaggerDoc(controllerClass: Type<unknown>) {
         controllers: [controllerClass],
         providers: []
     })
-    class AppModule {}
+    class AppModule { }
 
     const app = await NestFactory.create(AppModule, {
         logger: false

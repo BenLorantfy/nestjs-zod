@@ -13,14 +13,37 @@ export interface ZodDto<
   schema: TSchema
   create(input: unknown): ReturnType<TSchema['parse']>
   _OPENAPI_METADATA_FACTORY(): unknown
+  Output: ZodDto<UnknownSchema>
 }
 
 export function createZodDto<
   TSchema extends UnknownSchema|z3.ZodTypeAny|(z4.$ZodType & { parse: (input: unknown) => unknown })
 >(schema: TSchema) {
   class AugmentedZodDto {
-    public static isZodDto = true
-    public static schema = schema
+    public static readonly isZodDto = true
+    public static readonly schema = schema
+    public static readonly io: "input" | "output" = "input"
+
+    static get Output() {
+      // If the output schema is the same as the input schema, let's just return
+      // the input schema so we're not creating extrenuous entries in the
+      // openapi doc
+      if (areInputAndOutputSchemasEffectivelyEqual(this.schema)) {
+        return this;
+      }
+
+
+      class OutputSchema extends this {
+        public static readonly io = "output"
+      }
+
+      Object.defineProperty(OutputSchema, 'name', { value: `${this.name}Output` });
+
+
+      console.log('OutputSchema', OutputSchema);
+      return OutputSchema;
+    }
+    
 
     public static create(input: unknown) {
       return this.schema.parse(input)
@@ -31,7 +54,7 @@ export function createZodDto<
         const meta = globalRegistry.get(this.schema);
 
         const baseSchema = toJSONSchema(this.schema, {
-          io: 'input',
+          io: this.io,
           override: (ctx) => {
               if (Object.keys(ctx.jsonSchema).length === 1 && ctx.jsonSchema.anyOf && ctx.jsonSchema.anyOf.length === 2 && ctx.jsonSchema.anyOf[1].type === 'null' && typeof ctx.jsonSchema.anyOf?.[0] === 'object') {
                   // Note: nestjs/swagger doesn't like how zod generates nullable types like this:
@@ -89,7 +112,9 @@ export function createZodDto<
         // @ts-expect-error
         const withParentSchemaId = addSchemaIdToAllProperties(meta?.id, baseSchema);
 
-        const withZodRefMarker = temporarilyRemoveZodRefs(withParentSchemaId);
+        const withIO = addSchemaIOToAllProperties(this.io, withParentSchemaId);
+
+        const withZodRefMarker = temporarilyRemoveZodRefs(withIO);
 
         // @ts-expect-error
         return markRequiredPropertiesAsRequired(withZodRefMarker).properties;
@@ -106,6 +131,25 @@ export function createZodDto<
   return AugmentedZodDto as unknown as ZodDto<TSchema>
 }
 
+function areInputAndOutputSchemasEffectivelyEqual(schema: UnknownSchema|z3.ZodTypeAny|(z4.$ZodType & { parse: (input: unknown) => unknown })) {
+  if (!('_zod' in schema)) {
+    return true;
+  }
+
+  const inputSchema = toJSONSchema(schema, { 
+    io: "input",
+  });
+  const outputSchema = toJSONSchema(schema, { 
+    io: "output",
+    override: (ctx) => {
+      if ('additionalProperties' in ctx.jsonSchema && ctx.jsonSchema.additionalProperties === false) {
+        delete ctx.jsonSchema.additionalProperties;
+      }
+    }
+  });
+
+  return JSON.stringify(inputSchema) === JSON.stringify(outputSchema);
+}
 
 function addSchemaIdToAllProperties(schemaId: string|undefined, schema: JSONSchema.Schema) {
   if (!schemaId) {
@@ -115,6 +159,16 @@ function addSchemaIdToAllProperties(schemaId: string|undefined, schema: JSONSche
     const properties = schema.properties || {};
     for (const [key, value] of Object.entries(properties)) {
       properties[key]['x-__nestjs-zod__parent-schema-id'] = schemaId;
+    }
+  }
+  return schema;
+}
+
+function addSchemaIOToAllProperties(io: 'input'|'output', schema: JSONSchema.Schema) {
+  if (schema.type === 'object' && 'properties' in schema) {
+    const properties = schema.properties || {};
+    for (const [key, value] of Object.entries(properties)) {
+      properties[key]['x-__nestjs-zod__io'] = io;
     }
   }
   return schema;
