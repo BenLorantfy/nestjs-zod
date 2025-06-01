@@ -55,6 +55,33 @@ export function createZodDto<
                   delete ctx.jsonSchema.anyOf;
                   Object.assign(ctx.jsonSchema, firstType);
                   ctx.jsonSchema.nullable = true;
+                  return;
+              }
+
+              // Note: nestjs/swagger doesn't like `anyOf`.  Actually it doesn't like any schema that doesn't have a `type` property.
+              // To get around this, we:
+              // 1. Add a temporary `type: "object"` property
+              // 2. Change `anyOf` to `x-__nestjs_zod__-anyOf`
+              // 3. Undo this operation in `cleanupOpenApiDoc`
+              if (ctx.jsonSchema.anyOf && !ctx.jsonSchema.type) {
+                ctx.jsonSchema.type = 'object';
+                ctx.jsonSchema['x-__nestjs_zod__-anyOf'] = ctx.jsonSchema.anyOf;
+                delete ctx.jsonSchema.anyOf;
+                return;
+              }
+
+              if (ctx.jsonSchema.allOf && !ctx.jsonSchema.type) {
+                ctx.jsonSchema.type = 'object';
+                ctx.jsonSchema['x-__nestjs_zod__-allOf'] = ctx.jsonSchema.allOf;
+                delete ctx.jsonSchema.allOf;
+                return;
+              }
+
+              if (ctx.jsonSchema.const && !ctx.jsonSchema.type) {
+                ctx.jsonSchema.type = 'object';
+                ctx.jsonSchema['x-__nestjs_zod__-const'] = ctx.jsonSchema.const;
+                delete ctx.jsonSchema.const;
+                return;
               }
           }
         })
@@ -131,7 +158,7 @@ function temporarilyRemoveZodRefs(jsonSchema: JSONSchema.Schema) {
       return {
         ...rest,
         type: rest.type || 'object',
-        'x-zod-ref': $ref
+        'x-__nestjs-zod__-ref': $ref
       }
     }
     return schema;

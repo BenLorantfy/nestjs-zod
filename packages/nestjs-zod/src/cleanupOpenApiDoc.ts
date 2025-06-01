@@ -29,19 +29,49 @@ export function cleanupOpenApiDoc(d: OpenAPIObject): OpenAPIObject {
 
         // @ts-expect-error
         dtoSchemas[schemaId] = walkJsonSchema(value, (schema) => {
-            if (schema['x-zod-ref']) {
+            if (schema['x-__nestjs-zod__-ref']) {
                 // @ts-expect-error
-                let schemaRefId: string = schema['x-zod-ref'].replace('#/$defs/', '');
+                let schemaRefId: string = schema['x-__nestjs-zod__-ref'].replace('#/$defs/', '');
                 if (dtoRenames[schemaRefId]) {
                     schemaRefId = dtoRenames[schemaRefId];
                 }
 
                 foundSchemaIds.add(schemaRefId);
                 schema.$ref = `#/components/schemas/${schemaRefId}`;
-                delete schema['x-zod-ref'];
+                delete schema['x-__nestjs-zod__-ref'];
                 // @ts-expect-error
                 delete schema['type'];
             }
+
+            if (schema['x-__nestjs_zod__-anyOf']) {
+                // @ts-expect-error
+                delete schema['type'];
+                
+                // @ts-expect-error
+                schema.anyOf = schema['x-__nestjs_zod__-anyOf'];
+                
+                delete schema['x-__nestjs_zod__-anyOf'];
+            }
+
+            if (schema['x-__nestjs_zod__-allOf']) {
+                // @ts-expect-error
+                delete schema['type'];
+
+                // @ts-expect-error
+                schema.allOf = schema['x-__nestjs_zod__-allOf'];
+
+                delete schema['x-__nestjs_zod__-allOf'];
+            }
+
+            if (schema['x-__nestjs_zod__-const']) {
+                // @ts-expect-error
+                delete schema['type'];
+
+                // @ts-expect-error
+                schema.const = schema['x-__nestjs_zod__-const'];
+                delete schema['x-__nestjs_zod__-const'];
+            }
+
             return schema;
         }, { clone: true });
     }

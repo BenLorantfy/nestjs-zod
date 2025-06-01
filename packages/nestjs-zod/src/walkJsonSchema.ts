@@ -37,6 +37,11 @@ export function walkJsonSchema(schema: JSONSchema.Schema, callback: (schema: JSO
     schema.allOf = schema.allOf.map(subSchema => walkJsonSchema(subSchema, callback));
   }
 
+  if (schema.propertyNames) {
+    // @ts-expect-error
+    schema.propertyNames = walkJsonSchema(schema.propertyNames, callback);
+  }
+
 //   // Handle not
 //   if (schema.not) {
 //     schema.not = walkJsonSchema(schema.not, callback);

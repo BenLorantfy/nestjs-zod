@@ -7,7 +7,7 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { cleanupOpenApiDoc } from './cleanupOpenApiDoc';
 
 describe('cleanupOpenApiDoc', () => {
-    it('creates a simple openapi doc', async () => {
+    test('simple openapi doc', async () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string(),
@@ -59,7 +59,359 @@ describe('cleanupOpenApiDoc', () => {
         }));
     })
 
-    it('creates a simple openapi doc with array', async () => {
+    test('some misc zod types', async () => {
+        class BookDto extends createZodDto(z.object({
+            myBoolean: z.boolean(),
+            myCuid: z.cuid(),
+            myNum: z.int().lt(100).gt(0),
+            myNull: z.null(),
+            myRecord: z.record(z.string(), z.number()),
+            myTuple: z.tuple([z.string(), z.string()]),
+        })) {}
+
+        @Controller()
+        class BookController {
+            constructor() {}
+
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        expect(JSON.stringify(doc, null, 2)).not.toContain('__nestjs-zod__');
+
+        expect(doc).toEqual(expect.objectContaining({
+            components: {
+                schemas: {
+                    BookDto: {
+                        type: 'object',
+                        properties: {
+                            myBoolean: {
+                                type: 'boolean'
+                            },
+                            myCuid: {
+                                type: 'string',
+                                pattern: '^[cC][^\\s-]{8,}$',
+                                format: 'cuid'
+                            },
+                            myNum: {
+                                type: 'integer',
+                                exclusiveMinimum: 0,
+                                exclusiveMaximum: 100
+                            },
+                            myNull: {
+                                type: 'null'
+                            },
+                            myRecord: {
+                                type: 'object',
+                                propertyNames: {
+                                    type: 'string',
+                                },
+                                additionalProperties: {
+                                    type: 'number',
+                                }
+                            },
+                            myTuple: {
+                                type: 'array',
+                                prefixItems: [
+                                    {
+                                        type: 'string',
+                                    },
+                                    {
+                                        type: 'string',
+                                    }
+                                ]
+                            }
+                        },
+                        required: [
+                            'myBoolean',
+                            'myCuid',
+                            'myNum',
+                            'myNull',
+                            'myRecord',
+                            'myTuple'
+                        ]
+                    }
+                }
+            },
+            paths: {
+                '/': expect.objectContaining({
+                    post: expect.objectContaining({
+                        requestBody: {
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        $ref: '#/components/schemas/BookDto'
+                                    }
+                                }
+                            },
+                            required: true
+                        }
+                    })
+                })
+            }
+        }));
+    })
+
+    test('union', async () => {
+        class BookDto extends createZodDto(z.object({
+            myUnion: z.union([
+                z.number(),
+                z.string(),
+            ])
+        })) {}
+
+        @Controller()
+        class BookController {
+            constructor() {}
+
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        const stringified = JSON.stringify(doc, null, 2);
+        expect(stringified).not.toContain('__nestjs-zod__');
+
+        expect(doc).toEqual(expect.objectContaining({
+            components: {
+                schemas: {
+                    BookDto: {
+                        type: 'object',
+                        properties: {
+                            myUnion: {
+                                anyOf: [
+                                    {
+                                        type: 'number'
+                                    },
+                                    {
+                                        type: 'string'
+                                    }
+                                ]
+                            }
+                        },
+                        required: ['myUnion']
+                    }
+                }
+            },
+            paths: {
+                '/': expect.objectContaining({
+                    post: expect.objectContaining({
+                        requestBody: {
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        $ref: '#/components/schemas/BookDto'
+                                    }
+                                }
+                            },
+                            required: true
+                        }
+                    })
+                })
+            }
+        }));
+    })
+
+    test('discriminated union', async () => {
+        class BookDto extends createZodDto(z.object({
+            author: z.discriminatedUnion('name', [
+                z.object({
+                    name: z.literal('ben'),
+                }),
+                z.object({
+                    name: z.literal('zach'),
+                }),
+            ])
+        })) {}
+
+        @Controller()
+        class BookController {
+            constructor() {}
+
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        const stringified = JSON.stringify(doc, null, 2);
+        expect(stringified).not.toContain('__nestjs-zod__');
+
+        expect(doc).toEqual(expect.objectContaining({
+            components: {
+                schemas: {
+                    BookDto: {
+                        type: 'object',
+                        properties: {
+                            author: {
+                                anyOf: [
+                                    {
+                                        type: 'object',
+                                        properties: {
+                                            name: {
+                                                const: 'ben'
+                                            }
+                                        },
+                                        required: ['name']
+                                    },
+                                    {
+                                        type: 'object',
+                                        properties: {
+                                            name: {
+                                                const: 'zach'
+                                            }
+                                        },
+                                        required: ['name']
+                                    }
+                                ]
+                            }
+                        },
+                        required: ['author']
+                    }
+                }
+            },
+            paths: {
+                '/': expect.objectContaining({
+                    post: expect.objectContaining({
+                        requestBody: {
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        $ref: '#/components/schemas/BookDto'
+                                    }
+                                }
+                            },
+                            required: true
+                        }
+                    })
+                })
+            }
+        }));
+    })
+
+    test('intersection', async () => {
+        class BookDto extends createZodDto(z.object({
+            myIntersection: z.intersection(
+                z.string(),
+                z.literal('hello')
+            )
+        })) {}
+
+        @Controller()
+        class BookController {
+            constructor() {}
+
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        const stringified = JSON.stringify(doc, null, 2);
+
+        expect(stringified).not.toContain('__nestjs-zod__');
+
+        expect(await getSwaggerDoc(BookController)).toEqual(expect.objectContaining({
+            components: {
+                schemas: {
+                    BookDto: {
+                        type: 'object',
+                        properties: {
+                            myIntersection: {
+                                allOf: [
+                                    {
+                                        type: 'string'
+                                    },
+                                    {
+                                        const: 'hello'
+                                    }
+                                ]
+                            }
+                        },
+                        required: ['myIntersection']
+                    }
+                }
+            },
+            paths: {
+                '/': expect.objectContaining({
+                    post: expect.objectContaining({
+                        requestBody: {
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        $ref: '#/components/schemas/BookDto'
+                                    }
+                                }
+                            },
+                            required: true
+                        }
+                    })
+                })
+            }
+        }));
+    })
+
+    test('constant', async () => {
+        class BookDto extends createZodDto(z.object({
+            myConstant: z.literal('hello')
+        })) {}
+
+        @Controller()
+        class BookController {
+            constructor() {}
+
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        const stringified = JSON.stringify(doc, null, 2);
+
+        expect(stringified).not.toContain('__nestjs-zod__');
+
+        expect(doc).toEqual(expect.objectContaining({
+            components: {
+                schemas: {
+                    BookDto: {
+                        type: 'object',
+                        properties: {
+                            myConstant: {
+                                const: 'hello'
+                            }
+                        },
+                        required: ['myConstant']
+                    }
+                }
+            },
+            paths: {
+                '/': expect.objectContaining({
+                    post: expect.objectContaining({
+                        requestBody: {
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        $ref: '#/components/schemas/BookDto'
+                                    }
+                                }
+                            },
+                            required: true
+                        }
+                    })
+                })
+            }
+        }));
+    })
+
+    test('array', async () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string(),
@@ -115,7 +467,7 @@ describe('cleanupOpenApiDoc', () => {
         }));
     })
 
-    it('uses id from meta if present', async () => {
+    test('schema with id', async () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string(),
@@ -287,7 +639,7 @@ describe('cleanupOpenApiDoc', () => {
         }));
     })
 
-    it('uses id from meta if present for array', async () => {
+    test('array dto with schema with id', async () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string(),
@@ -358,7 +710,7 @@ describe('cleanupOpenApiDoc', () => {
         }));
     })
 
-    it('properly handles registered zod schema objects', async () => {
+    test('schema with property that references registered zod schemas', async () => {
         const Author = z.object({
             name: z.string(),
         }).meta({ id: 'Author' })
@@ -425,7 +777,7 @@ describe('cleanupOpenApiDoc', () => {
         }));
     })
 
-    it('properly handles registered zod schema enums', async () => {
+    test('schema with property that references registered zod enum schema', async () => {
         const Visibility = z.enum(['public', 'private']).meta({ id: 'Visibility' })
 
         class BookDto extends createZodDto(z.object({
@@ -484,7 +836,7 @@ describe('cleanupOpenApiDoc', () => {
         }));
     })
 
-    it('properly handles query parameters', async () => {
+    test('query parameter dto with schema with id', async () => {
         class BookQueryParametersDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string(),
@@ -534,7 +886,7 @@ describe('cleanupOpenApiDoc', () => {
         }));
     })
 
-    it('properly handles path parameters', async () => {
+    test('path parameter dto with schema with id', async () => {
         class BookParametersDto extends createZodDto(z.object({
             id: z.string(),
         }).meta({ id: 'BookParameters' })) {}
@@ -575,7 +927,7 @@ describe('cleanupOpenApiDoc', () => {
         }));
     })
 
-    it('properly handles nullish', async () => {
+    test('nullish properties', async () => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
             author: z.string().nullish()
