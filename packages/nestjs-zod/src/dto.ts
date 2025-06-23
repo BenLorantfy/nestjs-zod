@@ -64,7 +64,7 @@ export function createZodDto<
  * expectation for class metadata.
  */
 export function normalizeOpenAPISchemaForNest(schema: {
-  properties?: Record<string, { type?: string }>;
+  properties?: Record<string, {}>;
   required?: string[];
 }) {
   if (!schema.properties) return schema;
@@ -74,11 +74,11 @@ export function normalizeOpenAPISchemaForNest(schema: {
       const subSchema = schema.properties![key]
 
       // the expectation is that we always define a type
-      if (subSchema.type === undefined) {
-        subSchema.type === 'object';
+      if (!('type' in subSchema)) {
+        (subSchema as { type?: string }).type = 'object';
       }
 
-      if (subSchema.type === 'object') {
+      if ('type' in subSchema && subSchema.type === 'object') {
         acc[key] = {
           ...subSchema,
           // selfRequired seems to be needed to tell nest/swagger that the property is required, when the property is an object.
