@@ -172,6 +172,10 @@ exports[`zodToOpenAPI (using @nest-zod/z) should serialize a complex schema 1`] 
         },
       ],
     },
+    "zodDate": {
+      "format": "date-time",
+      "type": "string",
+    },
     "zodDateString": {
       "format": "date-time",
       "type": "string",
@@ -192,6 +196,7 @@ exports[`zodToOpenAPI (using @nest-zod/z) should serialize a complex schema 1`] 
     "record",
     "recordWithKeys",
     "zodDateString",
+    "zodDate",
   ],
   "type": "object",
 }
@@ -426,6 +431,10 @@ exports[`zodToOpenAPI (using zod) should serialize a complex schema 1`] = `
         },
       ],
     },
+    "zodDate": {
+      "format": "date-time",
+      "type": "string",
+    },
     "zodDateString": {
       "format": "date-time",
       "type": "string",
@@ -446,6 +455,7 @@ exports[`zodToOpenAPI (using zod) should serialize a complex schema 1`] = `
     "record",
     "recordWithKeys",
     "zodDateString",
+    "zodDate",
   ],
   "type": "object",
 }

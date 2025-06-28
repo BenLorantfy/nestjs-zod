@@ -1,6 +1,6 @@
+import { z } from '@nest-zod/z'
 import { Type } from '@nestjs/common'
 import { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
-import { z } from '@nest-zod/z'
 import deepmerge from 'deepmerge'
 
 interface ExtendedSchemaObject extends SchemaObject {
@@ -99,6 +99,11 @@ export function zodToOpenAPI(
         object.format = check.value
       }
     }
+  }
+
+  if (is(zodType, z.ZodDate)) {
+    object.type = 'string'
+    object.format = 'date-time'
   }
 
   if (is(zodType, z.ZodBigInt)) {
@@ -230,9 +235,9 @@ export function zodToOpenAPI(
       zodToOpenAPI(right, visited),
       {
         arrayMerge: (target, source) => {
-          const mergedSet = new Set([...target, ...source]);
-          return Array.from(mergedSet);
-        }
+          const mergedSet = new Set([...target, ...source])
+          return Array.from(mergedSet)
+        },
       }
     )
     Object.assign(object, merged)
