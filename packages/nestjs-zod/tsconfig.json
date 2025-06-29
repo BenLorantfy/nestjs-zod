@@ -24,7 +24,8 @@
     "outDir": "./dist",
     "typeRoots": [
       "./node_modules/@types"
-    ]
+    ],
+    "emitDecoratorMetadata": true
   },
   "exclude": [
     "./node_modules",
