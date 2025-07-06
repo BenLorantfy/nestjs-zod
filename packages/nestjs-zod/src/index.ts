@@ -6,3 +6,4 @@ export { zodToOpenAPI } from './openapi'
 export { createZodValidationPipe, ZodValidationPipe } from './pipe'
 export { ZodSerializerDto, ZodSerializerInterceptor } from './serializer'
 export { validate } from './validate'
+export { cleanupOpenApiDoc } from './cleanupOpenApiDoc';

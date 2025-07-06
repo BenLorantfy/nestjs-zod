@@ -15,9 +15,6 @@ export interface ZodDto<
   _OPENAPI_METADATA_FACTORY(): unknown
 }
 
-export const ioSymbol = Symbol('io');
-export const schemaSymbol = Symbol('schema');
-
 export function createZodDto<
   TSchema extends UnknownSchema|z3.ZodTypeAny|($ZodType & { parse: (input: unknown) => unknown })
 >(schema: TSchema) {
@@ -70,11 +67,12 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
     });
 
     assert(isObjectType(jsonSchema), 'createZodDto must be called with an object type');
-    
+
     let properties: Record<string, unknown> = {};
     for (let [propertyKey, propertySchema] of Object.entries(jsonSchema.properties)) {
       const newPropertySchema: Record<string, unknown> = {
-        ...propertySchema,
+        // TOOD: figure out why this fails at compile time
+        ...(propertySchema as Record<string, unknown>),
 
         // Note: nestjs throws the following error message if `type` is
         // missing on the schema: 

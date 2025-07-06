@@ -1,18 +1,19 @@
 import { Body, Controller, Delete, Get, Head, Module, Options, Param, Patch, Post, Put, Query, Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import { ApiBody, ApiOkResponse, ApiResponse, DocumentBuilder } from '@nestjs/swagger';
+import { ApiBody, ApiOkResponse, ApiProperty, ApiResponse, DocumentBuilder } from '@nestjs/swagger';
 import z from 'zod/v4';
 import { createZodDto } from './dto';
 import { SwaggerModule } from '@nestjs/swagger';
 import { cleanupOpenApiDoc } from './cleanupOpenApiDoc';
 import get from 'lodash/get';
 import { PREFIX } from './const';
+import { IsString } from 'class-validator';
 
 describe('cleanupOpenApiDoc', () => {
     test.each([
         { cleanUp: true, description: 'cleaned doc' },
         { cleanUp: false, description: 'uncleaned doc' } // basic use-case should work without cleanup phase
-    ])('basic - $description', async ({ cleanUp }) => {
+    ])('basic request body - $description', async ({ cleanUp }) => {
         class BookDto extends createZodDto(z.object({
             title: z.string(),
         })) { }
@@ -67,6 +68,39 @@ describe('cleanupOpenApiDoc', () => {
                 }
             }
         }));
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+
+    test.each([
+        { cleanUp: true, description: 'cleaned doc' },
+        { cleanUp: false, description: 'uncleaned doc' } // basic use-case should work without cleanup phase
+    ])('basic query params - $description', async ({ cleanUp }) => {
+        class QueryParamsDto extends createZodDto(z.object({
+            filter: z.string(),
+        })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Get()
+            getBooks(@Query() query: QueryParamsDto) {
+                return [];
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController, { cleanUp });
+
+        expect(get(doc, 'paths./.get.parameters')).toEqual([
+            {
+                in: 'query',
+                name: 'filter',
+                required: true,
+                schema: {
+                    type: 'string'
+                }
+            }
+        ]);
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     })
 
@@ -206,9 +240,12 @@ describe('cleanupOpenApiDoc', () => {
         expect(get(doc, 'components.schemas.Book2_Output.id')).toEqual('Book2_Output');
     })
 
-    test.skip('query param', async () => {
+    test('query param union', async () => {
         class QueryParamsDto extends createZodDto(z.object({
-            filter: z.string(),
+            filter: z.union([
+                z.literal('published'),
+                z.literal('unpublished')
+            ]),
         })) { }
 
         @Controller()
@@ -223,8 +260,326 @@ describe('cleanupOpenApiDoc', () => {
 
         const doc = await getSwaggerDoc(BookController);
 
-        expect(doc).toEqual({});
+        expect(get(doc, 'paths./.get.parameters')).toEqual([
+            {
+                in: 'query',
+                name: 'filter',
+                required: true,
+                schema: {
+                    anyOf: [
+                        {
+                            type: 'string',
+                            const: 'published'
+                        },
+                        {
+                            type: 'string',
+                            const: 'unpublished'
+                        }
+                    ]
+                }
+            }
+        ]);
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
     })
+
+    test('query param with nested named schema', async () => {
+        const BooleanString = z.enum(['true', 'false']).meta({ id: 'BooleanString' });
+
+        class QueryParamsDto extends createZodDto(z.object({
+            published: BooleanString,
+            banned: BooleanString
+        })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Get()
+            getBooks(@Query() query: QueryParamsDto) {
+                return [];
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+
+        expect(doc.components?.schemas).toEqual({
+            BooleanString: {
+                enum: [
+                    'true',
+                    'false'
+                ],
+                id: 'BooleanString',
+                type: 'string'
+            }
+        });
+
+        expect(get(doc, 'paths./.get.parameters')).toEqual([
+            {
+                in: 'query',
+                name: 'published',
+                required: true,
+                schema: {
+                    $ref: '#/components/schemas/BooleanString'
+                }
+            },
+            {
+                in: 'query',
+                name: 'banned',
+                required: true,
+                schema: {
+                    $ref: '#/components/schemas/BooleanString'
+                }
+            }
+        ]);
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+
+    test('removes -parent-id from query param', async () => {
+        class QueryParamsDto extends createZodDto(z.object({
+            published: z.enum(['true', 'false']),
+        }).meta({ id: 'QueryParams' })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Get()
+            getBooks(@Query() query: QueryParamsDto) {
+                return [];
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+
+    test('allows mixing class-validator and zod schemas', async () => {
+        class BookDto extends createZodDto(z.object({
+            title: z.string(),
+        })) { }
+
+        class FruitDto {
+            @IsString()
+            @ApiProperty()
+            name!: string;
+        }
+
+        @Controller()
+        class MyController {
+            constructor() { }
+
+            @Post('/book')
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+
+            @Post('/fruit')
+            createFruit(@Body() fruit: FruitDto) {
+                return fruit;
+            }
+        }
+
+        const doc = await getSwaggerDoc(MyController);
+        expect(doc.components?.schemas).toEqual({
+            BookDto: {
+                properties: {
+                    title: {
+                        type: 'string'
+                    }
+                },
+                required: ['title'],
+                type: 'object'
+            },
+            FruitDto: {
+                properties: {
+                    name: {
+                        type: 'string'
+                    }
+                },
+                required: ['name'],
+                type: 'object'
+            }
+        });
+        expect(get(doc, 'paths./book.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/BookDto');
+        expect(get(doc, 'paths./fruit.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/FruitDto');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+
+    test('throws an error if a zod schema name conflicts with a class-validator schema name', async () => {
+        class Fruit {
+            @IsString()
+            @ApiProperty()
+            name!: string;
+        }
+
+        class Fruit2 extends createZodDto(z.object({
+            color: z.string(),
+        }).meta({ id: 'Fruit' })) { }
+
+        @Controller()
+        class MyController {
+            constructor() { }
+
+            @Post('/class-validator-fruit')
+            createFruit1(@Body() fruit: Fruit) {
+                return fruit;
+            }
+
+            @Post('/zod-fruit')
+            createFruit2(@Body() fruit: Fruit2) {
+                return fruit;
+            }
+        }
+
+        await expect(getSwaggerDoc(MyController)).rejects.toEqual(new Error("[cleanupOpenApiDoc] Found multiple schemas with name `Fruit`.  Please review your schemas to ensure that you are not using the same schema name for different schemas"));
+    });
+
+    test('throws an error if a nested zod schema name conflicts with a class-validator schema name', async () => {
+        class Car {
+            @IsString()
+            @ApiProperty()
+            name!: string;
+        }
+
+        class Car2 extends createZodDto(z.object({
+            car: z.object({
+                color: z.string(),
+            }).meta({ id: 'Car' })
+        })) { }
+
+        @Controller()
+        class MyController {
+            constructor() { }
+
+            @Post('/class-validator-car')
+            createCar1(@Body() car: Car) {
+                return car;
+            }
+
+            @Post('/zod-car')
+            createCar2(@Body() car: Car2) {
+                return car;
+            }
+        }
+
+        await expect(getSwaggerDoc(MyController)).rejects.toEqual(new Error("[cleanupOpenApiDoc] Found multiple schemas with name `Car`.  Please review your schemas to ensure that you are not using the same schema name for different schemas"));
+    });
+
+    test('throws an error if a named schema nested in a query param conflicts with a class-validator schema name', async () => {
+        class Chair {
+            @IsString()
+            @ApiProperty()
+            name!: string;
+        }
+
+        class Chair2 extends createZodDto(z.object({
+            chair: z.enum(['oak', 'pine']).meta({ id: 'Chair' })
+        })) { }
+
+        @Controller()
+        class MyController {
+            constructor() { }
+
+            @Post()
+            createChair(@Body() chair: Chair) {
+                return chair;
+            }
+
+            @Get()
+            getChair(@Query() query: Chair2) {
+                return query;
+            }
+        }
+
+        await expect(getSwaggerDoc(MyController)).rejects.toEqual(new Error("[cleanupOpenApiDoc] Found multiple schemas with name `Chair`.  Please review your schemas to ensure that you are not using the same schema name for different schemas"));
+    });
+
+    test('allows using the same schema as a root DTO and a nested DTO', async () => {
+        const Product = z.object({
+            name: z.string(),
+        }).meta({ id: 'Product' });
+        
+        class ProductDto extends createZodDto(Product) { }
+
+        class RequestBodyDto extends createZodDto(z.object({
+            product: Product
+        })) { }
+
+        @Controller()
+        class MyController {
+            constructor() { }
+
+            @Post('/products1')
+            createProduct(@Body() product: ProductDto) {
+                return product;
+            }
+
+            @Post('/products2')
+            createProduct2(@Body() product: RequestBodyDto) {
+                return product;
+            }
+        }
+
+        const doc = await getSwaggerDoc(MyController);
+        expect(doc).toEqual(expect.objectContaining({
+            components: {
+                schemas: {
+                    RequestBodyDto: {
+                        type: 'object',
+                        properties: {
+                            product: {
+                                '$ref': '#/components/schemas/Product'
+                            }
+                        },
+                        required: ['product'],
+                    },
+                    Product: {
+                        id: 'Product',
+                        properties: {
+                            name: {
+                                type: 'string'
+                            }
+                        },
+                        required: ['name'],
+                        type: 'object'
+                    }
+                }
+            },
+            paths: {
+                '/products1': {
+                    post: expect.objectContaining({
+                        requestBody: {
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        '$ref': '#/components/schemas/Product'
+                                    }
+                                }
+                            },
+                            required: true
+                        }
+                    })
+                },
+                '/products2': {
+                    post: expect.objectContaining({
+                        requestBody: {
+                            content: {
+                                'application/json': {
+                                    schema: {
+                                        $ref: '#/components/schemas/RequestBodyDto'
+                                    }
+                                }
+                            },
+                            required: true
+                        }
+                    })
+                }
+            }
+        }));
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+
+    // TODO: write tests for recursive schemas
 
     test.skip('names output schema Book instead of BookDto if only using as output', async () => {        
         class BookDto extends createZodDto(z.object({
