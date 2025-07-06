@@ -579,7 +579,217 @@ describe('cleanupOpenApiDoc', () => {
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     })
 
+    test('recursive schemas', async () => {
+        const Node = z.object({
+            name: z.string(),
+            get children() {
+              return z.array(Node)
+            }
+        });
+
+        class NodeDto extends createZodDto(Node) { }
+
+        @Controller()
+        class WorkflowController {
+            constructor() { }
+
+            @Post()
+            createWorkflow(@Body() workflow: NodeDto) {
+                return workflow;
+            }
+        }
+
+        const doc = await getSwaggerDoc(WorkflowController);
+        expect(doc.components?.schemas).toEqual({
+            NodeDto: {
+                properties: {
+                    children: {
+                        items: {
+                            '$ref': '#/components/schemas/NodeDto'
+                        },
+                        type: 'array'
+                    },
+                    name: {
+                        type: 'string'
+                    }
+                },
+                required: ['name', 'children'],
+                type: 'object'
+            }
+        });
+        expect(get(doc, 'paths./.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/NodeDto');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+
+    test('recursive named schemas', async () => {
+        const Node = z.object({
+            name: z.string(),
+            get children() {
+              return z.array(Node)
+            }
+        }).meta({ id: 'Node' });
+
+        class NodeDto extends createZodDto(Node) { }
+
+        @Controller()
+        class WorkflowController {
+            constructor() { }
+
+            @Post()
+            createWorkflow(@Body() workflow: NodeDto) {
+                return workflow;
+            }
+        }
+
+        const doc = await getSwaggerDoc(WorkflowController);
+        expect(doc.components?.schemas).toEqual({
+            Node: {
+                id: 'Node',
+                properties: {
+                    children: {
+                        items: {
+                            '$ref': '#/components/schemas/Node'
+                        },
+                        type: 'array'
+                    },
+                    name: {
+                        type: 'string'
+                    }
+                },
+                required: ['name', 'children'],
+                type: 'object'
+            }
+        });
+        expect(get(doc, 'paths./.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/Node');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+
+    test('mutually recursive schemas', async () => {
+        const User = z.object({
+            name: z.string(),
+            get posts(){
+              return z.array(BlogPost)
+            }
+        });
+           
+        const BlogPost = z.object({
+            title: z.string(),
+            get author(){
+              return User
+            }
+        });
+
+        class UserDto extends createZodDto(User) { }
+
+        @Controller()
+        class MyController {
+            constructor() { }
+
+            @Post()
+            createUser(@Body() user: UserDto) {
+                return user;
+            }
+        }
+
+        const doc = await getSwaggerDoc(MyController);
+        expect(doc.components?.schemas).toEqual({
+            UserDto: {
+                type: 'object',
+                properties: {
+                    name: {
+                        type: 'string',
+                    },
+                    posts: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                author: {
+                                    '$ref': '#/components/schemas/UserDto'
+                                },
+                                title: {
+                                    type: 'string',
+                                }
+                            },
+                            required: ['title', 'author'],
+                        }
+                    },
+                },
+                required: ['name', 'posts'],
+            }
+        });
+        expect(get(doc, 'paths./.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/UserDto');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+
+    test('mutually recursive named schemas', async () => {
+        const User = z.object({
+            name: z.string(),
+            get posts(){
+              return z.array(BlogPost)
+            }
+        }).meta({ id: 'User' });
+           
+        const BlogPost = z.object({
+            title: z.string(),
+            get author(){
+              return User
+            }
+        }).meta({ id: 'BlogPost' });
+
+        class UserDto extends createZodDto(User) { }
+
+        @Controller()
+        class MyController {
+            constructor() { }
+
+            @Post()
+            createUser(@Body() user: UserDto) {
+                return user;
+            }
+        }
+
+        const doc = await getSwaggerDoc(MyController);
+        expect(doc.components?.schemas).toEqual({
+            BlogPost: {
+                id: 'BlogPost',
+                properties: {
+                    author: {
+                        '$ref': '#/components/schemas/User'
+                    },
+                    title: {
+                        type: 'string',
+                    }
+                },
+                required: ['title', 'author'],
+                type: 'object'
+            },
+            User: {
+                id: 'User',
+                properties: {
+                    name: {
+                        type: 'string',
+                    },
+                    posts: {
+                        type: 'array',
+                        items: {
+                            '$ref': '#/components/schemas/BlogPost'
+                        }
+                    }
+                },
+                required: ['name', 'posts'],
+                type: 'object'
+            }
+        });
+        expect(get(doc, 'paths./.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/User');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+
     // TODO: write tests for recursive schemas
+
+    // TODO: write test for error that occurrs for recursive schemas in parameters
+
+    // TODO: write test for mutually recursive named schemas where one schmea is additionally directly recursive with itself
 
     test.skip('names output schema Book instead of BookDto if only using as output', async () => {        
         class BookDto extends createZodDto(z.object({

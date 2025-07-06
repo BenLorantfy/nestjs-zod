@@ -30,6 +30,12 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                 delete propertySchema[EMPTY_TYPE_KEY];
             }
 
+            // Rename the schema if using `meta({ id: "NewName" })`
+            if (PARENT_ID_KEY in propertySchema && typeof propertySchema[PARENT_ID_KEY] === 'string') {
+                newSchemaName = propertySchema[PARENT_ID_KEY];
+                delete propertySchema[PARENT_ID_KEY];
+            }
+
             // Add each $def as a schema
             if (DEFS_KEY in propertySchema) {
                 const defs = propertySchema[DEFS_KEY] as Record<string, JSONSchema.BaseSchema>;
@@ -40,7 +46,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                         // TODO: what if defSchemaId is same as this schema's ID?
                         // TODO: check if schema already exists in schemas
 
-                        const fixedDef = fixAllRefs(defSchema);
+                        const fixedDef = fixAllRefs({ schema: defSchema, rootSchemaName: newSchemaName });
 
                         if (schemas[defSchemaId] && !isDeepStrictEqual(schemas[defSchemaId], fixedDef)) {
                             throw new Error(`[cleanupOpenApiDoc] Found multiple schemas with name \`${defSchemaId}\`.  Please review your schemas to ensure that you are not using the same schema name for different schemas`);
@@ -53,12 +59,6 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                     addedDefs = true;
                 }
             }
-
-            // Rename the schema if using `meta({ id: "NewName" })`
-            if (PARENT_ID_KEY in propertySchema && typeof propertySchema[PARENT_ID_KEY] === 'string') {
-                newSchemaName = propertySchema[PARENT_ID_KEY];
-                delete propertySchema[PARENT_ID_KEY];
-            }
         }
 
         if (newSchemaName !== oldSchemaName) {
@@ -68,9 +68,13 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
             newOpenapiSchema['id'] = newSchemaName;
         }
 
-        if (addedDefs) {
-            // @ts-expect-error TODO: fix TS error
-            newOpenapiSchema = fixAllRefs(newOpenapiSchema);
+        // TODO: remove hard-coded true
+        if (true) {
+            newOpenapiSchema = fixAllRefs({
+                // @ts-expect-error TODO: fix TS error
+                schema: newOpenapiSchema,
+                rootSchemaName: newSchemaName,
+            });
         }
 
         if (schemas[newSchemaName] && !isDeepStrictEqual(schemas[newSchemaName], newOpenapiSchema)) {
@@ -126,7 +130,17 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                     for (let [defSchemaId, defSchema] of Object.entries(defs)) {
                         // TODO: what if defSchemaId is same as this schema's ID?
 
-                        const fixedDef = fixAllRefs(defSchema);
+                        
+                        let fixedDef;
+                        try {
+                            fixedDef = fixAllRefs({ schema: defSchema });
+                        } catch (err) {
+                            if (err instanceof Error && err.message.startsWith('[fixAllRefs]')) {
+                                throw new Error(`[cleanupOpenApiDoc] Recursive schemas are not supported for parameters`, { cause: err });
+                            }
+                            throw err;
+                        }
+
                         if (schemas[defSchemaId] && !isDeepStrictEqual(schemas[defSchemaId], fixedDef)) {
                             throw new Error(`[cleanupOpenApiDoc] Found multiple schemas with name \`${defSchemaId}\`.  Please review your schemas to ensure that you are not using the same schema name for different schemas`);
                         }
@@ -136,8 +150,15 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                     }
 
                     if ('schema' in parameter) {
-                        // @ts-expect-error TODO: fix this
-                        parameter.schema = fixAllRefs(parameter.schema);
+                        try {
+                            // @ts-expect-error TODO: fix this
+                            parameter.schema = fixAllRefs({ schema: parameter.schema });
+                        } catch (err) {
+                            if (err instanceof Error && err.message.startsWith('[fixAllRefs]')) {
+                                throw new Error(`[cleanupOpenApiDoc] Recursive schemas are not supported for parameters`, { cause: err });
+                            }
+                            throw err;
+                        }
                     }
                 }
 
