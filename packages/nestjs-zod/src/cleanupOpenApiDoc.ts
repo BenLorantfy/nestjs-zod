@@ -2,7 +2,7 @@ import type { OpenAPIObject } from '@nestjs/swagger';
 import deepmerge from 'deepmerge';
 import { JSONSchema } from 'zod/v4/core';
 import { fixAllRefs } from './utils';
-import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_ID_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY } from './const';
 import { isDeepStrictEqual } from 'node:util';
 
 type DtoSchema = Exclude<Exclude<OpenAPIObject['components'], undefined>['schemas'], undefined>[string];
@@ -14,16 +14,23 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
     for (let [oldSchemaName, oldOpenapiSchema] of Object.entries(doc.components?.schemas || {})) {
         // Ignore non-object types, which are not added by us
         if (!('type' in oldOpenapiSchema) || oldOpenapiSchema.type !== 'object') {
+            schemas[oldSchemaName] = oldOpenapiSchema;
             continue;
         }
 
         let newSchemaName = oldSchemaName;
         let addedDefs = false;
+        let hasRefs = false;
 
         // Clone so we can mutate
         let newOpenapiSchema = deepmerge<typeof oldOpenapiSchema>({}, oldOpenapiSchema);
 
         for (let propertySchema of Object.values(newOpenapiSchema.properties || {})) {
+            if (PARENT_HAS_REFS_KEY in propertySchema && propertySchema[PARENT_HAS_REFS_KEY]) {
+                hasRefs = true;
+                delete propertySchema[PARENT_HAS_REFS_KEY];
+            }
+
             // Remove `type` if we added `type: ''`
             if (EMPTY_TYPE_KEY in propertySchema && propertySchema[EMPTY_TYPE_KEY] && 'type' in propertySchema && propertySchema.type === '') {
                 delete propertySchema.type;
@@ -68,8 +75,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
             newOpenapiSchema['id'] = newSchemaName;
         }
 
-        // TODO: remove hard-coded true
-        if (true) {
+        if (hasRefs) {
             newOpenapiSchema = fixAllRefs({
                 // @ts-expect-error TODO: fix TS error
                 schema: newOpenapiSchema,
@@ -148,18 +154,22 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
 
                 }
 
-                // TODO: don't do this to non-zod dtos
-                if ('schema' in parameter) {
-                    try {
-                        // @ts-expect-error TODO: fix this
-                        parameter.schema = fixAllRefs({ schema: parameter.schema });
-                    } catch (err) {
-                        if (err instanceof Error && err.message.startsWith('[fixAllRefs]')) {
-                            throw new Error(`[cleanupOpenApiDoc] Recursive schemas are not supported for parameters`, { cause: err });
+                if (PARENT_HAS_REFS_KEY in parameter) {
+                    delete parameter[PARENT_HAS_REFS_KEY];
+
+                    if ('schema' in parameter) {
+                        try {
+                            // @ts-expect-error TODO: fix this
+                            parameter.schema = fixAllRefs({ schema: parameter.schema });
+                        } catch (err) {
+                            if (err instanceof Error && err.message.startsWith('[fixAllRefs]')) {
+                                throw new Error(`[cleanupOpenApiDoc] Recursive schemas are not supported for parameters`, { cause: err });
+                            }
+                            throw err;
                         }
-                        throw err;
                     }
                 }
+
 
                 if (PARENT_ID_KEY in parameter) {
                     delete parameter[PARENT_ID_KEY];

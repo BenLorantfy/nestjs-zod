@@ -836,9 +836,44 @@ describe('cleanupOpenApiDoc', () => {
         await expect(getSwaggerDoc(MyController)).rejects.toEqual(new Error("[cleanupOpenApiDoc] Recursive schemas are not supported for parameters"));
     });
 
-    // TODO: write tests for recursive schemas
+    test('does not touch refs for schemas that are not from a zod dto', async () => {
+        class MySchema {
+            @ApiProperty({
+                type: 'array',
+                items: { 
+                    $ref: '#/$defs/MyThing' 
+                },
+            })
+            things!: unknown[];
+        }
 
-    // TODO: write test for error that occurrs for recursive schemas in parameters
+        class MyQueryParams {
+            @ApiProperty({
+                type: 'array',
+                items: {
+                    $ref: '#/$defs/MyFilter'
+                }
+            })
+            filters!: unknown[];
+        }
+
+        @Controller()
+        class MyController {
+            constructor() { }
+            
+            @Post()
+            createThing(@Query() query: MyQueryParams, @Body() thing: MySchema) {
+                return thing;
+            }
+        }
+        
+        const doc = await getSwaggerDoc(MyController);
+        expect(get(doc, 'components.schemas.MySchema.properties.things.items.$ref')).toEqual('#/$defs/MyThing');
+        expect(get(doc, 'paths./.post.parameters[0].schema.items.$ref')).toEqual('#/$defs/MyFilter');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+
+    // TODO: write tests for recursive schemas
 
     // TODO: write test for mutually recursive named schemas where one schmea is additionally directly recursive with itself
 

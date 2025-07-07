@@ -2,7 +2,8 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_ID_KEY, PREFIX } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX } from './const';
+import { walkJsonSchema } from './utils';
 
 export interface ZodDto<
   TSchema extends UnknownSchema
@@ -68,6 +69,8 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
 
     assert(isObjectType(jsonSchema), 'createZodDto must be called with an object type');
 
+    const hasRefs = checkSchemaHasRefs(jsonSchema);
+
     let properties: Record<string, unknown> = {};
     for (let [propertyKey, propertySchema] of Object.entries(jsonSchema.properties)) {
       const newPropertySchema: Record<string, unknown> = {
@@ -88,6 +91,10 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
         // `cleanupOpenApiDoc`
         type: propertySchema.type || '', 
       };
+
+      if (hasRefs) {
+        newPropertySchema[PARENT_HAS_REFS_KEY] = true;
+      }
 
       // Add a marker so we know to clean this up.  We could just remove any
       // empty type, but we really only want to remove the empty types we
@@ -134,6 +141,18 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
 
   // TODO: handle zod v3 here
   return {};
+}
+
+function checkSchemaHasRefs(jsonSchema: JSONSchema.BaseSchema) {
+  let hasRefs = false;
+  walkJsonSchema(jsonSchema, (schema) => {
+    if (schema.$ref) {
+      hasRefs = true;
+    }
+    return schema;
+  });
+
+  return hasRefs;
 }
 
 // /**
