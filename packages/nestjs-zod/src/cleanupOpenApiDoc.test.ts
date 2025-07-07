@@ -785,6 +785,57 @@ describe('cleanupOpenApiDoc', () => {
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     });
 
+    test('throws an error if trying to use recursive schemas in parameters', async () => {
+        const QueryParams = z.object({
+            name: z.string(),
+            get nestedQueryParams() {
+              return z.array(QueryParams)
+            }
+        });
+
+        class QueryParamsDto extends createZodDto(QueryParams) { }
+
+        @Controller()
+        class MyController {
+            constructor() { }
+
+            @Get()
+            getThing(@Query() query: QueryParamsDto) {
+                return query;
+            }
+        }
+
+        await expect(getSwaggerDoc(MyController)).rejects.toEqual(new Error("[cleanupOpenApiDoc] Recursive schemas are not supported for parameters"));
+    });
+
+    test('throws an error if trying to use a named schema that is recursive with the root schema in parameters', async () => {
+        const NestedQueryParams = z.object({
+            get nestedQueryParams() {
+                return QueryParams;
+            }
+        }).meta({ id: 'NestedQueryParams' });
+
+        const QueryParams = z.object({
+            name: z.string(),
+            nestedQueryParams: NestedQueryParams
+        });
+
+
+        class QueryParamsDto extends createZodDto(QueryParams) { }
+
+        @Controller()
+        class MyController {
+            constructor() { }
+
+            @Get()
+            getThing(@Query() query: QueryParamsDto) {
+                return query;
+            }
+        }
+
+        await expect(getSwaggerDoc(MyController)).rejects.toEqual(new Error("[cleanupOpenApiDoc] Recursive schemas are not supported for parameters"));
+    });
+
     // TODO: write tests for recursive schemas
 
     // TODO: write test for error that occurrs for recursive schemas in parameters

@@ -127,10 +127,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                     const defs = parameter[DEFS_KEY] as Record<string, JSONSchema.BaseSchema>;
                     delete parameter[DEFS_KEY];
 
-                    for (let [defSchemaId, defSchema] of Object.entries(defs)) {
-                        // TODO: what if defSchemaId is same as this schema's ID?
-
-                        
+                    for (let [defSchemaId, defSchema] of Object.entries(defs)) {                        
                         let fixedDef;
                         try {
                             fixedDef = fixAllRefs({ schema: defSchema });
@@ -149,16 +146,18 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                         schemas[defSchemaId] = fixedDef;
                     }
 
-                    if ('schema' in parameter) {
-                        try {
-                            // @ts-expect-error TODO: fix this
-                            parameter.schema = fixAllRefs({ schema: parameter.schema });
-                        } catch (err) {
-                            if (err instanceof Error && err.message.startsWith('[fixAllRefs]')) {
-                                throw new Error(`[cleanupOpenApiDoc] Recursive schemas are not supported for parameters`, { cause: err });
-                            }
-                            throw err;
+                }
+
+                // TODO: don't do this to non-zod dtos
+                if ('schema' in parameter) {
+                    try {
+                        // @ts-expect-error TODO: fix this
+                        parameter.schema = fixAllRefs({ schema: parameter.schema });
+                    } catch (err) {
+                        if (err instanceof Error && err.message.startsWith('[fixAllRefs]')) {
+                            throw new Error(`[cleanupOpenApiDoc] Recursive schemas are not supported for parameters`, { cause: err });
                         }
+                        throw err;
                     }
                 }
 
