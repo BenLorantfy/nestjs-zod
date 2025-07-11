@@ -23,7 +23,7 @@ export interface ZodValidationPipeConstructorOptions {
    *
    * @default false
    */
-  rejectNoSchema?: boolean
+  strictSchemaDeclaration?: boolean
 }
 
 export function createZodValidationPipe({
@@ -32,7 +32,7 @@ export function createZodValidationPipe({
   @Injectable()
   class ZodValidationPipe implements PipeTransform {
     private readonly schema: UnknownSchema | ZodDto<UnknownSchema> | undefined
-    private readonly rejectNoSchema?: boolean
+    private readonly strictSchemaDeclaration?: boolean
 
     constructor(options: ZodValidationPipeConstructorOptions)
     constructor(schemaOrDto?: UnknownSchema | ZodDto<UnknownSchema>)
@@ -46,7 +46,7 @@ export function createZodValidationPipe({
         this.schema = schemaOrOptions
       } else {
         this.schema = schemaOrOptions.schema
-        this.rejectNoSchema = schemaOrOptions.rejectNoSchema
+        this.strictSchemaDeclaration = schemaOrOptions.strictSchemaDeclaration
       }
     }
 
@@ -61,7 +61,7 @@ export function createZodValidationPipe({
         return validate(value, metatype.schema, createValidationException)
       }
 
-      if (!this.rejectNoSchema) {
+      if (!this.strictSchemaDeclaration) {
         return value
       }
 
@@ -72,7 +72,7 @@ export function createZodValidationPipe({
       }
 
       throw createValidationException(
-        new Error('All input must define a schema')
+        new Error('All DTOs must declare a schema when `strictSchemaDeclaration` is enabled.')
       )
     }
   }

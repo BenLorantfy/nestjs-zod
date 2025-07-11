@@ -64,9 +64,9 @@ describe.each([
     )
   })
 
-  describe('with rejectNoSchema set to true', () => {
+  describe('with strictSchemaDeclaration set to true', () => {
     it('should reject schemaless inputs', () => {
-      const pipe = new ZodValidationPipe({ rejectNoSchema: true })
+      const pipe = new ZodValidationPipe({ strictSchemaDeclaration: true })
 
       const data = { someField: 'value' }
       expect(() =>
@@ -87,7 +87,7 @@ describe.each([
     ])(
       'should allow primitive $name values for schemaless inputs',
       ({ ctor, value }) => {
-        const pipe = new ZodValidationPipe({ rejectNoSchema: true })
+        const pipe = new ZodValidationPipe({ strictSchemaDeclaration: true })
 
         const result = pipe.transform(value, {
           type: 'body',
