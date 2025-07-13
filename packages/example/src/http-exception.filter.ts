@@ -9,14 +9,14 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
     private readonly logger = new Logger(HttpExceptionFilter.name);
 
     catch(exception: HttpException, host: ArgumentsHost) {
-        // if (exception instanceof ZodSerializationException) {
-        //     const zodError = exception.getZodError();
-        //     if (zodError instanceof ZodErrorV3) {
-        //         this.logger.error(`ZodSerializationException: ${zodError.message}`);
-        //     } else if (zodError instanceof ZodErrorV4) {
-        //         this.logger.error(`ZodSerializationException: ${zodError.message}`);
-        //     }
-        // }
+        if (exception instanceof ZodSerializationException) {
+            const zodError = exception.getZodError();
+            if (zodError instanceof ZodErrorV3) {
+                this.logger.error(`ZodSerializationException: ${zodError.message}`);
+            } else if (zodError instanceof ZodErrorV4) {
+                this.logger.error(`ZodSerializationException: ${zodError.message}`);
+            }
+        }
 
         super.catch(exception, host);
     }

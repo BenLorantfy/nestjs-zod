@@ -42,9 +42,9 @@
   "devDependencies": {
     "@golevelup/ts-jest": "^0.3.3",
     "@nest-zod/z": "workspace:*",
-    "@nestjs/common": "^11.1.2",
-    "@nestjs/core": "^11.1.2",
-    "@nestjs/swagger": "^11.1.6",
+    "@nestjs/common": "^11.1.3",
+    "@nestjs/core": "^11.1.3",
+    "@nestjs/swagger": "^11.2.0",
     "@types/jest": "^29.5.2",
     "@types/lodash": "^4.17.19",
     "@types/merge-deep": "^3.0.0",
