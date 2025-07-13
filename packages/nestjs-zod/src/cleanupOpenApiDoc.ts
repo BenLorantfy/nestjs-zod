@@ -78,6 +78,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
         }
 
         if (hasRefs) {
+            // @ts-ignore TODO: fix this
             newOpenapiSchema = fixAllRefs({
                 // @ts-expect-error TODO: fix TS error
                 schema: newOpenapiSchema,
@@ -153,7 +154,6 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                         // @ts-ignore TODO: fix this
                         schemas[defSchemaId] = fixedDef;
                     }
-
                 }
 
                 if (PARENT_HAS_REFS_KEY in parameter) {
