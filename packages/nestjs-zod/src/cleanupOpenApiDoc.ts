@@ -32,9 +32,11 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
             }
 
             // Remove `type` if we added `type: ''`
-            if (EMPTY_TYPE_KEY in propertySchema && propertySchema[EMPTY_TYPE_KEY] && 'type' in propertySchema && propertySchema.type === '') {
-                delete propertySchema.type;
+            if (EMPTY_TYPE_KEY in propertySchema && propertySchema[EMPTY_TYPE_KEY]) {
                 delete propertySchema[EMPTY_TYPE_KEY];
+                if ('type' in propertySchema && propertySchema.type === '') {
+                    delete propertySchema.type;
+                }
             }
 
             // Rename the schema if using `meta({ id: "NewName" })`

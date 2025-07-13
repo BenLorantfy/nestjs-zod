@@ -13,8 +13,8 @@ const PostSchema = z.object({
   visibility: Visibility,
   get children() {
     return z.array(PostSchema)
-  }
-  // nullableField: z.string().nullable().describe('A nullable field'),
+  },
+  nullableField: z.string().nullable().describe('A nullable field'),
 })
 
 class PostDto extends createZodDto(PostSchema) {}

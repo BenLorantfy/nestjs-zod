@@ -873,6 +873,39 @@ describe('cleanupOpenApiDoc', () => {
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     })
 
+    test('nullable fields', async () => {
+        class BookDto extends createZodDto(z.object({
+            title: z.string().nullable(),
+        })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        expect(get(doc, 'components.schemas.BookDto.properties.title')).toEqual({
+            // This is the correct syntax for OpenAPI version 3.1
+            // In 3.0, you're supposed to use `nullable: true` instead.  Maybe
+            // we should add a parameter for consumers to specify which version
+            // of OpenAPI they are using?
+            anyOf: [
+                {
+                    type: 'string'
+                },
+                {
+                    type: 'null'
+                }
+            ]
+        });
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+
     // TODO: write tests for recursive schemas
 
     // TODO: write test for mutually recursive named schemas where one schmea is additionally directly recursive with itself
