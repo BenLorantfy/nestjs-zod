@@ -45,18 +45,51 @@ describe('fixAllRefs', () => {
             type: 'object',
             properties: {
                 myProperty: {
-                    '$ref': '#/$defs/myProperty'
+                    '$ref': '#/$defs/MySchema'
                 }
             }
-        }
+        } as const
 
-        expect(fixAllRefs(schema)).toEqual({
+        expect(fixAllRefs({ schema })).toEqual({
             type: 'object',
             properties: {
                 myProperty: {
-                    '$ref': '#/components/schemas/myProperty'
+                    '$ref': '#/components/schemas/MySchema'
                 }
             }
         })
+    })
+
+    it('should fix refs that use # to point to the named schema', () => {
+        const schema = {
+            type: 'object',
+            properties: {
+                previousBook: {
+                    '$ref': '#'
+                }
+            }
+        } as const
+
+        expect(fixAllRefs({ schema, rootSchemaName: 'Book' })).toEqual({
+            type: 'object',
+            properties: {
+                previousBook: {
+                    '$ref': '#/components/schemas/Book'
+                }
+            }
+        })
+    })
+
+    it('should throw error if schema is trying to reference itself but the schema has no name', () => {
+        const schema = {
+            type: 'object',
+            properties: {
+                previousBook: {
+                    '$ref': '#'
+                }
+            }
+        } as const
+
+        expect(() => fixAllRefs({ schema })).toThrow('[fixAllRefs] rootSchemaName is required when fixing a ref to #');
     })
 })

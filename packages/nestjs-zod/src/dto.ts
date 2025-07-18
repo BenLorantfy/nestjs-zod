@@ -29,8 +29,8 @@ export function createZodDto<
     }
 
     static get Output() {
-      // TODO: throw error if schema is not a v4 zod schema
-
+      assert('_zod' in schema, '[nestjs-zod] Output DTOs can only be created from zod v4 schemas')
+      
       class AugmentedZodDto {
         public static readonly isZodDto = true
         public static readonly schema = schema
