@@ -1,5 +1,5 @@
 import { z, ZodTypeAny } from 'zod';
-import { zodToOpenAPI } from './zod-to-openapi'
+import { zodV3ToOpenAPI } from './zodV3ToOpenApi'
 
 const complexTestSchema = z.object({
   stringMinMax: z.string().min(5).max(15),
@@ -54,29 +54,28 @@ const overrideIntersectionSchema = z.intersection(
 )
 
 it('should serialize a complex schema', () => {
-  const openApiObject = zodToOpenAPI(complexTestSchema)
+  const openApiObject = zodV3ToOpenAPI(complexTestSchema)
 
   expect(openApiObject).toMatchSnapshot()
 })
 
 it('should serialize an intersection of objects', () => {
-  const openApiObject = zodToOpenAPI(intersectedObjectsSchema)
+  const openApiObject = zodV3ToOpenAPI(intersectedObjectsSchema)
 
   expect(openApiObject).toMatchSnapshot()
 })
 
 it('should serialize an intersection of unions', () => {
-  const openApiObject = zodToOpenAPI(intersectedUnionsSchema)
+  const openApiObject = zodV3ToOpenAPI(intersectedUnionsSchema)
 
   expect(openApiObject).toMatchSnapshot()
 })
 
 it('should serialize an intersection with overrided fields', () => {
-  const openApiObject = zodToOpenAPI(overrideIntersectionSchema)
+  const openApiObject = zodV3ToOpenAPI(overrideIntersectionSchema)
 
   expect(openApiObject).toMatchSnapshot()
 })
-
 
 describe('scalar types', () => {
   const testCases: [ZodTypeAny, string, string?][] = [
@@ -92,7 +91,7 @@ describe('scalar types', () => {
   for (const [zodType, expectedType, expectedFormat] of testCases) {
     // eslint-disable-next-line no-loop-func
     it(expectedType, () => {
-      const openApiObject = zodToOpenAPI(zodType)
+      const openApiObject = zodV3ToOpenAPI(zodType)
 
       expect(openApiObject).toEqual({
         type: expectedType,

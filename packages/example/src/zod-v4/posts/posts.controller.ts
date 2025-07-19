@@ -9,16 +9,18 @@ enum Visibility {
   PRIVATE = 'private',
 }
 
-class PostDto extends createZodDto(z.object({
+const PostSchema = z.object({
   title: z.string().describe('The title of the post'),
   content: z.string().describe('The content of the post'),
   authorId: z.number().describe('The ID of the author of the post'),
   visibility: z.nativeEnum(Visibility).describe('The visibility of the post'),
-  // nullableField: z.string().nullable().describe('A nullable field'),
-})) {}
+  nullableField: z.string().nullable().describe('A nullable field'),
+})
+
+class PostDto extends createZodDto(PostSchema) {}
 
 class PostQueryParams extends createZodDto(z.object({
-  title: z.string(),
+  title: z.string()
 })) {}
 
 @Controller('zod-v4/posts')
