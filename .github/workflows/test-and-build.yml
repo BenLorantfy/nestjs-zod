@@ -2,7 +2,7 @@ name: Test and Build
 
 on:
   push:
-    branches: ['main', 'v5']
+    branches: ['main']
   pull_request:
     branches: ['main', 'v5']
 
