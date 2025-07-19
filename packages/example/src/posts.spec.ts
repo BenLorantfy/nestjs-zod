@@ -36,7 +36,7 @@ describe.each([
         .post(`${path}/posts`)
         .send(validPost)
         .expect((res) => {
-          expect(JSON.stringify(res.body)).toEqual(JSON.stringify(validPost))
+          expect(res.body).toEqual(validPost)
         })
         .expect(201)
   
