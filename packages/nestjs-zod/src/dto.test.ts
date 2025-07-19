@@ -56,6 +56,38 @@ describe.each([
   })
 })
 
+describe('zod/v4', () => {
+  it('allows creating an Output DTO from a schema', () => {
+    const UserSchema = z4.object({
+      username: z4.string(),
+      password: z4.string(),
+      myField: z4.string().optional().default('myField')
+    })
+  
+    class UserDto extends createZodDto(UserSchema) {}
+
+    expect(UserDto.Output._OPENAPI_METADATA_FACTORY()).toEqual({
+      username: { type: 'string', required: true },
+      password: { type: 'string', required: true },
+      myField: { type: 'string', required: true, default: 'myField' }
+    })
+  })
+})
+
+describe('zod/v3', () => {
+  it('throws error if trying to create an Output DTO from a zod v3 schema', () => {
+    const UserSchema = z3.object({
+      username: z3.string(),
+      password: z3.string(),
+      myField: z3.string().optional().default('myField')
+    })
+  
+    class UserDto extends createZodDto(UserSchema) {}
+
+    expect(() => UserDto.Output).toThrow('[nestjs-zod] Output DTOs can only be created from zod v4 schemas');
+  })
+})
+
 describe.each([
   {
     name: 'zod/mini-v4',
