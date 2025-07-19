@@ -38,7 +38,7 @@
 
 ## Installation
 
-```
+```bash
 npm install nestjs-zod zod
 ```
 
@@ -354,7 +354,7 @@ if (exception instanceof ZodSerializationException) {
     this.logger.error(`ZodSerializationException: ${zodError.message}`);
 }
 ```
-See the example app [here](/packages/example-star-wars/src/http-exception.filter.ts) for more information.
+See the example app [here](/packages/example/src/http-exception.filter.ts) for more information.
 
 ## Extended Zod
 
@@ -507,7 +507,7 @@ However, to complete the swagger integration, you need to call `cleanupOpenApiDo
   + SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
 ```
 
-For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application guide [here](/packages/example-star-wars/) .
+For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application guide [here](/packages/example/) .
 
 ### Writing more Swagger-compatible schemas
 
