@@ -34,6 +34,7 @@ export function walkJsonSchema(schema: JSONSchema.BaseSchema, callback: (schema:
 
   // Handle array items
   if (schema.type === 'array' && Array.isArray(schema.items)) {
+    // @ts-ignore
     schema.items = schema.items.map(item => walkJsonSchema(item, callback));
   }
 

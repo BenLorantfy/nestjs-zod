@@ -4,24 +4,23 @@ import { createZodDto, ZodSerializerDto } from 'nestjs-zod'
 import { z } from 'zod/v4'
 import { Logger } from '@nestjs/common';
 
-const Visibility = z.enum(['public', 'private']).meta({ id: 'Visibility', description: 'The visibility of the post' });
+enum Visibility {
+  PUBLIC = 'public',
+  PRIVATE = 'private',
+}
 
 const PostSchema = z.object({
   title: z.string().describe('The title of the post'),
   content: z.string().describe('The content of the post'),
   authorId: z.number().describe('The ID of the author of the post'),
-  visibility: Visibility,
-  get children() {
-    return z.array(PostSchema)
-  },
+  visibility: z.nativeEnum(Visibility).describe('The visibility of the post'),
   nullableField: z.string().nullable().describe('A nullable field'),
 })
 
 class PostDto extends createZodDto(PostSchema) {}
 
 class PostQueryParams extends createZodDto(z.object({
-  title: z.string(),
-  visibility: Visibility,
+  title: z.string()
 })) {}
 
 @Controller('zod-v4/posts')
