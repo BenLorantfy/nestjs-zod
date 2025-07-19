@@ -29,25 +29,25 @@ jobs:
         run: cd packages/nestjs-zod && pnpm test
       - name: Build nestjs-zod
         run: cd packages/nestjs-zod && pnpm build
-      - name: Build example app
-        run: cd packages/example && pnpm run build
-      - name: Test example app
-        run: cd packages/example && pnpm run test
+      - name: Build example-dual-zods app
+        run: cd packages/example-dual-zods && pnpm run build
+      - name: Test example-dual-zods app
+        run: cd packages/example-dual-zods && pnpm run test
       - name: Cache Playwright Browsers
         id: playwright-cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('packages/example/package.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('packages/example-dual-zods/package.json') }}
           restore-keys: |
             playwright-${{ runner.os }}-
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: cd packages/example && pnpm exec playwright install --with-deps
-      - name: Test example app swagger
+        run: cd packages/example-dual-zods && pnpm exec playwright install --with-deps
+      - name: Test example-dual-zods app swagger
         run: |
-          cd packages/example && pnpm run start &
-          cd packages/example && pnpm run test:swagger
+          cd packages/example-dual-zods && pnpm run start &
+          cd packages/example-dual-zods && pnpm run test:swagger
       - name: Get current date
         if: github.ref == 'refs/heads/v5'
         id: date
