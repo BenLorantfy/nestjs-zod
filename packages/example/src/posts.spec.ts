@@ -14,13 +14,13 @@ describe.each([
       app = await createApp();
     });
   
-    test('POST /posts - valies input with zod', async () => {
+    test('POST /posts - validates input with zod', async () => {
       const validPost = {
         title: 'Test Post',
         content: 'This is a test post content.',
         authorId: 1,
         visibility: 'public',
-        // nullableField: null
+        nullableField: null
       };
   
       const invalidPost = {
@@ -28,27 +28,21 @@ describe.each([
         content: 'This is a test post content.',
         authorId: 'not a number', // Should be a number
         visibility: 'public',
-        // nullableField: null
+        nullableField: null
       };
   
       // Test with valid data
       await request(app.getHttpServer())
         .post(`${path}/posts`)
         .send(validPost)
-        .expect(201)
         .expect((res) => {
-          expect(res.body).toEqual({
-            title: validPost.title,
-            content: validPost.content,
-            authorId: validPost.authorId,
-            visibility: validPost.visibility,
-            // nullableField: validPost.nullableField
-          })
-        });
+          expect(res.body).toEqual(validPost)
+        })
+        .expect(201)
   
       // Test with invalid data
       await request(app.getHttpServer())
-        .post('/zod-v3/posts')
+        .post(`${path}/posts`)
         .send(invalidPost)
         .expect(400) // Bad request due to validation failure
         .expect((res) => {
