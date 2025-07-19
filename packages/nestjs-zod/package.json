@@ -28,7 +28,11 @@
     "url": "git@github.com:BenLorantfy/nestjs-zod.git",
     "directory": "packages/nestjs-zod"
   },
-  "author": "Evgeny Zakharov <to@risen.dev>",
+  "author": "Ben Lorantfy <ben@lorantfy.com>",
+  "contributors": [
+    "Ben Lorantfy <ben@lorantfy.com>",
+    "Evgeny Zakharov <to@risen.dev>"
+  ],
   "publishConfig": {
     "access": "public"
   },
