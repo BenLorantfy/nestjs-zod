@@ -43,31 +43,30 @@
 npm install nestjs-zod # Note: zod >= 3.25.0 is also required
 ```
 2. Add `ZodValidationPipe` to the `AppModule`
+    <details>
+      <summary>
+        Show me how
+      </summary>
 
-  <details>
-    <summary>
-      Show me how
-    </summary>
+    `ZodValidationPipe` is required in order to validate the request body, query, and params
 
-  `ZodValidationPipe` is required in order to validate the request body, query, and params
+    ```diff
+    + import { APP_PIPE } from '@nestjs/core';
+    + import { ZodValidationPipe } from 'nestjs-zod';
 
-  ```diff
-  + import { APP_PIPE } from '@nestjs/core';
-  + import { ZodValidationPipe } from 'nestjs-zod';
-
-  @Module({
-    imports: [],
-    controllers: [AppController],
-    providers: [
-  +    {
-  +      provide: APP_PIPE,
-  +      useClass: ZodValidationPipe,
-  +    },
-    ]
-  })
-  export class AppModule {}
-  ```
-  </details>
+    @Module({
+      imports: [],
+      controllers: [AppController],
+      providers: [
+    +    {
+    +      provide: APP_PIPE,
+    +      useClass: ZodValidationPipe,
+    +    },
+      ]
+    })
+    export class AppModule {}
+    ```
+    </details>
 
 3. [OPTIONAL] Add `ZodSerializerInterceptor` to the `AppModule`
 
