@@ -255,6 +255,41 @@ describe('nullable fields', () => {
     })
 })
 
+describe('optional fields', () => {
+    test.each([
+        ctx({ version: 'v4', cleanUp: false }),
+        ctx({ version: 'v4', cleanUp: true }),
+        ctx({ version: 'v3', cleanUp: false }),
+        ctx({ version: 'v3', cleanUp: true }),
+    ])('$ctx', async ({ cleanUp, version }) => {
+        const zod = (version === 'v4' ? z : z3) as typeof z;
+        class BookDto extends createZodDto(zod.object({
+            title: zod.string().optional(),
+        })) { }
+    
+        @Controller()
+        class BookController {
+            constructor() { }
+    
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+    
+        const doc = await getSwaggerDoc(BookController, { cleanUp });
+        expect(get(doc, 'components.schemas.BookDto')).toEqual({
+            type: 'object',
+            properties: {
+                title: {
+                    type: 'string',
+                }
+            }
+        });
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+});
+
 describe('arrays', () => {
     test.each([
         ctx({ version: 'v4', cleanUp: false }),
