@@ -172,7 +172,7 @@
 
     </details>
 
-## Navigation
+## Documentation
 
 - [Creating DTO from Zod schema](#creating-dto-from-zod-schema)
   - [Using DTO](#using-dto)
@@ -196,7 +196,7 @@
   - [Writing more Swagger-compatible schemas](#writing-more-swagger-compatible-schemas)
   - [Using zodToOpenAPI](#using-zodtoopenapi)
 
-## Creating DTO from Zod schema
+### Creating DTO from Zod schema
 
 ```ts
 import { createZodDto } from 'nestjs-zod'
@@ -211,7 +211,7 @@ const CredentialsSchema = z.object({
 class CredentialsDto extends createZodDto(CredentialsSchema) {}
 ```
 
-### Using DTO
+#### Using DTO
 
 DTO does two things:
 
@@ -239,13 +239,13 @@ class AuthController {
 }
 ```
 
-## Using ZodValidationPipe
+### Using ZodValidationPipe
 
 The validation pipe uses your Zod schema to parse data from parameter decorator.
 
 When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
 
-### Globally (recommended)
+#### Globally (recommended)
 
 ```ts
 import { ZodValidationPipe } from 'nestjs-zod'
@@ -262,7 +262,7 @@ import { APP_PIPE } from '@nestjs/core'
 export class AppModule {}
 ```
 
-### Locally
+#### Locally
 
 ```ts
 import { ZodValidationPipe } from 'nestjs-zod'
@@ -296,7 +296,7 @@ class AuthController {
 }
 ```
 
-### Creating custom validation pipe
+#### Creating custom validation pipe
 
 ```ts
 import { createZodValidationPipe } from 'nestjs-zod'
@@ -308,7 +308,7 @@ const MyZodValidationPipe = createZodValidationPipe({
 })
 ```
 
-## Using ZodGuard
+### Using ZodGuard
 
 > [!CAUTION]
 > `ZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -345,7 +345,7 @@ class MyController {
 }
 ```
 
-### Creating custom guard
+#### Creating custom guard
 
 > [!CAUTION]
 > `createZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -360,7 +360,7 @@ const MyZodGuard = createZodGuard({
 })
 ```
 
-## Create validation from scratch
+### Create validation from scratch
 
 > [!CAUTION]
 > `validate` is deprecated and will not be supported soon.  It is recommended to use `.parse` directly. See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -379,7 +379,7 @@ const validatedUser = validate(
 ) // returns typed value when succeed
 ```
 
-## Validation Exceptions
+### Validation Exceptions
 
 The default server response on validation error looks like that:
 
@@ -424,7 +424,7 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
 }
 ```
 
-## Using ZodSerializerInterceptor for output validation
+### Using ZodSerializerInterceptor for output validation
 
 To ensure that a response conforms to a certain shape, you may use the `ZodSerializerInterceptor` interceptor.
 
@@ -432,7 +432,7 @@ This would be especially useful in prevent accidental data leaks.
 
 This is similar to NestJs' `@ClassSerializerInterceptor` feature [here](https://docs.nestjs.com/techniques/serialization)
 
-### Include `@ZodSerializerInterceptor` in application root
+#### Include `@ZodSerializerInterceptor` in application root
 
 ```ts
 @Module({
@@ -445,7 +445,7 @@ This is similar to NestJs' `@ClassSerializerInterceptor` feature [here](https://
 export class AppModule {}
 ```
 
-### Use `@ZodSerializerDto` to define the shape of the response for endpoint in controller
+#### Use `@ZodSerializerDto` to define the shape of the response for endpoint in controller
 
 ```ts
 const UserSchema = z.object({ username: string() })
@@ -467,7 +467,7 @@ export class UserController {
 
 In the above example, despite the `userService.findOne` method returns `password`, the `password` property will be stripped out thanks to the `@ZodSerializerDto` decorator.
 
-### Logging serialization errors using `ZodSerializationException` 
+#### Logging serialization errors using `ZodSerializationException` 
 
 You can catch serialization errors using `ZodSerializationException` and log them using your preferred logger.
 
@@ -479,14 +479,14 @@ if (exception instanceof ZodSerializationException) {
 ```
 See the example app [here](/packages/example/src/http-exception.filter.ts) for more information.
 
-## Extended Zod
+### Extended Zod
 
 > [!CAUTION]
 > `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 `@nest-zod/z` provides a special version of Zod. It helps you to validate the user input more accurately by using our custom schemas and methods.
 
-### ZodDateString
+#### ZodDateString
 
 > [!CAUTION]
 > `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -565,7 +565,7 @@ Errors:
 - `too_small` with `type === 'date_string_year'`
 - `too_big` with `type === 'date_string_year'`
 
-### ZodPassword
+#### ZodPassword
 
 > [!CAUTION]
 > `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -606,7 +606,7 @@ Errors:
 - `too_small` with `type === 'password'`
 - `too_big` with `type === 'password'`
 
-## OpenAPI (Swagger) support
+### OpenAPI (Swagger) support
 
 > [!Note]
 > There used to be a function called `patchNestJsSwagger`.  This function has been replaced by `cleanupOpenApiDoc`
@@ -632,7 +632,7 @@ However, to complete the swagger integration, you need to call `cleanupOpenApiDo
 
 For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application guide [here](/packages/example/) .
 
-### Writing more Swagger-compatible schemas
+#### Writing more Swagger-compatible schemas
 
 Use `.describe()` method to add Swagger description:
 
@@ -645,7 +645,7 @@ const CredentialsSchema = z.object({
 })
 ```
 
-### Using zodV3ToOpenAPI
+#### Using zodV3ToOpenAPI
 
 > [!CAUTION]
 > `zodV3ToOpenAPI` is deprecated and will not be supported soon, since zod v4 adds built-in support for generating OpenAPI schemas from zod scehams.  See [MIGRATION.md](./MIGRATION.md) for more information.
