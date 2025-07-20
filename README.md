@@ -155,6 +155,7 @@
 
 
 5. [OPTIONAL] Add `cleanupOpenApiDoc`
+
     > [!IMPORTANT]
     > This step is important if using `@nestjs/swagger`
 
