@@ -1,25 +1,32 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import { App } from 'supertest/types';
 import { AppModule } from './app.module';
 import request from 'supertest';
 
-describe('AppController (e2e)', () => {
-  let app: INestApplication<App>;
+let app: INestApplication;
 
-  beforeEach(async () => {
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-      imports: [AppModule],
-    }).compile();
+beforeEach(async () => {
+  const moduleFixture: TestingModule = await Test.createTestingModule({
+    imports: [AppModule],
+  }).compile();
 
-    app = moduleFixture.createNestApplication();
-    await app.init();
-  });
+  app = moduleFixture.createNestApplication();
+  await app.init();
+});
 
-  it('/ (GET)', () => {
+afterEach(async () => {
+  await app.close();
+});
+
+describe('GET /api/people', () => {
+  it('should return a list of people', () => {
     return request(app.getHttpServer())
-      .get('/')
+      .get('/api/people')
       .expect(200)
-      .expect('Hello World!');
+      .expect((res) => {
+        expect(res.body).toHaveProperty('data');
+        expect(Array.isArray(res.body.data)).toBe(true);
+        expect(res.body.data.length).toBeGreaterThan(0);
+      });
   });
 });

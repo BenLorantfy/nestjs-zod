@@ -33,6 +33,10 @@ jobs:
         run: cd packages/example-dual-zods && pnpm run build
       - name: Test example-dual-zods app
         run: cd packages/example-dual-zods && pnpm run test
+      - name: Build example app
+        run: cd packages/example && pnpm build
+      - name: Test example app
+        run: cd packages/example && pnpm test
       - name: Cache Playwright Browsers
         id: playwright-cache
         uses: actions/cache@v4
