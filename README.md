@@ -39,9 +39,9 @@
 ## Getting Started
 
 1. Install the package:
-```bash
-npm install nestjs-zod # Note: zod >= 3.25.0 is also required
-```
+    ```bash
+    npm install nestjs-zod # Note: zod >= 3.25.0 is also required
+    ```
 2. Add `ZodValidationPipe` to the `AppModule`
     <details>
       <summary>
@@ -69,111 +69,108 @@ npm install nestjs-zod # Note: zod >= 3.25.0 is also required
     </details>
 
 3. [OPTIONAL] Add `ZodSerializerInterceptor` to the `AppModule`
+    <details>
+      <summary>
+        Show me how
+      </summary>
 
-<details>
-  <summary>
-    Show me how
-  </summary>
+    `ZodSerializerInterceptor` is required in order to validate the response bodies
 
-`ZodSerializerInterceptor` is required in order to validate the response bodies
+    ```diff
+    - import { APP_PIPE } from '@nestjs/core';
+    + import { APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
+    - import { ZodValidationPipe } from 'nestjs-zod';
+    + import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
 
-```diff
-- import { APP_PIPE } from '@nestjs/core';
-+ import { APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
-- import { ZodValidationPipe } from 'nestjs-zod';
-+ import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
-
-@Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [
-    {
-      provide: APP_PIPE,
-      useClass: ZodValidationPipe,
-    },
-+    {
-+      provide: APP_INTERCEPTOR,
-+      useClass: ZodSerializerInterceptor,
-+    },
-  ]
-})
-export class AppModule {}
-```
-</details>
+    @Module({
+      imports: [],
+      controllers: [AppController],
+      providers: [
+        {
+          provide: APP_PIPE,
+          useClass: ZodValidationPipe,
+        },
+    +    {
+    +      provide: APP_INTERCEPTOR,
+    +      useClass: ZodSerializerInterceptor,
+    +    },
+      ]
+    })
+    export class AppModule {}
+    ```
+    </details>
 
 4. [OPTIONAL] Add an `HttpExceptionFilter` 
+    <details>
+      <summary>
+        Show me how
+      </summary>
 
-<details>
-  <summary>
-    Show me how
-  </summary>
+    An `HttpExceptionFilter` is required in order to add custom handling for zod errors
 
-An `HttpExceptionFilter` is required in order to add custom handling for zod errors
+    ```diff
+    - import { APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
+    + import { APP_PIPE, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
+    import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
+    + import { HttpExceptionFilter } from './http-exception.filter';
 
-```diff
-- import { APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
-+ import { APP_PIPE, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
-import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
-+ import { HttpExceptionFilter } from './http-exception.filter';
+    @Module({
+      imports: [],
+      controllers: [AppController],
+      providers: [
+        {
+          provide: APP_PIPE,
+          useClass: ZodValidationPipe,
+        },
+        {
+          provide: APP_INTERCEPTOR,
+          useClass: ZodSerializerInterceptor,
+        },
+        {
+          provide: APP_FILTER,
+          useClass: HttpExceptionFilter,
+        }
+      ]
+    })
+    export class AppModule {}
 
-@Module({
-  imports: [],
-  controllers: [AppController],
-  providers: [
-    {
-      provide: APP_PIPE,
-      useClass: ZodValidationPipe,
-    },
-    {
-      provide: APP_INTERCEPTOR,
-      useClass: ZodSerializerInterceptor,
-    },
-    {
-      provide: APP_FILTER,
-      useClass: HttpExceptionFilter,
-    }
-  ]
-})
-export class AppModule {}
-
-+ // http-exception.filter
-+ @Catch(HttpException)
-+ export class HttpExceptionFilter extends BaseExceptionFilter {
-+     private readonly logger = new Logger(HttpExceptionFilter.name);
-+ 
-+     catch(exception: HttpException, host: ArgumentsHost) {
-+         if (exception instanceof ZodSerializationException) {
-+             const zodError = exception.getZodError();
-+             if (zodError instanceof ZodError) {
-+                 this.logger.error(`ZodSerializationException: ${zodError.message}`);
-+             }
-+         }
-+ 
-+         super.catch(exception, host);
-+     }
-+ }
-```
-</details>
+    + // http-exception.filter
+    + @Catch(HttpException)
+    + export class HttpExceptionFilter extends BaseExceptionFilter {
+    +     private readonly logger = new Logger(HttpExceptionFilter.name);
+    + 
+    +     catch(exception: HttpException, host: ArgumentsHost) {
+    +         if (exception instanceof ZodSerializationException) {
+    +             const zodError = exception.getZodError();
+    +             if (zodError instanceof ZodError) {
+    +                 this.logger.error(`ZodSerializationException: ${zodError.message}`);
+    +             }
+    +         }
+    + 
+    +         super.catch(exception, host);
+    +     }
+    + }
+    ```
+    </details>
 
 
 5. [OPTIONAL] Add `cleanupOpenApiDoc`
+    > [!IMPORTANT]
+    > This step is important if using `@nestjs/swagger`
 
-> [!IMPORTANT]
-> This step is important if using `@nestjs/swagger`
+    <details>
+      <summary>
+        Show me how
+      </summary>
 
-<details>
-  <summary>
-    Show me how
-  </summary>
+    `cleanupOpenApiDoc` is required if using `@nestjs/swagger` to properly post-process the OpenAPI doc
 
-`cleanupOpenApiDoc` is required if using `@nestjs/swagger` to properly post-process the OpenAPI doc
+    ```diff
+    - SwaggerModule.setup('api', app, openApiDoc);
+    + SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
+    ```
 
-```diff
-- SwaggerModule.setup('api', app, openApiDoc);
-+ SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
-```
-
-</details>
+    </details>
 
 ## Navigation
 
