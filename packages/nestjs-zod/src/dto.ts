@@ -119,7 +119,7 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
     // As an apparent (and undocumented) workaround, nestjs expects you to
     // return `selfRequired: true` (for objects) or `required: true` (for
     // non-objects) if the field is required
-    const required = jsonSchema.required?.includes(propertyKey);
+    const required = Boolean(jsonSchema.required?.includes(propertyKey));
     if (newPropertySchema.type === 'object') {
       newPropertySchema.selfRequired = required;
     } else {

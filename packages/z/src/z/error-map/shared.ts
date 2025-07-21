@@ -1,4 +1,4 @@
-import { ZodIssueCode } from 'zod'
+import { ZodIssueCode } from 'zod/v3'
 import { isNestJsZodIssue } from '../is-nestjs-zod-issue'
 import {
   NestJsZodIssue,
