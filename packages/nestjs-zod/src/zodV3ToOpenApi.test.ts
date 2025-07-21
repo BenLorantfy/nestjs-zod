@@ -1,4 +1,4 @@
-import { z, ZodTypeAny } from 'zod';
+import { z, ZodTypeAny } from 'zod/v3';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi'
 
 const complexTestSchema = z.object({
@@ -99,4 +99,19 @@ describe('scalar types', () => {
       })
     })
   }
+})
+
+it('should handle optional types', () => {
+  const openApiObject = zodV3ToOpenAPI(z.object({
+    name: z.string().optional(),
+  }))
+
+  expect(openApiObject).toEqual({
+    type: 'object',
+    properties: {
+      name: {
+        type: 'string',
+      },
+    },
+  })
 })

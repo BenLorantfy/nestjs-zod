@@ -3,6 +3,8 @@
   <h1 align="center">nestjs-zod</h1>
   <p align="center">
     ✨ A seamless validation solution for your NestJS application ✨
+      <br/>
+      by <a href="https://x.com/benlorantfy">@benlorantfy</a>
   </p>
 </p>
 <br/>
@@ -19,6 +21,9 @@
   <a href="https://www.npmjs.com/package/nestjs-zod" rel="nofollow">
     <img src="https://img.shields.io/github/stars/BenLorantfy/nestjs-zod" alt="stars">
   </a>
+  <a href="https://x.com/benlorantfy">
+    <img alt="X (formerly Twitter) Follow" src="https://img.shields.io/twitter/follow/benlorantfy">
+  </a>
 </p>
 
 ## Core library features
@@ -26,29 +31,150 @@
 - `createZodDto` - create DTO classes from Zod schemas
 - `ZodValidationPipe` - validate `body` / `query` / `params` using Zod DTOs
 - `ZodValidationException` - BadRequestException extended with Zod errors
-- `zodToOpenAPI` - create OpenAPI declarations from Zod schemas
 - OpenAPI support
-  - `@nestjs/swagger` integration using the patch
-  - `zodToOpenAPI` - generate highly accurate Swagger Schema
+  - `@nestjs/swagger` integration
   - Zod DTOs can be used in any `@nestjs/swagger` decorator
 - Customization - change exception format easily
 
-## Installation
+## Getting Started
 
-```
-npm install nestjs-zod zod
-```
+1. Install the package:
+    ```bash
+    npm install nestjs-zod # Note: zod >= 3.25.0 is also required
+    ```
+2. Add `ZodValidationPipe` to the `AppModule`
+    <details>
+      <summary>
+        Show me how
+      </summary>
 
-Peer dependencies:
+    `ZodValidationPipe` is required in order to validate the request body, query, and params
 
-- `zod` - `>= 3.14.3`
-- `@nestjs/common` - `>= 8.0.0` (required on server side)
-- `@nestjs/core` - `>= 8.0.0` (required on server side)
-- `@nestjs/swagger` - `>= 5.0.0`
+    ```diff
+    + import { APP_PIPE } from '@nestjs/core';
+    + import { ZodValidationPipe } from 'nestjs-zod';
 
-All peer dependencies are marked as optional for better client side usage, but you need to install required ones when using `nestjs-zod` on server side.
+    @Module({
+      imports: [],
+      controllers: [AppController],
+      providers: [
+    +    {
+    +      provide: APP_PIPE,
+    +      useClass: ZodValidationPipe,
+    +    },
+      ]
+    })
+    export class AppModule {}
+    ```
+    </details>
 
-## Navigation
+3. [OPTIONAL] Add `ZodSerializerInterceptor` to the `AppModule`
+    <details>
+      <summary>
+        Show me how
+      </summary>
+
+    `ZodSerializerInterceptor` is required in order to validate the response bodies
+
+    ```diff
+    - import { APP_PIPE } from '@nestjs/core';
+    + import { APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
+    - import { ZodValidationPipe } from 'nestjs-zod';
+    + import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
+
+    @Module({
+      imports: [],
+      controllers: [AppController],
+      providers: [
+        {
+          provide: APP_PIPE,
+          useClass: ZodValidationPipe,
+        },
+    +    {
+    +      provide: APP_INTERCEPTOR,
+    +      useClass: ZodSerializerInterceptor,
+    +    },
+      ]
+    })
+    export class AppModule {}
+    ```
+    </details>
+
+4. [OPTIONAL] Add an `HttpExceptionFilter` 
+    <details>
+      <summary>
+        Show me how
+      </summary>
+
+    An `HttpExceptionFilter` is required in order to add custom handling for zod errors
+
+    ```diff
+    - import { APP_PIPE, APP_INTERCEPTOR } from '@nestjs/core';
+    + import { APP_PIPE, APP_INTERCEPTOR, APP_FILTER } from '@nestjs/core';
+    import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
+    + import { HttpExceptionFilter } from './http-exception.filter';
+
+    @Module({
+      imports: [],
+      controllers: [AppController],
+      providers: [
+        {
+          provide: APP_PIPE,
+          useClass: ZodValidationPipe,
+        },
+        {
+          provide: APP_INTERCEPTOR,
+          useClass: ZodSerializerInterceptor,
+        },
+        {
+          provide: APP_FILTER,
+          useClass: HttpExceptionFilter,
+        }
+      ]
+    })
+    export class AppModule {}
+
+    + // http-exception.filter
+    + @Catch(HttpException)
+    + export class HttpExceptionFilter extends BaseExceptionFilter {
+    +     private readonly logger = new Logger(HttpExceptionFilter.name);
+    + 
+    +     catch(exception: HttpException, host: ArgumentsHost) {
+    +         if (exception instanceof ZodSerializationException) {
+    +             const zodError = exception.getZodError();
+    +             if (zodError instanceof ZodError) {
+    +                 this.logger.error(`ZodSerializationException: ${zodError.message}`);
+    +             }
+    +         }
+    + 
+    +         super.catch(exception, host);
+    +     }
+    + }
+    ```
+    </details>
+
+
+5. [OPTIONAL] Add `cleanupOpenApiDoc`
+
+    > **Important**: This step is important if using `@nestjs/swagger`
+
+    <details>
+      <summary>
+        Show me how
+      </summary>
+
+    `cleanupOpenApiDoc` is required if using `@nestjs/swagger` to properly post-process the OpenAPI doc
+
+    ```diff
+    - SwaggerModule.setup('api', app, openApiDoc);
+    + SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
+    ```
+
+    </details>
+
+Check out the [example app](./packages/example/) for a full example of how to integrate nestjs-zod in your nestjs application
+
+## Documentation
 
 - [Creating DTO from Zod schema](#creating-dto-from-zod-schema)
   - [Using DTO](#using-dto)
@@ -72,7 +198,7 @@ All peer dependencies are marked as optional for better client side usage, but y
   - [Writing more Swagger-compatible schemas](#writing-more-swagger-compatible-schemas)
   - [Using zodToOpenAPI](#using-zodtoopenapi)
 
-## Creating DTO from Zod schema
+### Creating DTO from Zod schema
 
 ```ts
 import { createZodDto } from 'nestjs-zod'
@@ -87,7 +213,7 @@ const CredentialsSchema = z.object({
 class CredentialsDto extends createZodDto(CredentialsSchema) {}
 ```
 
-### Using DTO
+#### Using DTO
 
 DTO does two things:
 
@@ -115,19 +241,13 @@ class AuthController {
 }
 ```
 
-### Using standalone (without server-side dependencies)
-
-```ts
-import { createZodDto } from 'nestjs-zod/dto'
-```
-
-## Using ZodValidationPipe
+### Using ZodValidationPipe
 
 The validation pipe uses your Zod schema to parse data from parameter decorator.
 
 When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
 
-### Globally (recommended)
+#### Globally (recommended)
 
 ```ts
 import { ZodValidationPipe } from 'nestjs-zod'
@@ -144,7 +264,7 @@ import { APP_PIPE } from '@nestjs/core'
 export class AppModule {}
 ```
 
-### Locally
+#### Locally
 
 ```ts
 import { ZodValidationPipe } from 'nestjs-zod'
@@ -178,7 +298,7 @@ class AuthController {
 }
 ```
 
-### Creating custom validation pipe
+#### Creating custom validation pipe
 
 ```ts
 import { createZodValidationPipe } from 'nestjs-zod'
@@ -190,7 +310,7 @@ const MyZodValidationPipe = createZodValidationPipe({
 })
 ```
 
-## Using ZodGuard
+### Using ZodGuard
 
 > [!CAUTION]
 > `ZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -227,7 +347,7 @@ class MyController {
 }
 ```
 
-### Creating custom guard
+#### Creating custom guard
 
 > [!CAUTION]
 > `createZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -242,7 +362,7 @@ const MyZodGuard = createZodGuard({
 })
 ```
 
-## Create validation from scratch
+### Create validation from scratch
 
 > [!CAUTION]
 > `validate` is deprecated and will not be supported soon.  It is recommended to use `.parse` directly. See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -261,7 +381,7 @@ const validatedUser = validate(
 ) // returns typed value when succeed
 ```
 
-## Validation Exceptions
+### Validation Exceptions
 
 The default server response on validation error looks like that:
 
@@ -306,7 +426,7 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
 }
 ```
 
-## Using ZodSerializerInterceptor for output validation
+### Using ZodSerializerInterceptor for output validation
 
 To ensure that a response conforms to a certain shape, you may use the `ZodSerializerInterceptor` interceptor.
 
@@ -314,7 +434,7 @@ This would be especially useful in prevent accidental data leaks.
 
 This is similar to NestJs' `@ClassSerializerInterceptor` feature [here](https://docs.nestjs.com/techniques/serialization)
 
-### Include `@ZodSerializerInterceptor` in application root
+#### Include `@ZodSerializerInterceptor` in application root
 
 ```ts
 @Module({
@@ -327,7 +447,7 @@ This is similar to NestJs' `@ClassSerializerInterceptor` feature [here](https://
 export class AppModule {}
 ```
 
-### Use `@ZodSerializerDto` to define the shape of the response for endpoint in controller
+#### Use `@ZodSerializerDto` to define the shape of the response for endpoint in controller
 
 ```ts
 const UserSchema = z.object({ username: string() })
@@ -349,7 +469,7 @@ export class UserController {
 
 In the above example, despite the `userService.findOne` method returns `password`, the `password` property will be stripped out thanks to the `@ZodSerializerDto` decorator.
 
-### Logging serialization errors using `ZodSerializationException` 
+#### Logging serialization errors using `ZodSerializationException` 
 
 You can catch serialization errors using `ZodSerializationException` and log them using your preferred logger.
 
@@ -361,17 +481,17 @@ if (exception instanceof ZodSerializationException) {
 ```
 See the example app [here](/packages/example/src/http-exception.filter.ts) for more information.
 
-## Extended Zod
+### Extended Zod
 
 > [!CAUTION]
-> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 `@nest-zod/z` provides a special version of Zod. It helps you to validate the user input more accurately by using our custom schemas and methods.
 
-### ZodDateString
+#### ZodDateString
 
 > [!CAUTION]
-> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 In HTTP, we always accept Dates as strings. But default Zod only has validations for full date-time strings. `ZodDateString` was created to address this issue.
 
@@ -447,10 +567,10 @@ Errors:
 - `too_small` with `type === 'date_string_year'`
 - `too_big` with `type === 'date_string_year'`
 
-### ZodPassword
+#### ZodPassword
 
 > [!CAUTION]
-> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 `ZodPassword` is a string-like type, just like the `ZodDateString`. As you might have guessed, it's intended to help you with password schemas definition.
 
@@ -488,91 +608,33 @@ Errors:
 - `too_small` with `type === 'password'`
 - `too_big` with `type === 'password'`
 
-### Json Schema
-
-> [!CAUTION]
-> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
-
-> Created for `nestjs-zod-prisma`
-
-```ts
-z.json()
-```
-
-### "from" function
-
-> [!CAUTION]
-> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
-
-> Created for custom schemas in `nestjs-zod-prisma`
-
-Just returns the same Schema
-
-```ts
-z.from(MySchema)
-```
-
-### Extended Zod Errors
-
-> [!CAUTION]
-> `@nest-zod/z` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
-
-Currently, we use `custom` error code due to some Zod limitations (`errorMap` priorities)
-
-Therefore, the error details is located inside `params` property:
-
-```ts
-const error = {
-  code: 'custom',
-  message: 'Invalid date, expected it to be the past',
-  params: {
-    isNestJsZod: true,
-    code: 'invalid_date_string_direction',
-
-    // payload is always located here in a flat view
-    expected: 'past',
-  },
-  path: ['date'],
-}
-```
-
-### Working with errors on the client side
-
-> [!CAUTION]
-> `@nest-zod/z/frontend` is deprecated and will not be supported soon.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
-
-
-Optionally, you can install `@nest-zod/z` on the client side.
-
-The library provides you a `@nest-zod/z/frontend` entry point, that can be used to detect custom NestJS Zod issues and process them the way you want.
-
-```ts
-import { isNestJsZodIssue, NestJsZodIssue, ZodIssue } from '@nest-zod/z/frontend'
-
-function mapToFormErrors(issues: ZodIssue[]) {
-  for (const issue of issues) {
-    if (isNestJsZodIssue(issue)) {
-      // issue is NestJsZodIssue
-    }
-  }
-}
-```
-
-> :warning: **If you use `zod` in your client-side application, and you want to install `@nest-zod/z` too, it may be better to completely switch to `@nest-zod/z` to prevent issues caused by mismatch between `zod` versions. `@nest-zod/z/frontend` doesn't use `zod` at the runtime, but it uses its types.**
-
-## OpenAPI (Swagger) support
+### OpenAPI (Swagger) support
 
 > [!Note]
-> There used to be a function called `patchNestJsSwagger`.  This function has been removed since it is no longer neccessary to call.  
+> There used to be a function called `patchNestJsSwagger`.  This function has been replaced by `cleanupOpenApiDoc`
 
 If you have `@nestjs/swagger` setup, documentation will automatically be generated for:
 - Request bodies, if you use `@Body() body: MyDto`
 - Response bodies, if you use `@ApiOkResponse({ type: MyDto })`
 - Query params, if you use `@Query() query: MyQueryParamsDto`
 
+However, to complete the swagger integration, you need to call `cleanupOpenApiDoc` with the generated open api doc:
+
+```diff
+  const openApiDoc = SwaggerModule.createDocument(app, 
+      new DocumentBuilder()
+        .setTitle('Example API')
+        .setDescription('Example API description')
+        .setVersion('1.0')
+        .build(),
+  );
+  - SwaggerModule.setup('api', app, openApiDoc);
+  + SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
+```
+
 For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application guide [here](/packages/example/) .
 
-### Writing more Swagger-compatible schemas
+#### Writing more Swagger-compatible schemas
 
 Use `.describe()` method to add Swagger description:
 
@@ -585,10 +647,10 @@ const CredentialsSchema = z.object({
 })
 ```
 
-### Using zodToOpenAPI
+#### Using zodV3ToOpenAPI
 
 > [!CAUTION]
-> `zodToOpenAPI` is deprecated and will not be supported soon, since zod v4 adds built-in support for generating OpenAPI schemas from zod scehams.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `zodV3ToOpenAPI` is deprecated and will not be supported soon, since zod v4 adds built-in support for generating OpenAPI schemas from zod scehams.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 You can convert any Zod schema to an OpenAPI JSON object:
 
@@ -605,7 +667,7 @@ const SignUpSchema = z.object({
   social: z.record(z.string().url())
 })
 
-const openapi = zodToOpenAPI(SignUpSchema)
+const openapi = zodV3ToOpenAPI(SignUpSchema)
 ```
 
 The output will be the following:
@@ -647,9 +709,4 @@ The output will be the following:
 
 ## Credits
 
-- [zod-dto](https://github.com/kbkk/abitia/tree/master/packages/zod-dto)  
-  `nestjs-zod` includes a lot of refactored code from `zod-dto`.
-
-- [zod-nestjs](https://github.com/anatine/zod-plugins/blob/main/packages/zod-nestjs/README.md) and [zod-openapi](https://github.com/anatine/zod-plugins/tree/main/packages/zod-openapi)  
-  These libraries bring some new features compared to `zod-dto`.  
-  `nestjs-zod` has used them too.
+This library was originally created by [risen228](https://github.com/risen228) and now maintained by [BenLorantfy](https://github.com/BenLorantfy/)

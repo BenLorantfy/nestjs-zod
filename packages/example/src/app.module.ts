@@ -1,18 +1,14 @@
 import { Module } from '@nestjs/common';
-import { ZodSerializerInterceptor, ZodValidationPipe } from 'nestjs-zod'
-import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core'
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { V3Module } from './zod-v3/v3.module';
-import { V4Module } from './zod-v4/v4.module';
+import { PeopleController } from './people/people.controller';
+import { StarshipsController } from './starships/starships.controller';
 import { HttpExceptionFilter } from './http-exception.filter';
-
+import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
+import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
 
 @Module({
-  imports: [V3Module, V4Module],
-  controllers: [AppController],
+  imports: [],
+  controllers: [PeopleController, StarshipsController],
   providers: [
-    AppService,
     {
       provide: APP_PIPE,
       useClass: ZodValidationPipe,
