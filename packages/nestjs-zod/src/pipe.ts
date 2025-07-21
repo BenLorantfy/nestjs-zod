@@ -1,40 +1,93 @@
 import { ArgumentMetadata, Injectable, PipeTransform } from '@nestjs/common'
 import { isZodDto, ZodDto } from './dto'
-import { ZodExceptionCreator } from './exception'
-import { validate } from './validate'
+import { createZodValidationException, ZodExceptionCreator } from './exception'
 import { UnknownSchema } from './types'
+import { validate } from './validate'
 
 interface ZodValidationPipeOptions {
   createValidationException?: ZodExceptionCreator
 }
 
-type ZodValidationPipeClass = new (
-  schemaOrDto?: UnknownSchema | ZodDto<UnknownSchema>
-) => PipeTransform
+type ZodValidationPipeClass = {
+  new (options: ZodValidationPipeConstructorOptions): PipeTransform
+  new (schemaOrDto?: UnknownSchema | ZodDto<UnknownSchema>): PipeTransform
+}
+
+export interface ZodValidationPipeConstructorOptions {
+  schema?: UnknownSchema | ZodDto<UnknownSchema>
+  /**
+   * If this flag is set to true, inputs that do not specify a schema (either
+   * via the {@link ZodValidationPipeConstructorOptions.schema}, or by using a
+   * ZodDto class), will be rejected. This prevents unvalidated inputs from
+   * getting passed the {@link ZodValidationPipe}.
+   *
+   * @default false
+   */
+  strictSchemaDeclaration?: boolean
+}
 
 export function createZodValidationPipe({
-  createValidationException,
+  createValidationException = createZodValidationException,
 }: ZodValidationPipeOptions = {}): ZodValidationPipeClass {
   @Injectable()
   class ZodValidationPipe implements PipeTransform {
-    constructor(private schemaOrDto?: UnknownSchema | ZodDto<UnknownSchema>) {}
+    private readonly schema: UnknownSchema | ZodDto<UnknownSchema> | undefined
+    private readonly strictSchemaDeclaration?: boolean
+
+    constructor(options: ZodValidationPipeConstructorOptions)
+    constructor(schemaOrDto?: UnknownSchema | ZodDto<UnknownSchema>)
+    constructor(
+      schemaOrOptions:
+        | UnknownSchema
+        | ZodDto<UnknownSchema>
+        | ZodValidationPipeConstructorOptions = {}
+    ) {
+      if (isZodDto(schemaOrOptions) || 'parse' in schemaOrOptions) {
+        this.schema = schemaOrOptions
+      } else {
+        this.schema = schemaOrOptions.schema
+        this.strictSchemaDeclaration = schemaOrOptions.strictSchemaDeclaration
+      }
+    }
 
     public transform(value: unknown, metadata: ArgumentMetadata) {
-      if (this.schemaOrDto) {
-        return validate(value, this.schemaOrDto, createValidationException)
+      if (this.schema) {
+        return validate(value, this.schema, createValidationException)
       }
 
-      const { metatype } = metadata
+      const { metatype, type: paramType, data } = metadata
 
-      if (!isZodDto(metatype)) {
+      if (isZodDto(metatype)) {
+        return validate(value, metatype.schema, createValidationException)
+      }
+
+      if (!this.strictSchemaDeclaration) {
         return value
       }
 
-      return validate(value, metatype.schema, createValidationException)
+      const runtimeType = PRIMITIVE_TYPES.get(metatype)
+      if (runtimeType && typeof value === runtimeType) {
+        // Allow simple `@Body() param: number`, `@Query('queryArg') query: string`, etc. cases.
+        return value
+      }
+
+      throw createValidationException(
+        new Error('All DTOs must declare a schema when `strictSchemaDeclaration` is enabled.')
+      )
     }
   }
 
   return ZodValidationPipe
 }
+
+const PRIMITIVE_TYPES = new Map<
+  unknown,
+  'string' | 'boolean' | 'bigint' | 'number'
+>([
+  [String, 'string'],
+  [Boolean, 'boolean'],
+  [Number, 'number'],
+  [BigInt, 'bigint'],
+])
 
 export const ZodValidationPipe = createZodValidationPipe()
