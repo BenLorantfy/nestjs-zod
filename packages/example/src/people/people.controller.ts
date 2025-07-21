@@ -1,7 +1,7 @@
-import { Controller, Get, Post, Body } from '@nestjs/common';
+import { Controller, Get, Post, Body, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { ZodSerializerDto } from 'nestjs-zod';
-import { CreatePersonDto, PersonDto, PersonListDto, Person, PersonList } from './people.dto';
+import { CreatePersonDto, PersonDto, PersonListDto, PersonFilterDto, Person, PersonList } from './people.dto';
 
 @ApiTags('People')
 @Controller('api/people')
@@ -65,9 +65,9 @@ export class PeopleController {
     type: PersonListDto 
   })
   @ZodSerializerDto(PersonListDto)
-  getPeople(): PersonList {
+  getPeople(@Query() query: PersonFilterDto): PersonList {
     return {
-      data: this.mockPeople,
+      data: this.mockPeople.filter(person => query.name ? person.name.includes(query.name) : true),
     };
   }
 

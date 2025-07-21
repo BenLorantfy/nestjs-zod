@@ -172,6 +172,8 @@
 
     </details>
 
+Check out the [example app](./packages/example/) for a full example of how to integrate nestjs-zod in your nestjs application
+
 ## Documentation
 
 - [Creating DTO from Zod schema](#creating-dto-from-zod-schema)

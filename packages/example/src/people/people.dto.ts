@@ -26,12 +26,18 @@ export const PersonListSchema = z.object({
   data: z.array(PersonSchema),
 }).meta({ id: 'PersonList' });
 
+export const PersonFilterSchema = z.object({
+  name: z.string().optional().describe('Filter by name'),
+})
+
 // DTO classes
 export class CreatePersonDto extends createZodDto(CreatePersonSchema) {}
 export class PersonDto extends createZodDto(PersonSchema) {}
 export class PersonListDto extends createZodDto(PersonListSchema) {} 
+export class PersonFilterDto extends createZodDto(PersonFilterSchema) {}
 
 // Types
 export type Person = z.infer<typeof PersonSchema>;
 export type CreatePerson = z.infer<typeof CreatePersonSchema>;
 export type PersonList = z.infer<typeof PersonListSchema>;
+export type PersonFilter = z.infer<typeof PersonFilterSchema>;
