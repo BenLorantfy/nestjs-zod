@@ -1,4 +1,4 @@
-import { ZodIssueCode } from 'zod'
+import { ZodIssueCode } from 'zod/v3'
 import { DateStringFormat, ZodAnyDateStringIssue } from '../issues'
 import { createCustomMapper, createMinMaxMapper } from './shared'
 

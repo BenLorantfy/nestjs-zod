@@ -3,7 +3,7 @@ import {
   setErrorMap,
   ZodErrorMap,
   ZodIssueOptionalMessage as ZodIssueOptionalMessageDefault,
-} from 'zod'
+} from 'zod/v3'
 import { ZodIssueOptionalMessage } from '../issues'
 import { dateStringCustom, dateStringYearMinMax } from './date-string'
 import { passwordCustom, passwordMinMax } from './password'
