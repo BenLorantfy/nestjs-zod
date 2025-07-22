@@ -1,4 +1,4 @@
-import { ArgumentMetadata, Injectable, PipeTransform } from '@nestjs/common'
+import { ArgumentMetadata, Injectable, Optional, PipeTransform } from '@nestjs/common'
 import { isZodDto, ZodDto } from './dto'
 import { ZodExceptionCreator } from './exception'
 import { validate } from './validate'
@@ -17,7 +17,7 @@ export function createZodValidationPipe({
 }: ZodValidationPipeOptions = {}): ZodValidationPipeClass {
   @Injectable()
   class ZodValidationPipe implements PipeTransform {
-    constructor(private schemaOrDto?: UnknownSchema | ZodDto<UnknownSchema>) {}
+    constructor(@Optional() private schemaOrDto?: UnknownSchema | ZodDto<UnknownSchema>) {}
 
     public transform(value: unknown, metadata: ArgumentMetadata) {
       if (this.schemaOrDto) {
