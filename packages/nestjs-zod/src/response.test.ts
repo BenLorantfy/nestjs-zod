@@ -1,16 +1,11 @@
-import { Body, Controller, Module, Post, Type } from "@nestjs/common";
-import { APP_INTERCEPTOR, APP_PIPE } from "@nestjs/core";
-import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
-import { cleanupOpenApiDoc } from "./cleanupOpenApiDoc";
+import { Body, Controller, Post } from "@nestjs/common";
 import { z } from "zod/v4";
 import { z as z3 } from "zod/v3";
 import { createZodDto } from "./dto";
 import { ZodResponse } from "./response";
 import { get } from "lodash";
 import request from 'supertest';
-import { Test, TestingModule } from '@nestjs/testing';
-import { ZodSerializerInterceptor } from "./serializer";
-import { ZodValidationPipe } from "./pipe";
+import { setupApp } from "./testUtils";
 
 test('serializes the return value and sets the openapi doc', async () => {
     class BookDto extends createZodDto(z.object({
@@ -56,7 +51,7 @@ test('serializes the return value and sets the openapi doc', async () => {
         }
     }
 
-    const { app, openApiDoc } = await setup(BookController)
+    const { app, openApiDoc } = await setupApp(BookController)
 
     const schemaName = 'BookDto_Output';
     expect(get(openApiDoc, 'paths./books.post.responses.201.content.application/json.schema')).toEqual({
@@ -107,34 +102,3 @@ test('throws error if trying to use zod v3', () => {
     }).toThrow('ZodResponse can only be called with zod v4 schemas')
 
 })
-
-async function setup(controllerClass: Type<unknown>) {
-    @Module({
-        imports: [],
-        controllers: [controllerClass],
-        providers: [
-          {
-            provide: APP_PIPE,
-            useClass: ZodValidationPipe,
-          },
-          {
-            provide: APP_INTERCEPTOR,
-            useClass: ZodSerializerInterceptor,
-          }
-        ]
-      })
-      class AppModule {}
-
-
-    const moduleFixture: TestingModule = await Test.createTestingModule({
-        imports: [AppModule],
-      }).compile();
-    
-      const app = moduleFixture.createNestApplication();
-      await app.init();
-
-    return {
-        app,
-        openApiDoc: cleanupOpenApiDoc(SwaggerModule.createDocument(app, new DocumentBuilder().build())),
-    }
-}

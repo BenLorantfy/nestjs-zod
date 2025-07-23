@@ -176,29 +176,38 @@ Check out the [example app](./packages/example/) for a full example of how to in
 
 ## Documentation
 
-- [Creating DTO from Zod schema](#creating-dto-from-zod-schema)
-  - [Using DTO](#using-dto)
-- [Using ZodValidationPipe](#using-zodvalidationpipe)
+- [`createZodDto` (Create a DTO from a Zod schema)](#createzoddto-create-a-dto-from-a-zod-schema)
+  - [Using Zod DTOs](#using-zod-dtos)
+- [`ZodValidationPipe` (Get nestjs to validate using zod)](#zodvalidationpipe-get-nestjs-to-validate-using-zod)
   - [Globally](#globally-recommended)
   - [Locally](#locally)
-  - [Creating custom validation pipe](#creating-custom-validation-pipe)
-- [Using ZodGuard](#using-zodguard)
-  - [Creating custom guard](#creating-custom-guard)
-- [Validation Exceptions](#validation-exceptions)
-- [Using ZodSerializerInterceptor](#using-zodserializerinterceptor-for-output-validation)
-- [Extended Zod](#extended-zod)
+  - [`createZodValidationPipe` (Creating custom validation pipe)](#createzodvalidationpipe-creating-custom-validation-pipe)
+- [`ZodSerializerDto` (Set zod DTO to serialize responses with)](#zodserializerdto)
+- [`ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)](#using-zodserializerinterceptor-for-output-validation)
+- [OpenAPI (Swagger) support](#openapi-swagger-support)
+  - [`cleanupOpenApiDoc` (Ensure proper OpenAPI output)](#setup)
+  - [Writing more Swagger-compatible schemas](#writing-more-swagger-compatible-schemas)
+  - [\[*⚠️ DEPRECATED*\] `zodV3ToOpenAPI`](#using-zodtoopenapi)
+- [`ZodResponse` (Ensure correct responses at run-time, compile-time, and documentation-time)](#zodresponse)
+- [`ZodValidationException`](#zodvalidationexception)
+- [`ZodSerializationException`](#zodserializationexception)
+- [\[*⚠️ DEPRECATED*\] `validate`](#️-deprecated-validate)
+- [\[*⚠️ DEPRECATED*\] `ZodGuard`](#using-zodguard)
+  - [`createZodGuard` (Creating custom guard)](#creating-custom-guard)
+- [\[*⚠️ DEPRECATED*\] `@nest-zod/z`](#extended-zod)
   - [ZodDateString](#zoddatestring)
   - [ZodPassword](#zodpassword)
   - [Json Schema](#json-schema)
   - ["from" function](#from-function)
   - [Extended Zod Errors](#extended-zod-errors)
   - [Working with errors on the client side](#working-with-errors-on-the-client-side)
-- [OpenAPI (Swagger) support](#openapi-swagger-support)
-  - [Setup](#setup)
-  - [Writing more Swagger-compatible schemas](#writing-more-swagger-compatible-schemas)
-  - [Using zodToOpenAPI](#using-zodtoopenapi)
 
-### Creating DTO from Zod schema
+
+### `createZodDto` (Create a DTO from a Zod schema)
+
+`createZodDto` is used to create a nestjs DTO from a zod schema.  Then these DTOs can be used instead of DTOs created with `class-validator` / `class-transformer`.
+
+See an example below of how to create a zod DTO:
 
 ```ts
 import { createZodDto } from 'nestjs-zod'
@@ -213,12 +222,16 @@ const CredentialsSchema = z.object({
 class CredentialsDto extends createZodDto(CredentialsSchema) {}
 ```
 
-#### Using DTO
+> [!NOTE]
+> We need to use the `class <dtoname> extends createZodDto(...` syntax because nestjs/typescript requires classes be used for DTOs
 
-DTO does two things:
+#### Using Zod DTOs
 
-- Provides a schema for `ZodValidationPipe`
-- Provides a type from Zod schema for you
+Zod DTOs are responsible for three things:
+
+1. Providing a schema for `ZodValidationPipe` to validate incoming client data against
+2. Providing a compile-time typescript type from the Zod schema
+3. Providing an OpenAPI schema when using `nestjs/swagger`
 
 ```ts
 @Controller('auth')
@@ -241,11 +254,11 @@ class AuthController {
 }
 ```
 
-### Using ZodValidationPipe
+### `ZodValidationPipe` (Get nestjs to validate using zod)
 
-The validation pipe uses your Zod schema to parse data from parameter decorator.
+The validation pipe uses your Zod schema to parse data incoming client data when using `@Body()`, `@Params()`, or `@Query()` parameter deccorators
 
-When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
+When the data is invalid it throws a [ZodValidationException](#zodvalidationexception).
 
 #### Globally (recommended)
 
@@ -298,7 +311,9 @@ class AuthController {
 }
 ```
 
-#### Creating custom validation pipe
+#### `createZodValidationPipe` (Creating custom validation pipe)
+
+You can also create a custom validation pipe if desired:
 
 ```ts
 import { createZodValidationPipe } from 'nestjs-zod'
@@ -310,123 +325,7 @@ const MyZodValidationPipe = createZodValidationPipe({
 })
 ```
 
-### Using ZodGuard
-
-> [!CAUTION]
-> `ZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
-
-Sometimes, we need to validate user input before specific Guards. We can't use Validation Pipe since NestJS Pipes are always executed after Guards.
-
-The solution is `ZodGuard`. It works just like `ZodValidationPipe`, except for that is doesn't transform the input.
-
-It has 2 syntax forms:
-
-- `@UseGuards(new ZodGuard('body', CredentialsSchema))`
-- `@UseZodGuard('body', CredentialsSchema)`
-
-Parameters:
-
-1. The source - `'body' | 'query' | 'params'`
-2. Zod Schema or DTO (just like `ZodValidationPipe`)
-
-When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
-
-```ts
-import { ZodGuard } from 'nestjs-zod'
-
-// controller-level
-@UseZodGuard('body', CredentialsSchema)
-@UseZodGuard('params', CredentialsDto)
-class MyController {}
-
-class MyController {
-  // route-level
-  @UseZodGuard('query', CredentialsSchema)
-  @UseZodGuard('body', CredentialsDto)
-  async signIn() {}
-}
-```
-
-#### Creating custom guard
-
-> [!CAUTION]
-> `createZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
-
-```ts
-import { createZodGuard } from 'nestjs-zod'
-
-const MyZodGuard = createZodGuard({
-  // provide custom validation exception factory
-  createValidationException: (error: ZodError) =>
-    new BadRequestException('Ooops'),
-})
-```
-
-### Create validation from scratch
-
-> [!CAUTION]
-> `validate` is deprecated and will not be supported soon.  It is recommended to use `.parse` directly. See [MIGRATION.md](./MIGRATION.md) for more information.
-
-If you don't like `ZodGuard` and `ZodValidationPipe`, you can use `validate` function:
-
-```ts
-import { validate } from 'nestjs-zod'
-
-validate(wrongThing, UserDto, (zodError) => new MyException(zodError)) // throws MyException
-
-const validatedUser = validate(
-  user,
-  UserDto,
-  (zodError) => new MyException(zodError)
-) // returns typed value when succeed
-```
-
-### Validation Exceptions
-
-The default server response on validation error looks like that:
-
-```json
-{
-  "statusCode": 400,
-  "message": "Validation failed",
-  "errors": [
-    {
-      "code": "too_small",
-      "minimum": 8,
-      "type": "string",
-      "inclusive": true,
-      "message": "String must contain at least 8 character(s)",
-      "path": ["password"]
-    }
-  ]
-}
-```
-
-The reason of this structure is default `ZodValidationException`.
-
-You can customize the exception by creating custom `nestjs-zod` entities using the factories:
-
-- [Validation Pipe](#creating-custom-validation-pipe)
-- [Guard](#creating-custom-guard)
-
-You can create `ZodValidationException` manually by providing `ZodError`:
-
-```ts
-const exception = new ZodValidationException(error)
-```
-
-Also, `ZodValidationException` has an additional API for better usage in NestJS Exception Filters:
-
-```ts
-@Catch(ZodValidationException)
-export class ZodValidationExceptionFilter implements ExceptionFilter {
-  catch(exception: ZodValidationException) {
-    exception.getZodError() // -> ZodError
-  }
-}
-```
-
-### Using ZodSerializerInterceptor for output validation
+### `ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)
 
 To ensure that a response conforms to a certain shape, you may use the `ZodSerializerInterceptor` interceptor.
 
@@ -481,10 +380,250 @@ if (exception instanceof ZodSerializationException) {
 ```
 See the example app [here](/packages/example/src/http-exception.filter.ts) for more information.
 
-### Extended Zod
+### OpenAPI (Swagger) support
+
+> [!Note]
+> There used to be a function called `patchNestJsSwagger`.  This function has been replaced by `cleanupOpenApiDoc`
+
+If you have `@nestjs/swagger` setup, documentation will automatically be generated for:
+- Request bodies, if you use `@Body() body: MyDto`
+- Response bodies, if you use `@ApiOkResponse({ type: MyDto })`
+- Query params, if you use `@Query() query: MyQueryParamsDto`
+
+However, to complete the swagger integration, you need to call `cleanupOpenApiDoc` with the generated open api doc:
+
+```diff
+  const openApiDoc = SwaggerModule.createDocument(app, 
+      new DocumentBuilder()
+        .setTitle('Example API')
+        .setDescription('Example API description')
+        .setVersion('1.0')
+        .build(),
+  );
+  - SwaggerModule.setup('api', app, openApiDoc);
+  + SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
+```
+
+For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application guide [here](/packages/example/) .
+
+#### Writing more Swagger-compatible schemas
+
+Use `.describe()` method to add Swagger description:
+
+```ts
+import { z } from 'zod'
+
+const CredentialsSchema = z.object({
+  username: z.string().describe('This is an username'),
+  password: z.string().describe('This is a password'),
+})
+```
+
+#### [*⚠️ DEPRECATED*] `zodV3ToOpenAPI`
+
+> [!CAUTION]
+> `zodV3ToOpenAPI` is deprecated and will not be supported soon, since zod v4 adds built-in support for generating OpenAPI schemas from zod scehams.  See [MIGRATION.md](./MIGRATION.md) for more information.
+
+You can convert any Zod schema to an OpenAPI JSON object:
+
+```ts
+import { zodToOpenAPI } from 'nestjs-zod'
+import { z } from 'zod'
+
+const SignUpSchema = z.object({
+  username: z.string().min(8).max(20),
+  password: z.string().min(8).max(20),
+  sex: z
+    .enum(['male', 'female', 'nonbinary'])
+    .describe('We respect your gender choice'),
+  social: z.record(z.string().url())
+})
+
+const openapi = zodV3ToOpenAPI(SignUpSchema)
+```
+
+The output will be the following:
+
+```json
+{
+  "type": "object",
+  "properties": {
+    "username": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 20
+    },
+    "password": {
+      "type": "string",
+      "minLength": 8,
+      "maxLength": 20
+    },
+    "sex": {
+      "description": "We respect your gender choice",
+      "type": "string",
+      "enum": ["male", "female", "nonbinary"]
+    },
+    "social": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string",
+        "format": "uri"
+      }
+    },
+    "birthDate": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": ["username", "password", "sex", "social", "birthDate"]
+}
+```
+
+### `ZodValidationException`
+
+If the zod request parsing fails, then `nestjs-zod` will throw a `ZodValidationException`, which will result in the following HTTP response:
+
+```json
+{
+  "statusCode": 400,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "code": "too_small",
+      "minimum": 8,
+      "type": "string",
+      "inclusive": true,
+      "message": "String must contain at least 8 character(s)",
+      "path": ["password"]
+    }
+  ]
+}
+```
+
+You can customize the exception and HTTP response by either `1)` creating a custom validation pipe using [`createZodValidationPipe`](#createzodvalidationpipe-creating-custom-validation-pipe) or `2)` handling `ZodValidationException` inside an [exception filter](https://docs.nestjs.com/exception-filters)
+
+Here is an example exception filter:
+
+```ts
+@Catch(ZodValidationException)
+export class ZodValidationExceptionFilter implements ExceptionFilter {
+  catch(exception: ZodValidationException) {
+    exception.getZodError() // -> ZodError
+  }
+}
+```
+
+### `ZodSerializationException`
+
+If the zod response serialization fails, then `nestjs-zod` will throw a `ZodSerializationException`, which will result in the following HTTP response:
+
+```json
+{
+  "message": 'Internal Server Error',
+  "statusCode": 500,
+}
+```
+
+You can customize the exception and HTTP response handling `ZodSerializationException` inside an [exception filter](https://docs.nestjs.com/exception-filters)
+
+### [*⚠️ DEPRECATED*] `ZodGuard`
+
+> [!CAUTION]
+> Guard-related functions are deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
+
+<details>
+  <summary>
+    Show documentation for deprecated APIs
+  </summary>
+
+> [!CAUTION]
+> `ZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
+
+Sometimes, we need to validate user input before specific Guards. We can't use Validation Pipe since NestJS Pipes are always executed after Guards.
+
+The solution is `ZodGuard`. It works just like `ZodValidationPipe`, except for that is doesn't transform the input.
+
+It has 2 syntax forms:
+
+- `@UseGuards(new ZodGuard('body', CredentialsSchema))`
+- `@UseZodGuard('body', CredentialsSchema)`
+
+Parameters:
+
+1. The source - `'body' | 'query' | 'params'`
+2. Zod Schema or DTO (just like `ZodValidationPipe`)
+
+When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
+
+```ts
+import { ZodGuard } from 'nestjs-zod'
+
+// controller-level
+@UseZodGuard('body', CredentialsSchema)
+@UseZodGuard('params', CredentialsDto)
+class MyController {}
+
+class MyController {
+  // route-level
+  @UseZodGuard('query', CredentialsSchema)
+  @UseZodGuard('body', CredentialsDto)
+  async signIn() {}
+}
+```
+
+#### `createZodGuard` (Creating custom guard)
+
+> [!CAUTION]
+> `createZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
+
+```ts
+import { createZodGuard } from 'nestjs-zod'
+
+const MyZodGuard = createZodGuard({
+  // provide custom validation exception factory
+  createValidationException: (error: ZodError) =>
+    new BadRequestException('Ooops'),
+})
+```
+
+</details>
+
+### [*⚠️ DEPRECATED*] `validate`
+
+> [!CAUTION]
+> `validate` is deprecated and will not be supported soon.  It is recommended to use `.parse` directly. See [MIGRATION.md](./MIGRATION.md) for more information.
+
+<details>
+  <summary>
+    Show documentation for deprecated APIs
+  </summary>
+
+If you don't like `ZodGuard` and `ZodValidationPipe`, you can use `validate` function:
+
+```ts
+import { validate } from 'nestjs-zod'
+
+validate(wrongThing, UserDto, (zodError) => new MyException(zodError)) // throws MyException
+
+const validatedUser = validate(
+  user,
+  UserDto,
+  (zodError) => new MyException(zodError)
+) // returns typed value when succeed
+```
+
+</details>
+
+### [*⚠️ DEPRECATED*] `@nest-zod/z`
 
 > [!CAUTION]
 > `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+
+<details>
+  <summary>
+    Show documentation for deprecated package
+  </summary>
+
 
 `@nest-zod/z` provides a special version of Zod. It helps you to validate the user input more accurately by using our custom schemas and methods.
 
@@ -608,104 +747,7 @@ Errors:
 - `too_small` with `type === 'password'`
 - `too_big` with `type === 'password'`
 
-### OpenAPI (Swagger) support
-
-> [!Note]
-> There used to be a function called `patchNestJsSwagger`.  This function has been replaced by `cleanupOpenApiDoc`
-
-If you have `@nestjs/swagger` setup, documentation will automatically be generated for:
-- Request bodies, if you use `@Body() body: MyDto`
-- Response bodies, if you use `@ApiOkResponse({ type: MyDto })`
-- Query params, if you use `@Query() query: MyQueryParamsDto`
-
-However, to complete the swagger integration, you need to call `cleanupOpenApiDoc` with the generated open api doc:
-
-```diff
-  const openApiDoc = SwaggerModule.createDocument(app, 
-      new DocumentBuilder()
-        .setTitle('Example API')
-        .setDescription('Example API description')
-        .setVersion('1.0')
-        .build(),
-  );
-  - SwaggerModule.setup('api', app, openApiDoc);
-  + SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
-```
-
-For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application guide [here](/packages/example/) .
-
-#### Writing more Swagger-compatible schemas
-
-Use `.describe()` method to add Swagger description:
-
-```ts
-import { z } from 'zod'
-
-const CredentialsSchema = z.object({
-  username: z.string().describe('This is an username'),
-  password: z.string().describe('This is a password'),
-})
-```
-
-#### Using zodV3ToOpenAPI
-
-> [!CAUTION]
-> `zodV3ToOpenAPI` is deprecated and will not be supported soon, since zod v4 adds built-in support for generating OpenAPI schemas from zod scehams.  See [MIGRATION.md](./MIGRATION.md) for more information.
-
-You can convert any Zod schema to an OpenAPI JSON object:
-
-```ts
-import { zodToOpenAPI } from 'nestjs-zod'
-import { z } from 'zod'
-
-const SignUpSchema = z.object({
-  username: z.string().min(8).max(20),
-  password: z.string().min(8).max(20),
-  sex: z
-    .enum(['male', 'female', 'nonbinary'])
-    .describe('We respect your gender choice'),
-  social: z.record(z.string().url())
-})
-
-const openapi = zodV3ToOpenAPI(SignUpSchema)
-```
-
-The output will be the following:
-
-```json
-{
-  "type": "object",
-  "properties": {
-    "username": {
-      "type": "string",
-      "minLength": 8,
-      "maxLength": 20
-    },
-    "password": {
-      "type": "string",
-      "minLength": 8,
-      "maxLength": 20
-    },
-    "sex": {
-      "description": "We respect your gender choice",
-      "type": "string",
-      "enum": ["male", "female", "nonbinary"]
-    },
-    "social": {
-      "type": "object",
-      "additionalProperties": {
-        "type": "string",
-        "format": "uri"
-      }
-    },
-    "birthDate": {
-      "type": "string",
-      "format": "date-time"
-    }
-  },
-  "required": ["username", "password", "sex", "social", "birthDate"]
-}
-```
+</details>
 
 ## Credits
 
