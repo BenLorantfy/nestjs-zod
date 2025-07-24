@@ -461,7 +461,7 @@ See the example app [here](/packages/example/src/http-exception.filter.ts) for m
 
 If you have `@nestjs/swagger` setup, documentation will automatically be generated for:
 - Request bodies, if you use `@Body() body: MyDto`
-- Response bodies, if you use `@ApiOkResponse({ type: MyDto })` (or `@ZodResponse({ type: MyDto })`)
+- Response bodies, if you use `@ApiOkResponse({ type: MyDto })` (or [`@ZodResponse({ type: MyDto })`](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas))
 - Query params, if you use `@Query() query: MyQueryParamsDto`
 
 However, please ensure `cleanupOpenApiDoc` is setup correctly as detailed below
