@@ -428,7 +428,7 @@ If these 3 spots get out of sync, this may cause bugs.  If you want to remove th
 - @ZodSerializer(BookDto)
 - @ApiOkResponse({
 -  status: 200,
--  type: BookDto
+-  type: BookDto.Output
 - })
 - getBook(): BookDto {
 + @ZodResponse({ type: BookDto })
