@@ -530,55 +530,55 @@ The output will be the following:
     Show documentation for deprecated APIs
   </summary>
 
-> [!CAUTION]
-> `ZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
+  > [!CAUTION]
+  > `ZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
 
-Sometimes, we need to validate user input before specific Guards. We can't use Validation Pipe since NestJS Pipes are always executed after Guards.
+  Sometimes, we need to validate user input before specific Guards. We can't use Validation Pipe since NestJS Pipes are always executed after Guards.
 
-The solution is `ZodGuard`. It works just like `ZodValidationPipe`, except for that is doesn't transform the input.
+  The solution is `ZodGuard`. It works just like `ZodValidationPipe`, except for that is doesn't transform the input.
 
-It has 2 syntax forms:
+  It has 2 syntax forms:
 
-- `@UseGuards(new ZodGuard('body', CredentialsSchema))`
-- `@UseZodGuard('body', CredentialsSchema)`
+  - `@UseGuards(new ZodGuard('body', CredentialsSchema))`
+  - `@UseZodGuard('body', CredentialsSchema)`
 
-Parameters:
+  Parameters:
 
-1. The source - `'body' | 'query' | 'params'`
-2. Zod Schema or DTO (just like `ZodValidationPipe`)
+  1. The source - `'body' | 'query' | 'params'`
+  2. Zod Schema or DTO (just like `ZodValidationPipe`)
 
-When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
+  When the data is invalid - it throws [ZodValidationException](#validation-exceptions).
 
-```ts
-import { ZodGuard } from 'nestjs-zod'
+  ```ts
+  import { ZodGuard } from 'nestjs-zod'
 
-// controller-level
-@UseZodGuard('body', CredentialsSchema)
-@UseZodGuard('params', CredentialsDto)
-class MyController {}
+  // controller-level
+  @UseZodGuard('body', CredentialsSchema)
+  @UseZodGuard('params', CredentialsDto)
+  class MyController {}
 
-class MyController {
-  // route-level
-  @UseZodGuard('query', CredentialsSchema)
-  @UseZodGuard('body', CredentialsDto)
-  async signIn() {}
-}
-```
+  class MyController {
+    // route-level
+    @UseZodGuard('query', CredentialsSchema)
+    @UseZodGuard('body', CredentialsDto)
+    async signIn() {}
+  }
+  ```
 
-#### `createZodGuard` (Creating custom guard)
+  #### `createZodGuard` (Creating custom guard)
 
-> [!CAUTION]
-> `createZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
+  > [!CAUTION]
+  > `createZodGuard` is deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
 
-```ts
-import { createZodGuard } from 'nestjs-zod'
+  ```ts
+  import { createZodGuard } from 'nestjs-zod'
 
-const MyZodGuard = createZodGuard({
-  // provide custom validation exception factory
-  createValidationException: (error: ZodError) =>
-    new BadRequestException('Ooops'),
-})
-```
+  const MyZodGuard = createZodGuard({
+    // provide custom validation exception factory
+    createValidationException: (error: ZodError) =>
+      new BadRequestException('Ooops'),
+  })
+  ```
 
 </details>
 
@@ -592,19 +592,19 @@ const MyZodGuard = createZodGuard({
     Show documentation for deprecated APIs
   </summary>
 
-If you don't like `ZodGuard` and `ZodValidationPipe`, you can use `validate` function:
+  If you don't like `ZodGuard` and `ZodValidationPipe`, you can use `validate` function:
 
-```ts
-import { validate } from 'nestjs-zod'
+  ```ts
+  import { validate } from 'nestjs-zod'
 
-validate(wrongThing, UserDto, (zodError) => new MyException(zodError)) // throws MyException
+  validate(wrongThing, UserDto, (zodError) => new MyException(zodError)) // throws MyException
 
-const validatedUser = validate(
-  user,
-  UserDto,
-  (zodError) => new MyException(zodError)
-) // returns typed value when succeed
-```
+  const validatedUser = validate(
+    user,
+    UserDto,
+    (zodError) => new MyException(zodError)
+  ) // returns typed value when succeed
+  ```
 
 </details>
 
@@ -619,127 +619,127 @@ const validatedUser = validate(
   </summary>
 
 
-`@nest-zod/z` provides a special version of Zod. It helps you to validate the user input more accurately by using our custom schemas and methods.
+  `@nest-zod/z` provides a special version of Zod. It helps you to validate the user input more accurately by using our custom schemas and methods.
 
-#### ZodDateString
+  #### ZodDateString
 
-> [!CAUTION]
-> `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+  > [!CAUTION]
+  > `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
-In HTTP, we always accept Dates as strings. But default Zod only has validations for full date-time strings. `ZodDateString` was created to address this issue.
+  In HTTP, we always accept Dates as strings. But default Zod only has validations for full date-time strings. `ZodDateString` was created to address this issue.
 
-```ts
-// 1. Expect user input to be a "string" type
-// 2. Expect user input to be a valid date (by using new Date)
-z.dateString()
+  ```ts
+  // 1. Expect user input to be a "string" type
+  // 2. Expect user input to be a valid date (by using new Date)
+  z.dateString()
 
-// Cast to Date instance
-// (use it on end of the chain, but before "describe")
-z.dateString().cast()
+  // Cast to Date instance
+  // (use it on end of the chain, but before "describe")
+  z.dateString().cast()
 
-// Expect string in "full-date" format from RFC3339
-z.dateString().format('date')
+  // Expect string in "full-date" format from RFC3339
+  z.dateString().format('date')
 
-// [default format]
-// Expect string in "date-time" format from RFC3339
-z.dateString().format('date-time')
+  // [default format]
+  // Expect string in "date-time" format from RFC3339
+  z.dateString().format('date-time')
 
-// Expect date to be the past
-z.dateString().past()
+  // Expect date to be the past
+  z.dateString().past()
 
-// Expect date to be the future
-z.dateString().future()
+  // Expect date to be the future
+  z.dateString().future()
 
-// Expect year to be greater or equal to 2000
-z.dateString().minYear(2000)
+  // Expect year to be greater or equal to 2000
+  z.dateString().minYear(2000)
 
-// Expect year to be less or equal to 2025
-z.dateString().maxYear(2025)
+  // Expect year to be less or equal to 2025
+  z.dateString().maxYear(2025)
 
-// Expect day to be a week day
-z.dateString().weekDay()
+  // Expect day to be a week day
+  z.dateString().weekDay()
 
-// Expect year to be a weekend
-z.dateString().weekend()
-```
+  // Expect year to be a weekend
+  z.dateString().weekend()
+  ```
 
-Valid `date` format examples:
+  Valid `date` format examples:
 
-- `2022-05-15`
+  - `2022-05-15`
 
-Valid `date-time` format examples:
+  Valid `date-time` format examples:
 
-- `2022-05-02:08:33Z`
-- `2022-05-02:08:33.000Z`
-- `2022-05-02:08:33+00:00`
-- `2022-05-02:08:33-00:00`
-- `2022-05-02:08:33.000+00:00`
+  - `2022-05-02:08:33Z`
+  - `2022-05-02:08:33.000Z`
+  - `2022-05-02:08:33+00:00`
+  - `2022-05-02:08:33-00:00`
+  - `2022-05-02:08:33.000+00:00`
 
-Errors:
+  Errors:
 
-- `invalid_date_string` - invalid date
+  - `invalid_date_string` - invalid date
 
-- `invalid_date_string_format` - wrong format
+  - `invalid_date_string_format` - wrong format
 
-  Payload:
+    Payload:
 
-  - `expected` - `'date' | 'date-time'`
+    - `expected` - `'date' | 'date-time'`
 
-- `invalid_date_string_direction` - not past/future
+  - `invalid_date_string_direction` - not past/future
 
-  Payload:
+    Payload:
 
-  - `expected` - `'past' | 'future'`
+    - `expected` - `'past' | 'future'`
 
-- `invalid_date_string_day` - not weekDay/weekend
+  - `invalid_date_string_day` - not weekDay/weekend
 
-  Payload:
+    Payload:
 
-  - `expected` - `'weekDay' | 'weekend'`
+    - `expected` - `'weekDay' | 'weekend'`
 
-- `too_small` with `type === 'date_string_year'`
-- `too_big` with `type === 'date_string_year'`
+  - `too_small` with `type === 'date_string_year'`
+  - `too_big` with `type === 'date_string_year'`
 
-#### ZodPassword
+  #### ZodPassword
 
-> [!CAUTION]
-> `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
+  > [!CAUTION]
+  > `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
-`ZodPassword` is a string-like type, just like the `ZodDateString`. As you might have guessed, it's intended to help you with password schemas definition.
+  `ZodPassword` is a string-like type, just like the `ZodDateString`. As you might have guessed, it's intended to help you with password schemas definition.
 
-Also, `ZodPassword` has a more accurate OpenAPI conversion, comparing to regular `.string()`: it has `password` format and generated RegExp string for `pattern`.
+  Also, `ZodPassword` has a more accurate OpenAPI conversion, comparing to regular `.string()`: it has `password` format and generated RegExp string for `pattern`.
 
-```ts
-// Expect user input to be a "string" type
-z.password()
+  ```ts
+  // Expect user input to be a "string" type
+  z.password()
 
-// Expect password length to be greater or equal to 8
-z.password().min(8)
+  // Expect password length to be greater or equal to 8
+  z.password().min(8)
 
-// Expect password length to be less or equal to 100
-z.password().max(100)
+  // Expect password length to be less or equal to 100
+  z.password().max(100)
 
-// Expect password to have at least one digit
-z.password().atLeastOne('digit')
+  // Expect password to have at least one digit
+  z.password().atLeastOne('digit')
 
-// Expect password to have at least one lowercase letter
-z.password().atLeastOne('lowercase')
+  // Expect password to have at least one lowercase letter
+  z.password().atLeastOne('lowercase')
 
-// Expect password to have at least one uppercase letter
-z.password().atLeastOne('uppercase')
+  // Expect password to have at least one uppercase letter
+  z.password().atLeastOne('uppercase')
 
-// Expect password to have at least one special symbol
-z.password().atLeastOne('special')
-```
+  // Expect password to have at least one special symbol
+  z.password().atLeastOne('special')
+  ```
 
-Errors:
+  Errors:
 
-- `invalid_password_no_digit`
-- `invalid_password_no_lowercase`
-- `invalid_password_no_uppercase`
-- `invalid_password_no_special`
-- `too_small` with `type === 'password'`
-- `too_big` with `type === 'password'`
+  - `invalid_password_no_digit`
+  - `invalid_password_no_lowercase`
+  - `invalid_password_no_uppercase`
+  - `invalid_password_no_special`
+  - `too_small` with `type === 'password'`
+  - `too_big` with `type === 'password'`
 
 </details>
 
