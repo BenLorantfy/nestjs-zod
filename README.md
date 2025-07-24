@@ -28,10 +28,18 @@
 
 ## Core library features
 
+<p>
 ✨ Create nestjs DTOs from zod schemas
+</p>
+<p>
 ✨ Validate / parse request body, query params, and url params using zod
+</p>
+<p>
 ✨ Serialize response bodies using zod
+</p>
+<p>
 ✨ Automatically generate OpenAPI documentation using zod
+</p>
 
 
 ## Getting Started
