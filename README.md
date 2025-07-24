@@ -176,34 +176,29 @@ Check out the [example app](./packages/example/) for a full example of how to in
 
 ## Documentation
 
-- [`createZodDto` (Create a DTO from a Zod schema)](#createzoddto-create-a-dto-from-a-zod-schema)
-  - [Using Zod DTOs](#using-zod-dtos)
-- [`ZodValidationPipe` (Get nestjs to validate using zod)](#zodvalidationpipe-get-nestjs-to-validate-using-zod)
-  - [Globally](#globally-recommended)
-  - [Locally](#locally)
+- [Request Validation](#request-validation)
+  - [`createZodDto` (Create a DTO from a Zod schema)](#createzoddto-create-a-dto-from-a-zod-schema)
+  - [`ZodValidationPipe` (Get nestjs to validate using zod)](#zodvalidationpipe-get-nestjs-to-validate-using-zod)
   - [`createZodValidationPipe` (Creating custom validation pipe)](#createzodvalidationpipe-creating-custom-validation-pipe)
-- [`ZodSerializerDto` (Set zod DTO to serialize responses with)](#zodserializerdto)
-- [`ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)](#using-zodserializerinterceptor-for-output-validation)
+  - [`ZodValidationException`](#zodvalidationexception)
+- [Response Validation](#response-validation)  
+  - [`ZodSerializerDto` (Set zod DTO to serialize responses with)](#zodserializerdto-set-zod-dto-to-serialize-responses-with)
+  - [`ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)](#zodserializerinterceptor-get-nestjs-to-serialize-responses-with-zod)
+  - [`ZodResponse` (Ensure correct responses at run-time, compile-time, and documentation-time)](#zodresponse)
+  - [`ZodSerializationException`](#zodserializationexception)
 - [OpenAPI (Swagger) support](#openapi-swagger-support)
-  - [`cleanupOpenApiDoc` (Ensure proper OpenAPI output)](#setup)
+  - [`cleanupOpenApiDoc` (Ensure proper OpenAPI output)](#cleanupopenapidoc-ensure-proper-openapi-output)
   - [Writing more Swagger-compatible schemas](#writing-more-swagger-compatible-schemas)
-  - [\[*⚠️ DEPRECATED*\] `zodV3ToOpenAPI`](#using-zodtoopenapi)
-- [`ZodResponse` (Ensure correct responses at run-time, compile-time, and documentation-time)](#zodresponse)
-- [`ZodValidationException`](#zodvalidationexception)
-- [`ZodSerializationException`](#zodserializationexception)
-- [\[*⚠️ DEPRECATED*\] `validate`](#️-deprecated-validate)
-- [\[*⚠️ DEPRECATED*\] `ZodGuard`](#using-zodguard)
-  - [`createZodGuard` (Creating custom guard)](#creating-custom-guard)
-- [\[*⚠️ DEPRECATED*\] `@nest-zod/z`](#extended-zod)
+  - [`zodV3ToOpenAPI` (⚠️ DEPRECATED)](#zodv3toopenapi-deprecated)
+- [`validate` (⚠️ DEPRECATED)](#validate-deprecated)
+- [`ZodGuard` (⚠️ DEPRECATED)](#zodguard-deprecated)
+  - [`createZodGuard` (Creating custom guard)](#createzodguard-creating-custom-guard)
+- [`@nest-zod/z` (⚠️ DEPRECATED)](#nest-zodz-deprecated)
   - [ZodDateString](#zoddatestring)
   - [ZodPassword](#zodpassword)
-  - [Json Schema](#json-schema)
-  - ["from" function](#from-function)
-  - [Extended Zod Errors](#extended-zod-errors)
-  - [Working with errors on the client side](#working-with-errors-on-the-client-side)
 
-
-### `createZodDto` (Create a DTO from a Zod schema)
+### Request Validation
+#### `createZodDto` (Create a DTO from a Zod schema)
 
 `createZodDto` is used to create a nestjs DTO from a zod schema.  Then these DTOs can be used instead of DTOs created with `class-validator` / `class-transformer`.
 
@@ -225,7 +220,7 @@ class CredentialsDto extends createZodDto(CredentialsSchema) {}
 > [!NOTE]
 > We need to use the `class <dtoname> extends createZodDto(...` syntax because nestjs/typescript requires classes be used for DTOs
 
-#### Using Zod DTOs
+##### Using Zod DTOs
 
 Zod DTOs are responsible for three things:
 
@@ -254,13 +249,13 @@ class AuthController {
 }
 ```
 
-### `ZodValidationPipe` (Get nestjs to validate using zod)
+#### `ZodValidationPipe` (Get nestjs to validate using zod)
 
 The validation pipe uses your Zod schema to parse data incoming client data when using `@Body()`, `@Params()`, or `@Query()` parameter deccorators
 
 When the data is invalid it throws a [ZodValidationException](#zodvalidationexception).
 
-#### Globally (recommended)
+##### Globally (recommended)
 
 ```ts
 import { ZodValidationPipe } from 'nestjs-zod'
@@ -277,7 +272,7 @@ import { APP_PIPE } from '@nestjs/core'
 export class AppModule {}
 ```
 
-#### Locally
+##### Locally
 
 ```ts
 import { ZodValidationPipe } from 'nestjs-zod'
@@ -325,15 +320,70 @@ const MyZodValidationPipe = createZodValidationPipe({
 })
 ```
 
-### `ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)
+#### `ZodValidationException`
 
-To ensure that a response conforms to a certain shape, you may use the `ZodSerializerInterceptor` interceptor.
+If the zod request parsing fails, then `nestjs-zod` will throw a `ZodValidationException`, which will result in the following HTTP response:
 
-This would be especially useful in prevent accidental data leaks.
+```json
+{
+  "statusCode": 400,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "code": "too_small",
+      "minimum": 8,
+      "type": "string",
+      "inclusive": true,
+      "message": "String must contain at least 8 character(s)",
+      "path": ["password"]
+    }
+  ]
+}
+```
 
-This is similar to NestJs' `@ClassSerializerInterceptor` feature [here](https://docs.nestjs.com/techniques/serialization)
+You can customize the exception and HTTP response by either `1)` creating a custom validation pipe using [`createZodValidationPipe`](#createzodvalidationpipe-creating-custom-validation-pipe) or `2)` handling `ZodValidationException` inside an [exception filter](https://docs.nestjs.com/exception-filters)
 
-#### Include `@ZodSerializerInterceptor` in application root
+Here is an example exception filter:
+
+```ts
+@Catch(ZodValidationException)
+export class ZodValidationExceptionFilter implements ExceptionFilter {
+  catch(exception: ZodValidationException) {
+    exception.getZodError() // -> ZodError
+  }
+}
+```
+
+### Response Validation
+
+#### `ZodSerializerDto` (Set zod DTO to serialize responses with)
+
+To ensure that a response conforms to a certain shape, you can use the `ZodSerializerDto` method decorator (ensure `ZodSerializerInterceptor` is setup correctly as detailed in the below section)
+
+This is especially useful to prevent accidental data leaks.
+
+```ts
+const UserSchema = z.object({ username: string() })
+
+class UserDto extends createZodDto(UserSchema) {}
+
+@Controller('user')
+export class UserController {
+  constructor(private readonly userService: UserService) {}
+
+  @ZodSerializerDto(UserDto)
+  getUser(id: number) {
+    return this.userService.findOne(id)
+  }
+}
+```
+
+In the above example, if the `userService.findOne` method returns `password`, the `password` property will be stripped out thanks to the `@ZodSerializerDto` decorator.
+
+
+#### `ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)
+
+To ensure `ZodSerializerDto` works correctly, `ZodSerializerInterceptor` needs to be used and setup correctly.  This should be done in the `AppModule` like so:
 
 ```ts
 @Module({
@@ -346,38 +396,25 @@ This is similar to NestJs' `@ClassSerializerInterceptor` feature [here](https://
 export class AppModule {}
 ```
 
-#### Use `@ZodSerializerDto` to define the shape of the response for endpoint in controller
+Also see [`ZodSerializationException`](#zodserializationexception) for information about customizing the serialization error handling
 
-```ts
-const UserSchema = z.object({ username: string() })
+#### `ZodResponse`
 
-export class UserDto extends createZodDto(UserSchema) {}
-```
+TODO: add docs for `ZodResponse` here
 
-```ts
-@Controller('user')
-export class UserController {
-  constructor(private readonly userService: UserService) {}
+#### `ZodSerializationException`
 
-  @ZodSerializerDto(UserDto)
-  getUser(id: number) {
-    return this.userService.findOne(id) // --> The native service method returns { username: string, password: string by default }
-  }
+If the zod response serialization fails, then `nestjs-zod` will throw a `ZodSerializationException`, which will result in the following HTTP response:
+
+```json
+{
+  "message": 'Internal Server Error',
+  "statusCode": 500,
 }
 ```
 
-In the above example, despite the `userService.findOne` method returns `password`, the `password` property will be stripped out thanks to the `@ZodSerializerDto` decorator.
+You can customize the exception and HTTP response handling `ZodSerializationException` inside an [exception filter](https://docs.nestjs.com/exception-filters)
 
-#### Logging serialization errors using `ZodSerializationException` 
-
-You can catch serialization errors using `ZodSerializationException` and log them using your preferred logger.
-
-```ts
-if (exception instanceof ZodSerializationException) {
-    const zodError = exception.getZodError();
-    this.logger.error(`ZodSerializationException: ${zodError.message}`);
-}
-```
 See the example app [here](/packages/example/src/http-exception.filter.ts) for more information.
 
 ### OpenAPI (Swagger) support
@@ -387,10 +424,14 @@ See the example app [here](/packages/example/src/http-exception.filter.ts) for m
 
 If you have `@nestjs/swagger` setup, documentation will automatically be generated for:
 - Request bodies, if you use `@Body() body: MyDto`
-- Response bodies, if you use `@ApiOkResponse({ type: MyDto })`
+- Response bodies, if you use `@ApiOkResponse({ type: MyDto })` (or `@ZodResponse({ type: MyDto })`)
 - Query params, if you use `@Query() query: MyQueryParamsDto`
 
-However, to complete the swagger integration, you need to call `cleanupOpenApiDoc` with the generated open api doc:
+However, `cleanupOpenApiDoc` needs to be called as detailed below:
+
+#### `cleanupOpenApiDoc` (Ensure proper OpenAPI output)
+
+To complete the swagger integration/setup, you need to call `cleanupOpenApiDoc` with the generated open api doc:
 
 ```diff
   const openApiDoc = SwaggerModule.createDocument(app, 
@@ -404,7 +445,7 @@ However, to complete the swagger integration, you need to call `cleanupOpenApiDo
   + SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
 ```
 
-For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application guide [here](/packages/example/) .
+For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application [here](/packages/example/) .
 
 #### Writing more Swagger-compatible schemas
 
@@ -419,7 +460,7 @@ const CredentialsSchema = z.object({
 })
 ```
 
-#### [*⚠️ DEPRECATED*] `zodV3ToOpenAPI`
+#### `zodV3ToOpenAPI` _**(DEPRECATED)**_
 
 > [!CAUTION]
 > `zodV3ToOpenAPI` is deprecated and will not be supported soon, since zod v4 adds built-in support for generating OpenAPI schemas from zod scehams.  See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -479,54 +520,7 @@ The output will be the following:
 }
 ```
 
-### `ZodValidationException`
-
-If the zod request parsing fails, then `nestjs-zod` will throw a `ZodValidationException`, which will result in the following HTTP response:
-
-```json
-{
-  "statusCode": 400,
-  "message": "Validation failed",
-  "errors": [
-    {
-      "code": "too_small",
-      "minimum": 8,
-      "type": "string",
-      "inclusive": true,
-      "message": "String must contain at least 8 character(s)",
-      "path": ["password"]
-    }
-  ]
-}
-```
-
-You can customize the exception and HTTP response by either `1)` creating a custom validation pipe using [`createZodValidationPipe`](#createzodvalidationpipe-creating-custom-validation-pipe) or `2)` handling `ZodValidationException` inside an [exception filter](https://docs.nestjs.com/exception-filters)
-
-Here is an example exception filter:
-
-```ts
-@Catch(ZodValidationException)
-export class ZodValidationExceptionFilter implements ExceptionFilter {
-  catch(exception: ZodValidationException) {
-    exception.getZodError() // -> ZodError
-  }
-}
-```
-
-### `ZodSerializationException`
-
-If the zod response serialization fails, then `nestjs-zod` will throw a `ZodSerializationException`, which will result in the following HTTP response:
-
-```json
-{
-  "message": 'Internal Server Error',
-  "statusCode": 500,
-}
-```
-
-You can customize the exception and HTTP response handling `ZodSerializationException` inside an [exception filter](https://docs.nestjs.com/exception-filters)
-
-### [*⚠️ DEPRECATED*] `ZodGuard`
+### `ZodGuard` _**(DEPRECATED)**_
 
 > [!CAUTION]
 > Guard-related functions are deprecated and will not be supported soon.  It is recommended to use guards for authorization, not validation. See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -588,7 +582,7 @@ const MyZodGuard = createZodGuard({
 
 </details>
 
-### [*⚠️ DEPRECATED*] `validate`
+### `validate` _**(DEPRECATED)**_
 
 > [!CAUTION]
 > `validate` is deprecated and will not be supported soon.  It is recommended to use `.parse` directly. See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -614,7 +608,7 @@ const validatedUser = validate(
 
 </details>
 
-### [*⚠️ DEPRECATED*] `@nest-zod/z`
+### `@nest-zod/z` _**(DEPRECATED)**_
 
 > [!CAUTION]
 > `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
