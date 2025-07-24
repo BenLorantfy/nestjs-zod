@@ -1,13 +1,16 @@
 import { createMock } from '@golevelup/ts-jest'
-import { CallHandler, ExecutionContext } from '@nestjs/common'
+import { CallHandler, Controller, ExecutionContext, Get, Post } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { lastValueFrom, of } from 'rxjs'
+import request from 'supertest'
 import { createZodDto } from './dto'
 import { ZodSerializationException } from './exception'
-import { ZodSerializerInterceptor } from './serializer'
+import { ZodSerializerDto, ZodSerializerInterceptor } from './serializer'
 
 import * as z3 from 'zod/v3'
 import * as z4 from 'zod/v4'
+
+import { setupApp } from './testUtils'
 
 describe.each([
   { name: 'v4', z: z4 },
@@ -79,3 +82,32 @@ describe.each([
     expect(user.username).toBe('test')
   })
 });
+
+test('should throw an error if the response is invalid', async () => {
+  class BookDto extends createZodDto(z4.object({
+    id: z4.string(),
+})) { }
+
+  @Controller('books')
+  class BookController {
+      constructor() { }
+
+      @Get()
+      @ZodSerializerDto(BookDto)
+      getBook() {
+          return {};
+      }
+  }
+
+  const { app } = await setupApp(BookController)
+
+  await request(app.getHttpServer())
+  .get('/books')
+  .expect(500)
+  .expect((res) => {
+    expect(res.body).toEqual({
+      message: 'Internal Server Error',
+      statusCode: 500,
+    })
+  });
+})
