@@ -26,7 +26,7 @@
   </a>
 </p>
 
-## Core library features
+## Core Library Features
 
 <p>
 ✨ Create nestjs DTOs from zod schemas
@@ -178,7 +178,7 @@
 
     </details>
 
-Check out the [example app](./packages/example/) for a full example of how to integrate nestjs-zod in your nestjs application
+Check out the [example app](./packages/example/) for a full example of how to integrate `nestjs-zod` in your nestjs application
 
 ## Documentation
 
@@ -190,7 +190,7 @@ Check out the [example app](./packages/example/) for a full example of how to in
 - [Response Validation](#response-validation)  
   - [`ZodSerializerDto` (Set zod DTO to serialize responses with)](#zodserializerdto-set-zod-dto-to-serialize-responses-with)
   - [`ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)](#zodserializerinterceptor-get-nestjs-to-serialize-responses-with-zod)
-  - [`ZodResponse` (Ensure correct responses at run-time, compile-time, and documentation-time)](#zodresponse)
+  - [`ZodResponse` (Sync run-time, compile-time, and docs-time schemas)](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas)
   - [`ZodSerializationException`](#zodserializationexception)
 - [OpenAPI (Swagger) support](#openapi-swagger-support)
   - [`cleanupOpenApiDoc` (Ensure proper OpenAPI output)](#cleanupopenapidoc-ensure-proper-openapi-output)
@@ -404,9 +404,43 @@ export class AppModule {}
 
 Also see [`ZodSerializationException`](#zodserializationexception) for information about customizing the serialization error handling
 
-#### `ZodResponse`
+#### `ZodResponse` (Sync run-time, compile-time, and docs-time schemas)
 
-TODO: add docs for `ZodResponse` here
+You may find yourself duplicating type information:
+
+```tsx
+@ZodSerializer(BookDto)
+@ApiOkResponse({
+  status: 200,
+  type: BookDto
+})
+getBook(): BookDto {
+  ...
+}
+```
+Here, `BookDto` is repeated 3 times:
+1. To set the DTO to use to serialize 
+2. To set the DTO to use for the OpenAPI documetnation
+3. To set the return type for the function
+
+If these 3 spots get out of sync, this may cause bugs.  If you want to remove this duplication, you can consolidate using `ZodResponse`:
+```diff
+- @ZodSerializer(BookDto)
+- @ApiOkResponse({
+-  status: 200,
+-  type: BookDto
+- })
+- getBook(): BookDto {
++ @ZodResponse({ type: BookDto })
++ getBook()
+  ...
+}
+```
+
+`@ZodResponse` will set all these things.  It will set the DTO to use to serialize, it will set the DTO to use for the OpenAPI documentation, and it will throw a compile-time typescript error if the method does not return data that matches the zod input schema 
+
+This is pretty powerful, because it ensures the run-time, compile-time, and docs-time representations of your response are all in sync.  For this reason, it's recommended to use `@ZodResponse` instead of repeating the DTO three times.
+
 
 #### `ZodSerializationException`
 
