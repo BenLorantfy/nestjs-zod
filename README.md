@@ -200,7 +200,7 @@ Check out the [example app](./packages/example/) for a full example of how to in
 ### Request Validation
 #### `createZodDto` (Create a DTO from a Zod schema)
 
-`createZodDto` is used to create a nestjs DTO from a zod schema.  Then these DTOs can be used instead of DTOs created with `class-validator` / `class-transformer`.
+`createZodDto` is used to create a nestjs DTO from a zod schema.  These zod DTOs can be used in place of `class-validator` / `class-transformer` DTOs. **Note:** For this feature to work, please ensure [`ZodValidationPipe`](#zodvalidationpipe-get-nestjs-to-validate-using-zod) is setup correctly
 
 See an example below of how to create a zod DTO:
 
@@ -251,7 +251,7 @@ class AuthController {
 
 #### `ZodValidationPipe` (Get nestjs to validate using zod)
 
-The validation pipe uses your Zod schema to parse data incoming client data when using `@Body()`, `@Params()`, or `@Query()` parameter deccorators
+`ZodValidationPipe` is needed to ensure zod DTOs actually validate incoming request data when using `@Body()`, `@Params()`, or `@Query()` parameter deccorators
 
 When the data is invalid it throws a [ZodValidationException](#zodvalidationexception).
 
@@ -358,7 +358,7 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
 
 #### `ZodSerializerDto` (Set zod DTO to serialize responses with)
 
-To ensure that a response conforms to a certain shape, you can use the `ZodSerializerDto` method decorator (ensure `ZodSerializerInterceptor` is setup correctly as detailed in the below section)
+To ensure that a response conforms to a certain shape, you can use the `ZodSerializerDto` method decorator.  **Note:** For this feature to work, please ensure [`ZodSerializerInterceptor`](#zodserializerinterceptor-get-nestjs-to-serialize-responses-with-zod) is setup correctly
 
 This is especially useful to prevent accidental data leaks.
 
@@ -408,7 +408,7 @@ If the zod response serialization fails, then `nestjs-zod` will throw a `ZodSeri
 
 ```json
 {
-  "message": 'Internal Server Error',
+  "message": "Internal Server Error",
   "statusCode": 500,
 }
 ```
@@ -419,17 +419,17 @@ See the example app [here](/packages/example/src/http-exception.filter.ts) for m
 
 ### OpenAPI (Swagger) support
 
-> [!Note]
-> There used to be a function called `patchNestJsSwagger`.  This function has been replaced by `cleanupOpenApiDoc`
-
 If you have `@nestjs/swagger` setup, documentation will automatically be generated for:
 - Request bodies, if you use `@Body() body: MyDto`
 - Response bodies, if you use `@ApiOkResponse({ type: MyDto })` (or `@ZodResponse({ type: MyDto })`)
 - Query params, if you use `@Query() query: MyQueryParamsDto`
 
-However, `cleanupOpenApiDoc` needs to be called as detailed below:
+However, please ensure `cleanupOpenApiDoc` is setup correctly as detailed below
 
 #### `cleanupOpenApiDoc` (Ensure proper OpenAPI output)
+
+> [!Note]
+> There used to be a function called `patchNestJsSwagger`.  This function has been replaced by `cleanupOpenApiDoc`
 
 To complete the swagger integration/setup, you need to call `cleanupOpenApiDoc` with the generated open api doc:
 
@@ -441,11 +441,11 @@ To complete the swagger integration/setup, you need to call `cleanupOpenApiDoc` 
         .setVersion('1.0')
         .build(),
   );
-  - SwaggerModule.setup('api', app, openApiDoc);
-  + SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
+- SwaggerModule.setup('api', app, openApiDoc);
++ SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
 ```
 
-For addtional documentation, follow the [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application [here](/packages/example/) .
+For addtional documentation, follow [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application [here](/packages/example/) .
 
 #### Writing more Swagger-compatible schemas
 
@@ -465,60 +465,67 @@ const CredentialsSchema = z.object({
 > [!CAUTION]
 > `zodV3ToOpenAPI` is deprecated and will not be supported soon, since zod v4 adds built-in support for generating OpenAPI schemas from zod scehams.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
-You can convert any Zod schema to an OpenAPI JSON object:
+<details>
+  <summary>
+    Show documentation for deprecated APIs
+  </summary>
 
-```ts
-import { zodToOpenAPI } from 'nestjs-zod'
-import { z } from 'zod'
+  You can convert any Zod schema to an OpenAPI JSON object:
 
-const SignUpSchema = z.object({
-  username: z.string().min(8).max(20),
-  password: z.string().min(8).max(20),
-  sex: z
-    .enum(['male', 'female', 'nonbinary'])
-    .describe('We respect your gender choice'),
-  social: z.record(z.string().url())
-})
+  ```ts
+  import { zodToOpenAPI } from 'nestjs-zod'
+  import { z } from 'zod'
 
-const openapi = zodV3ToOpenAPI(SignUpSchema)
-```
+  const SignUpSchema = z.object({
+    username: z.string().min(8).max(20),
+    password: z.string().min(8).max(20),
+    sex: z
+      .enum(['male', 'female', 'nonbinary'])
+      .describe('We respect your gender choice'),
+    social: z.record(z.string().url())
+  })
 
-The output will be the following:
+  const openapi = zodV3ToOpenAPI(SignUpSchema)
+  ```
 
-```json
-{
-  "type": "object",
-  "properties": {
-    "username": {
-      "type": "string",
-      "minLength": 8,
-      "maxLength": 20
-    },
-    "password": {
-      "type": "string",
-      "minLength": 8,
-      "maxLength": 20
-    },
-    "sex": {
-      "description": "We respect your gender choice",
-      "type": "string",
-      "enum": ["male", "female", "nonbinary"]
-    },
-    "social": {
-      "type": "object",
-      "additionalProperties": {
+  The output will be the following:
+
+  ```json
+  {
+    "type": "object",
+    "properties": {
+      "username": {
         "type": "string",
-        "format": "uri"
+        "minLength": 8,
+        "maxLength": 20
+      },
+      "password": {
+        "type": "string",
+        "minLength": 8,
+        "maxLength": 20
+      },
+      "sex": {
+        "description": "We respect your gender choice",
+        "type": "string",
+        "enum": ["male", "female", "nonbinary"]
+      },
+      "social": {
+        "type": "object",
+        "additionalProperties": {
+          "type": "string",
+          "format": "uri"
+        }
+      },
+      "birthDate": {
+        "type": "string",
+        "format": "date-time"
       }
     },
-    "birthDate": {
-      "type": "string",
-      "format": "date-time"
-    }
-  },
-  "required": ["username", "password", "sex", "social", "birthDate"]
-}
-```
+    "required": ["username", "password", "sex", "social", "birthDate"]
+  }
+  ```
+</details>
+
 
 ### `ZodGuard` _**(DEPRECATED)**_
 
@@ -621,7 +628,7 @@ The output will be the following:
 
   `@nest-zod/z` provides a special version of Zod. It helps you to validate the user input more accurately by using our custom schemas and methods.
 
-  #### ZodDateString
+  #### `ZodDateString`
 
   > [!CAUTION]
   > `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
@@ -700,7 +707,7 @@ The output will be the following:
   - `too_small` with `type === 'date_string_year'`
   - `too_big` with `type === 'date_string_year'`
 
-  #### ZodPassword
+  #### `ZodPassword`
 
   > [!CAUTION]
   > `@nest-zod/z` is no longer supported and has no impact on the OpenAPI generation.  It is recommended to use `zod` directly.  See [MIGRATION.md](./MIGRATION.md) for more information.
