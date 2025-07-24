@@ -28,13 +28,11 @@
 
 ## Core library features
 
-- `createZodDto` - create DTO classes from Zod schemas
-- `ZodValidationPipe` - validate `body` / `query` / `params` using Zod DTOs
-- `ZodValidationException` - BadRequestException extended with Zod errors
-- OpenAPI support
-  - `@nestjs/swagger` integration
-  - Zod DTOs can be used in any `@nestjs/swagger` decorator
-- Customization - change exception format easily
+- ✨ Create nestjs DTOs from zod schemas
+- ✨ Validate / parse request body, query params, and url params using zod
+- ✨ Serialize response bodies using zod
+- ✨ Automatically generate OpenAPI documentation using zod
+
 
 ## Getting Started
 
