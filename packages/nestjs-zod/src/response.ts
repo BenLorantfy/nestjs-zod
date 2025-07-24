@@ -16,8 +16,8 @@ import { input, $ZodType } from 'zod/v4/core';
  * 3. Throws a typescript error if the return value of the method does not match
  *    the DTO's input schema.
  *
- * It's recommended to use this decorator because it will keep the serilization,
- * OpenAPI documentation, and compile-time type checking in sync
+ * It's recommended to use this decorator because it will keep the
+ * serialization, OpenAPI documentation, and compile-time type checking in sync
  */
 export function ZodResponse<TSchema extends $ZodType & { parse: (input: unknown) => unknown }>({ status, description, type }: { status: number, description: string, type: ZodDto<TSchema> }) {
   assert('_zod' in type.schema, 'ZodResponse can only be called with zod v4 schemas');
