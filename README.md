@@ -464,9 +464,9 @@ If you have `@nestjs/swagger` setup, documentation will automatically be generat
 - Response bodies, if you use `@ApiOkResponse({ type: MyDto.Output })` (or [`@ZodResponse({ type: MyDto })`](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas))
 - Query params, if you use `@Query() query: MyQueryParamsDto`
 
-To generate the OpenAPI document, `nestjs-zod` uses [`z.toJSONSchema`](https://zod.dev/json-schema) for zod v4.  It's recommended to review the zod documentation itself for more information about how the OpenAPI document is generated
+To generate the OpenAPI document, `nestjs-zod` uses [`z.toJSONSchema`](https://zod.dev/json-schema) for zod v4 schemas.  It's recommended to review the zod documentation itself for more information about how the OpenAPI document is generated
 
-For zod v3, `nestjs-zod` uses a custom-built (deprecated) function called `zodV3ToOpenAPI` that generates the OpenAPI document by inspecting the zod schema directly.
+For zod v3 schemas, `nestjs-zod` uses a custom-built (deprecated) function called `zodV3ToOpenAPI` that generates the OpenAPI document by inspecting the zod schema directly.
 
 However, please ensure `cleanupOpenApiDoc` is setup correctly as detailed below
 
