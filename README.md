@@ -74,7 +74,7 @@
     ```
     </details>
 
-3. [OPTIONAL] Add `ZodSerializerInterceptor` to the `AppModule`
+3. Add `ZodSerializerInterceptor` to the `AppModule`
     <details>
       <summary>
         Show me how
@@ -257,7 +257,7 @@ class AuthController {
 
 #### `ZodValidationPipe` (Get nestjs to validate using zod)
 
-`ZodValidationPipe` is needed to ensure zod DTOs actually validate incoming request data when using `@Body()`, `@Params()`, or `@Query()` parameter deccorators
+`ZodValidationPipe` is needed to ensure zod DTOs actually validate incoming request data when using `@Body()`, `@Params()`, or `@Query()` parameter decorators
 
 When the data is invalid it throws a [ZodValidationException](#zodvalidationexception).
 
@@ -420,7 +420,7 @@ getBook(): BookDto {
 ```
 Here, `BookDto` is repeated 3 times:
 1. To set the DTO to use to serialize 
-2. To set the DTO to use for the OpenAPI documetnation
+2. To set the DTO to use for the OpenAPI documentation
 3. To set the return type for the function
 
 If these 3 spots get out of sync, this may cause bugs.  If you want to remove this duplication, you can consolidate using `ZodResponse`:
@@ -461,8 +461,12 @@ See the example app [here](/packages/example/src/http-exception.filter.ts) for m
 
 If you have `@nestjs/swagger` setup, documentation will automatically be generated for:
 - Request bodies, if you use `@Body() body: MyDto`
-- Response bodies, if you use `@ApiOkResponse({ type: MyDto })` (or [`@ZodResponse({ type: MyDto })`](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas))
+- Response bodies, if you use `@ApiOkResponse({ type: MyDto.Output })` (or [`@ZodResponse({ type: MyDto })`](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas))
 - Query params, if you use `@Query() query: MyQueryParamsDto`
+
+To generate the OpenAPI document, `nestjs-zod` uses [`z.toJSONSchema`](https://zod.dev/json-schema) for zod v4.  It's recommended to review the zod documentation itself for more information about how the OpenAPI document is generated
+
+For zod v3, `nestjs-zod` uses a custom-built (deprecated) function called `zodV3ToOpenAPI` that generates the OpenAPI document by inspecting the zod schema directly.
 
 However, please ensure `cleanupOpenApiDoc` is setup correctly as detailed below
 
@@ -485,25 +489,34 @@ To complete the swagger integration/setup, you need to call `cleanupOpenApiDoc` 
 + SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
 ```
 
-For addtional documentation, follow [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application [here](/packages/example/) .
+For additional documentation, follow [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application [here](/packages/example/) .
 
-#### Writing more Swagger-compatible schemas
+#### Output schemas
 
-Use `.describe()` method to add Swagger description:
+Note that `z.toJSONSchema` can generate two versions of any zod schema: "input" or "output".  This is what the [zod documentation](https://zod.dev/json-schema#io) says about this:
+
+> Some schema types have different input and output types, e.g. ZodPipe, ZodDefault, and coerced primitives.
+
+Note that by default, when generating OpenAPI documentation, `nestjs-zod` uses the "input" version of a schema, except for [`@ZodResponse`](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas) which always generates the "output" version of a schema.  If you want to explicitly use the "output" version of a schema when generating OpenAPI documentation, you can use the `.Output` property of a zod DTO.  For example, this makes sense when using `@ApiResponse`:
 
 ```ts
-import { z } from 'zod'
+@ApiResponse({
+  type: MyDto.Output
+})
+```
 
-const CredentialsSchema = z.object({
-  username: z.string().describe('This is an username'),
-  password: z.string().describe('This is a password'),
+However, it's recommended to use [`@ZodResponse`](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas) over `@ApiResponse`, which automatically handles this for you:
+
+```ts
+@ZodResponse({
+  type: MyDto // <-- No need to do `.Output` here
 })
 ```
 
 #### `zodV3ToOpenAPI` _**(DEPRECATED)**_
 
 > [!CAUTION]
-> `zodV3ToOpenAPI` is deprecated and will not be supported soon, since zod v4 adds built-in support for generating OpenAPI schemas from zod scehams.  See [MIGRATION.md](./MIGRATION.md) for more information.
+> `zodV3ToOpenAPI` is deprecated and will not be supported soon, since zod v4 adds built-in support for generating OpenAPI schemas from zod schemas.  See [MIGRATION.md](./MIGRATION.md) for more information.
 
 <details>
   <summary>
@@ -566,6 +579,31 @@ const CredentialsSchema = z.object({
   ```
 </details>
 
+### `validate` _**(DEPRECATED)**_
+
+> [!CAUTION]
+> `validate` is deprecated and will not be supported soon.  It is recommended to use `.parse` directly. See [MIGRATION.md](./MIGRATION.md) for more information.
+
+<details>
+  <summary>
+    Show documentation for deprecated APIs
+  </summary>
+
+  If you don't like `ZodGuard` and `ZodValidationPipe`, you can use `validate` function:
+
+  ```ts
+  import { validate } from 'nestjs-zod'
+
+  validate(wrongThing, UserDto, (zodError) => new MyException(zodError)) // throws MyException
+
+  const validatedUser = validate(
+    user,
+    UserDto,
+    (zodError) => new MyException(zodError)
+  ) // returns typed value when succeed
+  ```
+
+</details>
 
 ### `ZodGuard` _**(DEPRECATED)**_
 
@@ -625,32 +663,6 @@ const CredentialsSchema = z.object({
     createValidationException: (error: ZodError) =>
       new BadRequestException('Ooops'),
   })
-  ```
-
-</details>
-
-### `validate` _**(DEPRECATED)**_
-
-> [!CAUTION]
-> `validate` is deprecated and will not be supported soon.  It is recommended to use `.parse` directly. See [MIGRATION.md](./MIGRATION.md) for more information.
-
-<details>
-  <summary>
-    Show documentation for deprecated APIs
-  </summary>
-
-  If you don't like `ZodGuard` and `ZodValidationPipe`, you can use `validate` function:
-
-  ```ts
-  import { validate } from 'nestjs-zod'
-
-  validate(wrongThing, UserDto, (zodError) => new MyException(zodError)) // throws MyException
-
-  const validatedUser = validate(
-    user,
-    UserDto,
-    (zodError) => new MyException(zodError)
-  ) // returns typed value when succeed
   ```
 
 </details>
