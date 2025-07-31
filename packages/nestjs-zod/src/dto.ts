@@ -22,7 +22,7 @@ export function createZodDto<
     public static schema = schema
 
     public static create(input: unknown) {
-      return this.schema.parse(input)
+      return Object.assign(Object.create(this.prototype), this.schema.parse(input))
     }
   }
 
