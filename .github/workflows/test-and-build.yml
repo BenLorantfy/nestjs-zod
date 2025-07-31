@@ -20,6 +20,11 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
+      - name: Log stuff
+        run: |
+          echo "github.head_ref: ${{ github.head_ref }}"
+          echo "github.ref_name: ${{ github.ref_name}}"
+          echo "GITHUB_REF: $GITHUB_REF"
       - run: pnpm install
       - name: Build z
         run: cd packages/z && pnpm build
