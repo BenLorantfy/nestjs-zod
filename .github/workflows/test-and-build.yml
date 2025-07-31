@@ -22,6 +22,7 @@ jobs:
           cache: 'pnpm'
       - name: Log stuff
         run: |
+          echo "github.ref: ${{ github.ref }}"
           echo "github.head_ref: ${{ github.head_ref }}"
           echo "github.ref_name: ${{ github.ref_name}}"
           echo "GITHUB_REF: $GITHUB_REF"
