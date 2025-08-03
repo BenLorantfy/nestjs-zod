@@ -47,6 +47,9 @@
 npm install nestjs-zod zod
 ```
 
+> [!WARNING]
+> nestjs-zod v4 does not support zod v4.  For zod v4 support, install the v5 beta using `npm install nestjs-zod@next`.  Also see the [v5 PR](https://github.com/BenLorantfy/nestjs-zod/pull/143) and [discussion post](https://github.com/BenLorantfy/nestjs-zod/discussions/148).
+
 Peer dependencies:
 
 - `zod` - `>= 3.14.3`
