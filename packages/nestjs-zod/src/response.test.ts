@@ -33,7 +33,7 @@ test('serializes the return value and sets the openapi doc', async () => {
             description: 'Create a book', 
             type: BookDto 
         })
-        createBook2(@Body() book: BookDto) {
+        async createBook2(@Body() book: BookDto) {
             return {}
         }
 
