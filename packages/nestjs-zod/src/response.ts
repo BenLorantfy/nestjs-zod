@@ -26,5 +26,5 @@ export function ZodResponse<TSchema extends $ZodType & { parse: (input: unknown)
   return applyDecorators(
     ZodSerializerDto(type),
     ApiResponse({ status, description, type: type.Output }),
-  ) as (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => input<TSchema>>, 'value'>) => void
+  ) as (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void
 }
