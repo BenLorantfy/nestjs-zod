@@ -7,9 +7,10 @@ export interface ZodDto<
   TInput = TOutput
 > {
   new (): TOutput
+  new (values: unknown): TOutput
   isZodDto: true
   schema: ZodSchema<TOutput, TDef, TInput>
-  create(input: unknown): TOutput
+  create<T extends this>(this: T, input: unknown): InstanceType<typeof this>
 }
 
 export function createZodDto<
@@ -22,7 +23,17 @@ export function createZodDto<
     public static schema = schema
 
     public static create(input: unknown) {
-      return Object.assign(Object.create(this.prototype), this.schema.parse(input))
+      return Object.assign(
+        Object.create(this.prototype),
+        this.schema.parse(input)
+      )
+    }
+
+    constructor(values?: unknown) {
+      if (typeof values !== 'undefined') {
+        // eslint-disable-next-line no-constructor-return
+        return new.target.create(values)
+      }
     }
   }
 
