@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from "@nestjs/common";
+import { Body, Controller, Post, Get } from "@nestjs/common";
 import { z } from "zod/v4";
 import { z as z3 } from "zod/v3";
 import { createZodDto } from "./dto";
@@ -75,6 +75,59 @@ test('serializes the return value and sets the openapi doc', async () => {
         .expect((res) => {
             // The serializer should set the `id` field to `new-book`
             expect(res.body.id).toBe('new-book');
+        });
+})
+
+test('serializes the return value and sets the openapi doc when using arrays', async () => {
+    class BookDto extends createZodDto(z.object({
+        id: z.string().optional().default('new-book'),
+    })) { }
+
+    @Controller('books')
+    class BookController {
+        constructor() { }
+
+        @Get()
+        @ZodResponse({ 
+            status: 200, 
+            description: 'Get books', 
+            type: [BookDto] 
+        })
+        getBooks() {
+            return [{ id: '1' }, { id: '2' }, {}];
+        }
+    }
+
+    const { app, openApiDoc } = await setupApp(BookController)
+
+    const schemaName = 'BookDto_Output';
+    expect(get(openApiDoc, 'paths./books.get.responses.200.content.application/json.schema')).toEqual({
+        items: {
+            $ref: `#/components/schemas/${schemaName}`
+        },
+        type: 'array'
+    });
+
+    expect(get(openApiDoc, `components.schemas.${schemaName}`)).toEqual({
+        type: 'object',
+        properties: {
+            id: { type: 'string', default: 'new-book' }
+        },
+        // The "output" jsonschema for the zod schema should mark `id` as
+        // required
+        required: ['id']
+    });
+
+    await request(app.getHttpServer())
+        .get('/books')
+        .send()
+        .expect(200)
+        .expect((res) => {
+            expect(res.body).toEqual([
+                { id: '1' },
+                { id: '2' },
+                { id: 'new-book' }
+            ]);
         });
 })
 

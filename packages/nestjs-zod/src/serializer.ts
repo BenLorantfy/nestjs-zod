@@ -12,6 +12,8 @@ import { ZodDto } from './dto'
 import { validate } from './validate'
 import { createZodSerializationException } from './exception'
 import { UnknownSchema } from './types'
+import { $ZodArray, $ZodUnknown, parse } from 'zod/v4/core'
+
 // NOTE (external)
 // We need to deduplicate them here due to the circular dependency
 // between core and common packages
@@ -19,7 +21,7 @@ const REFLECTOR = 'Reflector'
 
 export const ZodSerializerDtoOptions = 'ZOD_SERIALIZER_DTO_OPTIONS' as const
 
-export const ZodSerializerDto = (dto: ZodDto<UnknownSchema> | UnknownSchema) =>
+export const ZodSerializerDto = (dto: ZodDto<UnknownSchema> | UnknownSchema | [ZodDto<UnknownSchema>] | [UnknownSchema]) =>
   SetMetadata(ZodSerializerDtoOptions, dto)
 
 @Injectable()
@@ -34,18 +36,30 @@ export class ZodSerializerInterceptor implements NestInterceptor {
         if (!responseSchema) return res
         if (typeof res !== 'object' || res instanceof StreamableFile) return res
 
-        return Array.isArray(res)
-          ? res.map((item) =>
-              validate(item, responseSchema, createZodSerializationException)
-            )
-          : validate(res, responseSchema, createZodSerializationException)
+        if (Array.isArray(responseSchema)) {
+          const unknownSchema = new $ZodUnknown({ type: 'unknown' })
+          const arrSchema = new $ZodArray({ type: 'array', element: unknownSchema });
+          
+          let parsedRes: unknown[] = []
+          try {
+            parsedRes = parse(arrSchema, res)
+          } catch (err) {
+            throw createZodSerializationException(err)
+          }
+
+          return parsedRes.map((item) =>
+            validate(item, responseSchema[0], createZodSerializationException)
+          )
+        }
+
+        return validate(res, responseSchema, createZodSerializationException)
       })
     )
   }
 
   protected getContextResponseSchema(
     context: ExecutionContext
-  ): ZodDto<UnknownSchema> | UnknownSchema | undefined {
+  ): ZodDto<UnknownSchema> | UnknownSchema | [ZodDto<UnknownSchema>] | [UnknownSchema] | undefined {
     return this.reflector.getAllAndOverride(ZodSerializerDtoOptions, [
       context.getHandler(),
       context.getClass(),
