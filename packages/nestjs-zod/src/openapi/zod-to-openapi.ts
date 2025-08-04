@@ -251,5 +251,9 @@ export function zodToOpenAPI(
     Object.assign(object, zodToOpenAPI(getter(), visited))
   }
 
+  if (is(zodType, z.ZodBranded)) {
+    Object.assign(object, zodToOpenAPI(zodType.unwrap(), visited))
+  }
+
   return object
 }

@@ -278,3 +278,56 @@ describe('special types', () => {
     });
   })
 });
+
+describe('should serialize branded schemas', () => {
+  const testCases: [string, ZodTypeAny, ReturnType<typeof zodToOpenAPI>][] = [
+    // [zod schema, expected open api type]
+    ['string', nestjsZod.string().brand<'Brand'>(), { type: 'string' }],
+    ['number', nestjsZod.number().brand<'Brand'>(), { type: 'number' }],
+    ['boolean', nestjsZod.boolean().brand<'Brand'>(), { type: 'boolean' }],
+    [
+      'bigint',
+      nestjsZod.bigint().brand<'Brand'>(),
+      { type: 'integer', format: 'int64' },
+    ],
+    [
+      'object',
+      nestjsZod
+        .object({
+          prop1: nestjsZod.string(),
+          prop2: nestjsZod.number().optional(),
+        })
+        .brand<'Brand'>(),
+      {
+        type: 'object',
+        required: ['prop1'],
+        properties: {
+          prop1: { type: 'string' },
+          prop2: { type: 'number' },
+        },
+      },
+    ],
+    [
+      'nested branded schema',
+      nestjsZod.object({
+        branded: nestjsZod.string().brand<'Brand'>(),
+      }),
+      {
+        type: 'object',
+        required: ['branded'],
+        properties: {
+          branded: {
+            type: 'string',
+          },
+        },
+      },
+    ],
+  ]
+
+  for (const [zodType, zodSchema, expectedOpenApiSchema] of testCases) {
+    // eslint-disable-next-line no-loop-func
+    it(zodType, () => {
+      expect(zodToOpenAPI(zodSchema)).toEqual(expectedOpenApiSchema)
+    })
+  }
+});
