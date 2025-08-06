@@ -43,7 +43,11 @@ Because of this, `zodToOpenAPI` is no longer needed and has been deprecated.  It
 
 ### [BREAKING] `getZodError` on `ZodValidationException` / `ZodSerializationException` returns `unknown` instead of `ZodError`
 
-In order to support both zod v3 and zod v4, which have different error classes, `getZodError` was changed to return `unknown`.  This means you'll have to use an `instanceof` check after calling `getZodError()`
+`nestjs-zod` v5 allows you to "bring your own zod", which includes zod v3, zod v4, and zod mini.  It can even work with validation libraries other than zod, as-long as there's a `parse` method on the schema.
+
+This means `getZodError` may return many error types, depending on what version of zod you bring.
+
+Because of this, it's been changed to return `unknown`.  The type of the zod error can be narrowed using `instanceof` checks, as shown below:
 
 ```ts
 import { ZodError as ZodErrorV3 } from 'zod/v3';
@@ -71,6 +75,39 @@ export class HttpExceptionFilter extends BaseExceptionFilter {
 ### [BREAKING] `z.password()` and `z.dateString()` from `@nest-zod/z` no longer have special handling in OpenAPI generation
 
 The `@nest-zod/z` package has been deprecated since version `4.x`.  In `5.x`, `z.password()` and `z.dateString()` are no longer supported - specifically regarding the automatic swagger documentation generation
+
+### [BREAKING] `ZodSerializerDto` unexpected array behavior fixed
+
+In v4 of `nestjs-zod`, `ZodSerializerDto` had some odd behavior when an array was returned.  Let's take this example where we accidentally return an array instead of an object:
+
+```ts
+class BookDto extends createZodDto(z.object({ title: 'The Martian' })) { }
+
+@ZodSerializerDto(BookDto)
+getBook() {
+    // Whoops, I'm returning an array instead of an object...
+    return [{ title: 'The Martian' }];
+}
+```
+In this case, even though we've unintentionally returned an array here, `nestjs-zod` would allow this.
+
+This is because when you return an array, `nestjs-zod` v4 validates each item in the array against the provided schema
+
+Consumers often found this behavior [surprising](https://github.com/BenLorantfy/nestjs-zod/issues/130#issuecomment-2733398629)
+
+This has been changed in v5.  In v5, the example above will throw an error, as most consumers likely expect.  If you actually want to serialize an array, you can use `[]` syntax like this:
+```ts
+@ZodSerializerDto([BookDto])
+```
+
+Or you can make the DTO itself an array:
+```ts
+class BookListDto extends createZodDto(z.object({ title: 'The Martian' }).array()) { }
+
+// ...
+
+@ZodSerializerDto(BookListDto)
+```
 
 ### Deprecated `createZodGuard`, `UseZodGuard`, and `ZodGuard`
 
