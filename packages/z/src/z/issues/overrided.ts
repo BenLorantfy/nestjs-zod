@@ -1,4 +1,4 @@
-import { ZodIssueBase, ZodIssueCode } from 'zod'
+import { ZodIssueBase, ZodIssueCode } from 'zod/v3'
 
 /*
  * If you add a new string to "Type" union,

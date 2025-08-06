@@ -19,4 +19,4 @@ export type {
 export { addIssueToContext } from '../issues'
 export * from '../new-types'
 export * from '../type-names'
-export * from 'zod'
+export * from 'zod/v3'

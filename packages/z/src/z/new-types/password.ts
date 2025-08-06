@@ -7,7 +7,7 @@ import {
   ZodParsedType,
   ZodType,
   ZodTypeDef,
-} from 'zod'
+} from 'zod/v3'
 import { addIssueToContext } from '../issues'
 import {
   ErrorMessage,

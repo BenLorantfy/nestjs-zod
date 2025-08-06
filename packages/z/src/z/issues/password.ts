@@ -1,4 +1,4 @@
-import { ZodIssueBase, ZodIssueCode } from 'zod'
+import { ZodIssueBase, ZodIssueCode } from 'zod/v3'
 
 export interface ZodInvalidPasswordNoDigit extends ZodIssueBase {
   code: typeof ZodIssueCode.custom

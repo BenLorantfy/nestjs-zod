@@ -1,4 +1,4 @@
-import { ZodIssueBase, ZodIssueCode } from 'zod'
+import { ZodIssueBase, ZodIssueCode } from 'zod/v3'
 
 export type DateStringFormat = 'date' | 'date-time'
 export type DateStringDirection = 'past' | 'future'

@@ -11,8 +11,8 @@
       "dom.iterable",
       "esnext"
     ],
-    "module": "esnext",
-    "moduleResolution": "node",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "noEmit": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
@@ -24,7 +24,8 @@
     "outDir": "./dist",
     "typeRoots": [
       "./node_modules/@types"
-    ]
+    ],
+    "emitDecoratorMetadata": true
   },
   "exclude": [
     "./node_modules",
