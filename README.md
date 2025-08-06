@@ -364,6 +364,9 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
 
 #### `ZodSerializerDto` (Set zod DTO to serialize responses with)
 
+> ![Note]
+> Instead of `ZodSerializerDto`, consider using [`ZodResponse`](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas), which has some improvements over `ZodSerializerDto`
+
 To ensure that a response conforms to a certain shape, you can use the `ZodSerializerDto` method decorator.  **Note:** For this feature to work, please ensure [`ZodSerializerInterceptor`](#zodserializerinterceptor-get-nestjs-to-serialize-responses-with-zod) is setup correctly
 
 This is especially useful to prevent accidental data leaks.
@@ -385,6 +388,36 @@ export class UserController {
 ```
 
 In the above example, if the `userService.findOne` method returns `password`, the `password` property will be stripped out thanks to the `@ZodSerializerDto` decorator.
+
+Also note that arrays can be serialized using `[]` syntax like this:
+```ts
+class BookDto extends createZodDto(z.object({ title: string() })) {}
+
+@Controller('books')
+export class BooksController {
+  constructor() {}
+
+  @ZodSerializerDto([BookDto])
+  getBooks() {
+    return [{ title: 'The Martian' }, { title: 'Hail Marry' }];
+  }
+}
+```
+
+Or by using an array DTO:
+```ts
+class BookListDto extends createZodDto(z.array(z.object({ title: string() }))) {}
+
+@Controller('books')
+export class BooksController {
+  constructor() {}
+
+  @ZodSerializerDto(BookListDto)
+  getBooks() {
+    return [{ title: 'The Martian' }, { title: 'Hail Marry' }];
+  }
+}
+```
 
 
 #### `ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)

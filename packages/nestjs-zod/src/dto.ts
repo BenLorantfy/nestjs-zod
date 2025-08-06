@@ -11,9 +11,10 @@ export interface ZodDto<
 > {
   new (): ReturnType<TSchema['parse']>
   isZodDto: true
+  isOutputZodDto: false
   schema: TSchema
   create(input: unknown): ReturnType<TSchema['parse']>
-  Output: ZodDto<UnknownSchema>
+  Output: Omit<ZodDto<UnknownSchema>, 'isOutputZodDto'> & { isOutputZodDto: true }
   _OPENAPI_METADATA_FACTORY(): unknown
 }
 
@@ -22,6 +23,7 @@ export function createZodDto<
 >(schema: TSchema) {
   class AugmentedZodDto {
     public static readonly isZodDto = true
+    public static readonly isOutputZodDto = false
     public static readonly schema = schema
 
     public static create(input: unknown) {
@@ -33,6 +35,7 @@ export function createZodDto<
       
       class AugmentedZodDto {
         public static readonly isZodDto = true
+        public static readonly isOutputZodDto = true
         public static readonly schema = schema
     
         public static create(input: unknown) {

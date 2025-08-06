@@ -12,7 +12,7 @@ import { ZodDto } from './dto'
 import { validate } from './validate'
 import { createZodSerializationException } from './exception'
 import { UnknownSchema } from './types'
-import { $ZodArray, $ZodUnknown, parse } from 'zod/v4/core'
+import { assert } from './assert'
 
 // NOTE (external)
 // We need to deduplicate them here due to the circular dependency
@@ -21,8 +21,14 @@ const REFLECTOR = 'Reflector'
 
 export const ZodSerializerDtoOptions = 'ZOD_SERIALIZER_DTO_OPTIONS' as const
 
-export const ZodSerializerDto = (dto: ZodDto<UnknownSchema> | UnknownSchema | [ZodDto<UnknownSchema>] | [UnknownSchema]) =>
-  SetMetadata(ZodSerializerDtoOptions, dto)
+export const ZodSerializerDto = (dto: ZodDto<UnknownSchema> | UnknownSchema | [ZodDto<UnknownSchema>] | [UnknownSchema]) => {
+  if (Array.isArray(dto)) {
+    const schema = 'schema' in dto[0] ? dto[0].schema : dto[0]
+    assert('array' in schema && typeof schema.array === 'function', 'ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method')
+  }
+  
+  return SetMetadata(ZodSerializerDtoOptions, dto);
+}
 
 @Injectable()
 export class ZodSerializerInterceptor implements NestInterceptor {
@@ -37,19 +43,10 @@ export class ZodSerializerInterceptor implements NestInterceptor {
         if (typeof res !== 'object' || res instanceof StreamableFile) return res
 
         if (Array.isArray(responseSchema)) {
-          const unknownSchema = new $ZodUnknown({ type: 'unknown' })
-          const arrSchema = new $ZodArray({ type: 'array', element: unknownSchema });
-          
-          let parsedRes: unknown[] = []
-          try {
-            parsedRes = parse(arrSchema, res)
-          } catch (err) {
-            throw createZodSerializationException(err)
-          }
+          const schema = 'schema' in responseSchema[0] ? responseSchema[0].schema : responseSchema[0]
+          assert('array' in schema && typeof schema.array === 'function', 'ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method')
 
-          return parsedRes.map((item) =>
-            validate(item, responseSchema[0], createZodSerializationException)
-          )
+          return validate(res, schema.array(), createZodSerializationException)
         }
 
         return validate(res, responseSchema, createZodSerializationException)

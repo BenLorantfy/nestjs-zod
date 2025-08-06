@@ -1,6 +1,6 @@
 import { Body, Controller, Post, Get } from "@nestjs/common";
 import { z } from "zod/v4";
-import { z as z3 } from "zod/v3";
+import { z as zMini } from "zod/v4-mini";
 import { createZodDto } from "./dto";
 import { ZodResponse } from "./response";
 import { get } from "lodash";
@@ -131,9 +131,52 @@ test('serializes the return value and sets the openapi doc when using arrays', a
         });
 })
 
-test('throws error if trying to use zod v3', () => {
-    class BookDto extends createZodDto(z3.object({
-        name: z3.string(),
+test('responds with 500 error if the response is invalid when using arrays', async () => {
+    class BookDto extends createZodDto(z.object({
+        id: z.string(),
+    })) { }
+    
+    @Controller('books')
+    class BookController {
+        constructor() { }
+
+        @Get()
+        // @ts-expect-error
+        @ZodResponse({ 
+            status: 200, 
+            description: 'Get books', 
+            type: [BookDto] 
+        })
+        getBooks() {
+            return {};
+        }
+    }
+
+    const { app } = await setupApp(BookController)
+
+    await request(app.getHttpServer())
+        .get('/books')
+        .send()
+        .expect(500)
+        .expect((res) => {
+            expect(res.body).toEqual({
+                statusCode: 500,
+                message: 'Internal Server Error',
+                issues: [
+                    {
+                        code: 'invalid_type',
+                        expected: 'array',
+                        message: 'Invalid input: expected array, received object',
+                        path: [],
+                    }
+                ]
+            });
+        })
+})
+
+test('throws error if trying to use array syntax with zod mini', async () => {
+    class BookDto extends createZodDto(zMini.object({
+        id: zMini.string(),
     })) { }
 
     expect(() => {
@@ -141,17 +184,59 @@ test('throws error if trying to use zod v3', () => {
         class BookController {
             constructor() { }
     
-            @Post()
+            @Get()
+            // @ts-expect-error - Should be a typescript error here because zod mini schemas don't have an `array` method
             @ZodResponse({ 
-                status: 201, 
-                description: 'Create a book', 
-                // @ts-expect-error - Testing runtime check
-                type: BookDto 
+                status: 200, 
+                description: 'Get books', 
+                type: [BookDto] 
             })
-            createBook(@Body() book: BookDto) {
-                return book;
+            getBooks() {
+                return [];
             }
         }
-    }).toThrow('ZodResponse can only be called with zod v4 schemas')
+    }).toThrow('[nestjs-zod] ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method');
+})
 
+test('throws error if trying to use DTO.Output', () => {
+    class BookDto extends createZodDto(z.object({
+        id: z.string(),
+    })) { }
+
+
+    expect(() => {
+        @Controller('books')
+        class BookController {
+            constructor() { }
+    
+            @Get()
+            // @ts-expect-error - Should have a typescript here when trying to use DTO.Output
+            @ZodResponse({ 
+                status: 200, 
+                description: 'Get books', 
+                type: [BookDto.Output] 
+            })
+            getBooks() {
+                return [];
+            }
+        }
+    }).toThrow('[nestjs-zod] ZodResponse should be called with the DTO directly, not DTO.Output');
+
+    expect(() => {
+        @Controller('books')
+        class BookController {
+            constructor() { }
+    
+            @Get()
+            @ZodResponse({ 
+                status: 200, 
+                description: 'Get books', 
+                // @ts-expect-error - Should have a typescript here when trying to use DTO.Output
+                type: BookDto.Output
+            })
+            getBooks() {
+                return [];
+            }
+        }
+    }).toThrow('[nestjs-zod] ZodResponse should be called with the DTO directly, not DTO.Output');
 })
