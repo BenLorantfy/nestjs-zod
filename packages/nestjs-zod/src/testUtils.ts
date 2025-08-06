@@ -11,7 +11,7 @@ import { Response } from "express";
 import { ZodSerializationException } from "./exception";
 import { ZodError } from "zod/v4";
 
-export async function setupApp(controllerClass: Type<unknown>) {
+export async function setupApp(controllerClass: Type<unknown>, { includeIssuesInSerializationErrorResponses }: { includeIssuesInSerializationErrorResponses?: boolean } = {}) {
   @Catch(HttpException)
   class HttpExceptionFilter extends BaseExceptionFilter {
       catch(exception: HttpException, host: ArgumentsHost) {
@@ -49,10 +49,10 @@ export async function setupApp(controllerClass: Type<unknown>) {
             provide: APP_INTERCEPTOR,
             useClass: ZodSerializerInterceptor,
           },
-          {
+          ...(includeIssuesInSerializationErrorResponses ? [{
             provide: APP_FILTER,
             useClass: HttpExceptionFilter,
-          },
+          }] : []),
         ]
       })
       class AppModule {}

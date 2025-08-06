@@ -81,33 +81,93 @@ describe.each([
     expect(user.password).toBe('test')
     expect(user.username).toBe('test')
   })
+
+  test('should throw an error if the response is invalid', async () => {
+    class BookDto extends createZodDto(z.object({
+      id: z.string(),
+  })) { }
+  
+    @Controller('books')
+    class BookController {
+        constructor() { }
+  
+        @Get()
+        @ZodSerializerDto(BookDto)
+        getBook() {
+            return {};
+        }
+    }
+  
+    const { app } = await setupApp(BookController)
+  
+    await request(app.getHttpServer())
+    .get('/books')
+    .expect(500)
+    .expect((res) => {
+      expect(res.body).toEqual({
+        message: 'Internal Server Error',
+        statusCode: 500,
+      })
+    });
+  })
+
+  test('should throw an error if the response is invalid when using arrays', async () => {
+    class BookDto extends createZodDto(z.object({
+      id: z.string(),
+  })) { }
+  
+    @Controller('books')
+    class BookController {
+        constructor() { }
+  
+        @Get()
+        @ZodSerializerDto(BookDto)
+        getBook() {
+            return [];
+        }
+    }
+  
+    const { app } = await setupApp(BookController)
+  
+    await request(app.getHttpServer())
+    .get('/books')
+    .expect(500)
+    .expect((res) => {
+      expect(res.body).toEqual({
+        message: 'Internal Server Error',
+        statusCode: 500,
+      })
+    });
+  })
+
+  test('should properly serialize when using array syntax', async () => {
+    class BookDto extends createZodDto(z.object({
+      id: z.string().default('new-book'),
+  })) { }
+  
+    @Controller('books')
+    class BookController {
+        constructor() { }
+  
+        @Get()
+        @ZodSerializerDto([BookDto])
+        getBook() {
+            return [{}, {}];
+        }
+    }
+  
+    const { app } = await setupApp(BookController)
+  
+    await request(app.getHttpServer())
+    .get('/books')
+    .expect(200)
+    .expect((res) => {
+      expect(res.body).toEqual([{
+        id: 'new-book',
+      }, {
+        id: 'new-book',
+      }])
+    });
+  })
 });
 
-test('should throw an error if the response is invalid', async () => {
-  class BookDto extends createZodDto(z4.object({
-    id: z4.string(),
-})) { }
-
-  @Controller('books')
-  class BookController {
-      constructor() { }
-
-      @Get()
-      @ZodSerializerDto(BookDto)
-      getBook() {
-          return {};
-      }
-  }
-
-  const { app } = await setupApp(BookController)
-
-  await request(app.getHttpServer())
-  .get('/books')
-  .expect(500)
-  .expect((res) => {
-    expect(res.body).toEqual({
-      message: 'Internal Server Error',
-      statusCode: 500,
-    })
-  });
-})

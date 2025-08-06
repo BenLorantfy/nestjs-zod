@@ -152,7 +152,7 @@ test('responds with 500 error if the response is invalid when using arrays', asy
         }
     }
 
-    const { app } = await setupApp(BookController)
+    const { app } = await setupApp(BookController, { includeIssuesInSerializationErrorResponses: true })
 
     await request(app.getHttpServer())
         .get('/books')
