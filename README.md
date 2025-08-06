@@ -505,7 +505,7 @@ However, please ensure `cleanupOpenApiDoc` is setup correctly as detailed below
 
 #### `cleanupOpenApiDoc` (Ensure proper OpenAPI output)
 
-> [!Note]
+> [!NOTE]
 > There used to be a function called `patchNestJsSwagger`.  This function has been replaced by `cleanupOpenApiDoc`
 
 To complete the swagger integration/setup, you need to call `cleanupOpenApiDoc` with the generated open api doc:
