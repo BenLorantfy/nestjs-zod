@@ -364,7 +364,7 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
 
 #### `ZodSerializerDto` (Set zod DTO to serialize responses with)
 
-> ![Note]
+> [!NOTE]
 > Instead of `ZodSerializerDto`, consider using [`ZodResponse`](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas), which has some improvements over `ZodSerializerDto`
 
 To ensure that a response conforms to a certain shape, you can use the `ZodSerializerDto` method decorator.  **Note:** For this feature to work, please ensure [`ZodSerializerInterceptor`](#zodserializerinterceptor-get-nestjs-to-serialize-responses-with-zod) is setup correctly
