@@ -3,7 +3,8 @@ import { ApiResponse } from '@nestjs/swagger';
 import { ZodSerializerDto } from './serializer';
 import { ZodDto } from './dto';
 import { assert } from './assert';
-import { input, $ZodType } from 'zod/v4/core';
+import { input } from 'zod/v4/core';
+import { RequiredBy, UnknownSchema } from './types';
 
 /**
  * `@ZodResponse` can be used to set the response DTO for a method
@@ -18,13 +19,46 @@ import { input, $ZodType } from 'zod/v4/core';
  *
  * It's recommended to use this decorator because it will keep the
  * serialization, OpenAPI documentation, and compile-time type checking in sync
+ * 
+ * @example
+ * ```ts
+ * @Get()
+ * @ZodResponse({ status: 200, description: 'Get book', type: BookDto })
+ * getBook() {
+ *   return { id: '1' };
+ * }
+ * ```
+ * 
+ * @example
+ * ```ts
+ * @Get()
+ * @ZodResponse({ status: 200, description: 'Get books', type: [BookDto] })
+ * getBooks() {
+ *   return [{ id: '1' }, { id: '2' }];
+ * }
  */
-export function ZodResponse<TSchema extends $ZodType & { parse: (input: unknown) => unknown }>({ status, description, type }: { status: number, description: string, type: ZodDto<TSchema> }) {
-  assert('_zod' in type.schema, 'ZodResponse can only be called with zod v4 schemas');
-  assert('Output' in type, 'ZodResponse should be called with the DTO directly, not DTO.Output');
+export function ZodResponse<TSchema extends UnknownSchema>({ status, description, type }: { status: number, description: string, type: ZodDto<TSchema> }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void
+export function ZodResponse<TSchema extends RequiredBy<UnknownSchema, 'array'>>({ status, description, type }: { status: number, description: string, type: [ZodDto<TSchema>] }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => Array<input<TSchema>>|Promise<Array<input<TSchema>>>>, 'value'>) => void
+export function ZodResponse<TSchema extends UnknownSchema>({ status, description, type }: { status: number, description: string, type: ZodDto<TSchema>|[ZodDto<TSchema>] }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => Array<input<TSchema>>|Promise<Array<input<TSchema>>>|input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void {
+  if (Array.isArray(type)) {
+    // @ts-expect-error - Runtime check
+    assert(type[0].isOutputZodDto !== true, 'ZodResponse should be called with the DTO directly, not DTO.Output');
 
-  return applyDecorators(
-    ZodSerializerDto(type),
-    ApiResponse({ status, description, type: type.Output }),
-  ) as (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void
+    return applyDecorators(
+      ZodSerializerDto(type),
+      // @ts-expect-error
+      ApiResponse({ status, description, type: ['_zod' in type[0].schema ? type[0].Output : type[0]] }),
+    )
+
+  } else {
+      // @ts-expect-error - Runtime check
+      assert(type.isOutputZodDto !== true, 'ZodResponse should be called with the DTO directly, not DTO.Output');
+
+    return applyDecorators(
+      ZodSerializerDto(type),
+      // @ts-expect-error
+      ApiResponse({ status, description, type: '_zod' in type.schema ? type.Output : type }),
+    )
+  }
 }
+
