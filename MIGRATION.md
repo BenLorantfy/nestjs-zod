@@ -96,17 +96,20 @@ This is because when you return an array, `nestjs-zod` v4 validates each item in
 Consumers often found this behavior [surprising](https://github.com/BenLorantfy/nestjs-zod/issues/130#issuecomment-2733398629)
 
 This has been changed in v5.  In v5, the example above will throw an error, as most consumers likely expect.  If you actually want to serialize an array, you can use `[]` syntax like this:
-```ts
-@ZodSerializerDto([BookDto])
+```diff
+- @ZodSerializerDto(BookDto)
++ @ZodSerializerDto([BookDto])
 ```
 
 Or you can make the DTO itself an array:
-```ts
-class BookListDto extends createZodDto(z.object({ title: 'The Martian' }).array()) { }
+```diff
+- class BookDto extends createZodDto(z.object({ title: 'The Martian' })) { }
++ class BookListDto extends createZodDto(z.object({ title: 'The Martian' }).array()) { }
 
 // ...
 
-@ZodSerializerDto(BookListDto)
+- @ZodSerializerDto(BookDto)
++ @ZodSerializerDto(BookListDto)
 ```
 
 ### Deprecated `createZodGuard`, `UseZodGuard`, and `ZodGuard`
