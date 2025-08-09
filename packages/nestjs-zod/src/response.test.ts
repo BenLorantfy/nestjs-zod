@@ -20,7 +20,7 @@ test('serializes the return value and sets the openapi doc', async () => {
         @ZodResponse({ 
             status: 201, 
             description: 'Create a book', 
-            type: BookDto 
+            type: BookDto
         })
         createBook(@Body() book: BookDto) {
             return book;
@@ -220,7 +220,7 @@ test('throws error if trying to use DTO.Output', () => {
                 return [];
             }
         }
-    }).toThrow('[nestjs-zod] ZodResponse should be called with the DTO directly, not DTO.Output');
+    }).toThrow('[nestjs-zod] ZodResponse automatically uses the output version of the DTO, there is no need to use DTO.Output');
 
     expect(() => {
         @Controller('books')
@@ -238,5 +238,5 @@ test('throws error if trying to use DTO.Output', () => {
                 return [];
             }
         }
-    }).toThrow('[nestjs-zod] ZodResponse should be called with the DTO directly, not DTO.Output');
+    }).toThrow('[nestjs-zod] ZodResponse automatically uses the output version of the DTO, there is no need to use DTO.Output');
 })
