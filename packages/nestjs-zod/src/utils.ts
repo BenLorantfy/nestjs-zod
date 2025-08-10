@@ -1,9 +1,21 @@
 import { JSONSchema } from "zod/v4/core";
 
-export function fixAllRefs({ schema, rootSchemaName }: { schema: JSONSchema.BaseSchema, rootSchemaName?: string }) {
+export function fixAllRefs({ schema, defRenames, rootSchemaName }: { schema: JSONSchema.BaseSchema, defRenames?: Record<string, string>, rootSchemaName?: string }) {
     return walkJsonSchema(schema, (s) => {
         if (s.$ref) {
+          if (s.$ref.startsWith('#/$defs/')) {
+            const oldDefName = s.$ref.replace('#/$defs/', '');
+            const newDefName = defRenames?.[oldDefName];
+            if (newDefName) {
+              s.$ref = `#/$defs/${newDefName}`;
+            }
+          }
+
+
             s.$ref = s.$ref.replace('#/$defs/', '#/components/schemas/');
+
+
+            
             if (s.$ref === '#') {
               if (!rootSchemaName) {
                 throw new Error('[fixAllRefs] rootSchemaName is required when fixing a ref to #');

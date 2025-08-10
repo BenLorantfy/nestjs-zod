@@ -6,7 +6,6 @@ import { ZodResponse } from "./response";
 import { get } from "lodash";
 import request from 'supertest';
 import { setupApp } from "./testUtils";
-import { ApiResponse } from "@nestjs/swagger";
 
 test('serializes the return value and sets the openapi doc', async () => {
     class BookDto extends createZodDto(z.object({
@@ -19,8 +18,6 @@ test('serializes the return value and sets the openapi doc', async () => {
 
         @Post()
         @ZodResponse({ 
-            status: 201, 
-            description: 'Create a book', 
             type: BookDto
         })
         createBook(@Body() book: BookDto) {
@@ -30,8 +27,6 @@ test('serializes the return value and sets the openapi doc', async () => {
         // No typescript error should be present here, because `id` is optional
         @Post('/2')
         @ZodResponse({ 
-            status: 201, 
-            description: 'Create a book', 
             type: BookDto 
         })
         async createBook2(@Body() book: BookDto) {
@@ -41,8 +36,6 @@ test('serializes the return value and sets the openapi doc', async () => {
         @Post('/3')
         // @ts-expect-error - This should throw a typescript error, since `id` can not be a boolean
         @ZodResponse({ 
-            status: 201, 
-            description: 'Create a book', 
             type: BookDto 
         })
         createBook3(@Body() book: BookDto) {
@@ -55,7 +48,7 @@ test('serializes the return value and sets the openapi doc', async () => {
     const { app, openApiDoc } = await setupApp(BookController)
 
     const schemaName = 'BookDto_Output';
-    expect(get(openApiDoc, 'paths./books.post.responses.201.content.application/json.schema')).toEqual({
+    expect(get(openApiDoc, 'paths./books.post.responses.default.content.application/json.schema')).toEqual({
         $ref: `#/components/schemas/${schemaName}`
     });
 
@@ -77,6 +70,41 @@ test('serializes the return value and sets the openapi doc', async () => {
             // The serializer should set the `id` field to `new-book`
             expect(res.body.id).toBe('new-book');
         });
+})
+
+test('allows setting status code and description', async () => {
+    class BookDto extends createZodDto(z.object({
+        id: z.string(),
+    })) { }
+
+    @Controller('books')
+    class BookController {
+        constructor() { }
+
+        @Post()
+        @ZodResponse({ 
+            description: 'Create a book', 
+            status: 202,
+            type: BookDto
+        })
+        createBook(@Body() book: BookDto) {
+            return book;
+        }
+    }
+
+    const { app, openApiDoc } = await setupApp(BookController)
+
+    const schemaName = 'BookDto_Output';
+    expect(get(openApiDoc, 'paths./books.post.responses.202.content.application/json.schema')).toEqual({
+        $ref: `#/components/schemas/${schemaName}`
+    });
+
+    expect(get(openApiDoc, 'paths./books.post.responses.202.description')).toEqual('Create a book');
+
+    await request(app.getHttpServer())
+        .post('/books')
+        .send({ id: '1' })
+        .expect(202)
 })
 
 test('serializes the return value and sets the openapi doc when using arrays', async () => {

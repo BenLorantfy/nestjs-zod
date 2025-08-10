@@ -413,6 +413,22 @@ describe('direct array schemas', () => {
     });
 });
 
+test('throws error if using array DTO for parameters', async () => {
+    class BookListDto extends createZodDto(z.array(z.object({ title: z.string() }))) { }
+
+    @Controller()
+    class BookController {
+        constructor() { }
+
+        @Post()
+        createBooks(@Query() books: BookListDto) {
+            return [];
+        }
+    }
+
+    await expect(getSwaggerDoc(BookController)).rejects.toThrow('[cleanupOpenApiDoc] Array DTOs are not supported for query or url parameters')
+})
+
 test('named schemas', async () => {        
     class BookDto extends createZodDto(z.object({
         title: z.string(),
@@ -1094,6 +1110,104 @@ test('mutually recursive named schemas', async () => {
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
 });
 
+test('recursive unnamed sub-schemas', async () => {
+    const Dog = z.object({
+        name: z.string(),
+        // In this case where zod needs to reference a schema that has no
+        // explicit ID, it generates a def anyway and names it
+        // `__schema{number}`.  This causes us problems, because __schema0 is
+        // not a unique def key name, so it will clash if consumers use
+        // recursive schemas multiple times.  To fix this, `cleanupOpenApiDoc`
+        // should prefix `__schema0` with the root schema name 
+        // (e.g. `DogPersonDto__schema0` or `CatPersonDto__schema0` instead of just `__schema0`)
+        get mother() {
+            return Dog;
+        }
+    })
+
+    const DogPerson = z.object({
+        name: z.string(),
+        dog: Dog,
+    })
+
+    class DogPersonDto extends createZodDto(DogPerson) { }
+
+    const Cat = z.object({
+        name: z.string(),
+        litterBoxFull: z.boolean(),
+        get mother() {
+            return Cat;
+        }
+    })
+
+    const CatPerson = z.object({
+        name: z.string(),
+        cat: Cat,
+    });
+
+    class CatPersonDto extends createZodDto(CatPerson) { }
+
+    @Controller()
+    class MyController {
+        constructor() { }
+
+        @Get('/dog-person')
+        @ApiResponse({
+            type: DogPersonDto,
+        })
+        getDogPerson() {
+            return {};
+        }
+
+        @Get('/cat-person')
+        @ApiResponse({
+            type: CatPersonDto,
+        })
+        getCatPerson() {
+            return {};
+        }
+    }
+
+    const doc = await getSwaggerDoc(MyController);
+    expect(doc.components?.schemas).toEqual({
+        CatPersonDto: expect.objectContaining({
+            type: 'object',
+            properties: expect.objectContaining({
+                cat: {
+                    '$ref': '#/components/schemas/CatPersonDto__schema0'
+                }
+            }) 
+        }),
+        CatPersonDto__schema0: expect.objectContaining({
+            type: 'object',
+            properties: expect.objectContaining({
+                mother: {
+                    '$ref': '#/components/schemas/CatPersonDto__schema0'
+                }
+            })
+        }),
+        DogPersonDto: expect.objectContaining({
+            type: 'object',
+            properties: expect.objectContaining({
+                dog: {
+                    '$ref': '#/components/schemas/DogPersonDto__schema0'
+                }
+            }) 
+        }),
+        DogPersonDto__schema0: expect.objectContaining({
+            type: 'object',
+            properties: expect.objectContaining({
+                mother: {
+                    '$ref': '#/components/schemas/DogPersonDto__schema0'
+                }
+            })
+        })
+    });
+    expect(get(doc, 'paths./cat-person.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/CatPersonDto');
+    expect(get(doc, 'paths./dog-person.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/DogPersonDto');
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+})
+
 test('throws an error if trying to use recursive schemas in parameters', async () => {
     const QueryParams = z.object({
         name: z.string(),
@@ -1181,10 +1295,6 @@ test('does not touch refs for schemas that are not from a zod dto', async () => 
     expect(get(doc, 'paths./.post.parameters[0].schema.items.$ref')).toEqual('#/$defs/MyFilter');
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
 })
-
-// TODO: write tests for recursive schemas
-
-// TODO: write test for mutually recursive named schemas where one schmea is additionally directly recursive with itself
 
 test.skip('names output schema Book instead of BookDto if only using as output', async () => {        
     class BookDto extends createZodDto(z.object({

@@ -21,6 +21,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
         let newSchemaName = oldSchemaName;
         let addedDefs = false;
         let hasRefs = false;
+        const defRenames: Record<string, string> = {};
 
         // Clone so we can mutate
         let newOpenapiSchema = deepmerge<typeof oldOpenapiSchema>({}, oldOpenapiSchema);
@@ -51,18 +52,28 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                 delete propertySchema[DEFS_KEY];
 
                 if (!addedDefs) {
+                    // If the def has no ID, then we need to prefix the def key
+                    // with the root schema name to make it globally unique 
+                    // This can happen if the def is part of a recursive schema
+                    // (for example, `___schema0`)
                     for (let [defSchemaId, defSchema] of Object.entries(defs)) {
-                        // TODO: what if defSchemaId is same as this schema's ID?
-                        // TODO: check if schema already exists in schemas
+                        if (!('id' in defSchema)) {
+                            defRenames[defSchemaId] = `${newSchemaName}${defSchemaId}`;
+                        }
+                    }
 
-                        const fixedDef = fixAllRefs({ schema: defSchema, rootSchemaName: newSchemaName });
+                    for (let [defSchemaId, defSchema] of Object.entries(defs)) {
 
-                        if (schemas[defSchemaId] && !isDeepStrictEqual(schemas[defSchemaId], fixedDef)) {
-                            throw new Error(`[cleanupOpenApiDoc] Found multiple schemas with name \`${defSchemaId}\`.  Please review your schemas to ensure that you are not using the same schema name for different schemas`);
+                        const fixedDef = fixAllRefs({ schema: defSchema, rootSchemaName: newSchemaName, defRenames });
+
+                        const newDefSchemaKey = defRenames[defSchemaId] || defSchemaId;
+
+                        if (schemas[newDefSchemaKey] && !isDeepStrictEqual(schemas[newDefSchemaKey], fixedDef)) {
+                            throw new Error(`[cleanupOpenApiDoc] Found multiple schemas with name \`${newDefSchemaKey}\`.  Please review your schemas to ensure that you are not using the same schema name for different schemas`);
                         }
 
                         // @ts-ignore TODO: fix this
-                        schemas[defSchemaId] = fixedDef;
+                        schemas[newDefSchemaKey] = fixedDef;
                     }
 
                     addedDefs = true;
@@ -83,6 +94,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                 // @ts-expect-error TODO: fix TS error
                 schema: newOpenapiSchema,
                 rootSchemaName: newSchemaName,
+                defRenames,
             });
         }
 
@@ -146,6 +158,10 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                     }
                 }
 
+                if (REPLACE_ROOT_WITH_ARRAY_KEY in parameter) {
+                    throw new Error(`[cleanupOpenApiDoc] Array DTOs are not supported for query or url parameters`);
+                }
+
                 // Add each $def as a schema
                 if (DEFS_KEY in parameter) {
                     const defs = parameter[DEFS_KEY] as Record<string, JSONSchema.BaseSchema>;
@@ -186,7 +202,6 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                         }
                     }
                 }
-
 
                 if (PARENT_ID_KEY in parameter) {
                     delete parameter[PARENT_ID_KEY];
