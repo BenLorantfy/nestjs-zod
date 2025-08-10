@@ -1296,8 +1296,6 @@ test('does not touch refs for schemas that are not from a zod dto', async () => 
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
 })
 
-// TODO: write test for mutually recursive named schemas where one schmea is additionally directly recursive with itself
-
 test.skip('names output schema Book instead of BookDto if only using as output', async () => {        
     class BookDto extends createZodDto(z.object({
         title: z.string(),
