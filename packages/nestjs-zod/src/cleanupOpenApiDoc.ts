@@ -2,7 +2,7 @@ import type { OpenAPIObject } from '@nestjs/swagger';
 import deepmerge from 'deepmerge';
 import { JSONSchema } from 'zod/v4/core';
 import { fixAllRefs } from './utils';
-import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, REPLACE_ROOT_WITH_ARRAY_KEY } from './const';
 import { isDeepStrictEqual } from 'node:util';
 
 type DtoSchema = Exclude<Exclude<OpenAPIObject['components'], undefined>['schemas'], undefined>[string];
@@ -84,6 +84,21 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject): OpenAPIObject {
                 schema: newOpenapiSchema,
                 rootSchemaName: newSchemaName,
             });
+        }
+
+        // When the consumer does this `createZodDto(z.array(...))`, then
+        // `_OPENAPI_METADATA_FACTORY` will return: 
+        // `{ array: { type: 'array', [REPLACE_ROOT_WITH_ARRAY_KEY]: true } }`
+        // This is a workaround for the fact that the factory doesn't support
+        // returning array schemas directly.  
+        // If we see `REPLACE_ROOT_WITH_ARRAY_KEY`, then we unwrap the array
+        // schema (replace the root object schema with the array schema)
+        if (newOpenapiSchema.properties && 'array' in newOpenapiSchema.properties && 'type' in newOpenapiSchema.properties.array && newOpenapiSchema.properties.array.type === 'array' && REPLACE_ROOT_WITH_ARRAY_KEY in newOpenapiSchema.properties.array) {
+            const replaceRoot = newOpenapiSchema.properties.array[REPLACE_ROOT_WITH_ARRAY_KEY];
+            delete newOpenapiSchema.properties.array[REPLACE_ROOT_WITH_ARRAY_KEY];
+            if (replaceRoot) {
+                newOpenapiSchema = newOpenapiSchema.properties.array;
+            }
         }
 
         if (schemas[newSchemaName] && !isDeepStrictEqual(schemas[newSchemaName], newOpenapiSchema)) {

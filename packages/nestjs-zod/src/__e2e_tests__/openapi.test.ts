@@ -362,6 +362,57 @@ describe('arrays', () => {
     });
 })
 
+describe('direct array schemas', () => {
+    test.each([
+        ctx({ version: 'v4' }),
+        ctx({ version: 'v3' }),
+    ])('$ctx', async ({ version }) => {
+        const zod = (version === 'v4' ? z : z3) as typeof z;
+
+        class BookListDto extends createZodDto(zod.array(zod.object({ title: zod.string() }))) { }
+
+        @Controller('books')
+        class BookController {
+            constructor() { }
+
+            @Post()
+            @ApiResponse({ 
+                status: 200, 
+                description: 'Batch create books', 
+                type: BookListDto
+            })
+            createBooks(@Body() books: BookListDto) {
+                for (let book of books) {
+                    console.log(book.title);
+                }
+                
+                return [];
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        expect(doc.components?.schemas).toEqual({
+            BookListDto: expect.objectContaining({
+                type: 'array',
+                items: {
+                    type: 'object',
+                    properties: {
+                        title: {
+                            type: 'string'
+                        }
+                    },
+                    required: [
+                        'title'
+                    ]
+                }
+            })
+        })
+        expect(get(doc, 'paths./books.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/BookListDto');
+        expect(get(doc, 'paths./books.post.responses.200.content.application/json.schema.$ref')).toEqual('#/components/schemas/BookListDto');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+});
+
 test('named schemas', async () => {        
     class BookDto extends createZodDto(z.object({
         title: z.string(),
