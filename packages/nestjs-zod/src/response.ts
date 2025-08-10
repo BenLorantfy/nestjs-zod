@@ -13,7 +13,9 @@ import { RequiredBy, UnknownSchema } from './types';
  * 1. Serializes the return value of the method using `@ZodSerializerDto`.  This
  *    means the return value of the method will be parsed by the DTO's schema.
  * 2. Sets the response DTO for the method using `@ApiResponse`.  This means the
- *    OpenAPI documentation will be updated to reflect the DTO's schema.
+ *    OpenAPI documentation will be updated to reflect the DTO's schema.  Note
+ *    that ZodResponse automatically uses the output version of the DTO, so
+ *    there is no need to use DTO.Output.
  * 3. Throws a typescript error if the return value of the method does not match
  *    the DTO's input schema.
  *
@@ -37,26 +39,22 @@ import { RequiredBy, UnknownSchema } from './types';
  *   return [{ id: '1' }, { id: '2' }];
  * }
  */
-export function ZodResponse<TSchema extends UnknownSchema>({ status, description, type }: { status: number, description: string, type: ZodDto<TSchema> }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void
-export function ZodResponse<TSchema extends RequiredBy<UnknownSchema, 'array'>>({ status, description, type }: { status: number, description: string, type: [ZodDto<TSchema>] }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => Array<input<TSchema>>|Promise<Array<input<TSchema>>>>, 'value'>) => void
-export function ZodResponse<TSchema extends UnknownSchema>({ status, description, type }: { status: number, description: string, type: ZodDto<TSchema>|[ZodDto<TSchema>] }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => Array<input<TSchema>>|Promise<Array<input<TSchema>>>|input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void {
+export function ZodResponse<TSchema extends UnknownSchema>({ status, description, type }: { status: number, description: string, type: ZodDto<TSchema> & { io: "input" } }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void
+export function ZodResponse<TSchema extends RequiredBy<UnknownSchema, 'array'>>({ status, description, type }: { status: number, description: string, type: [ZodDto<TSchema> & { io: "input" }] }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => Array<input<TSchema>>|Promise<Array<input<TSchema>>>>, 'value'>) => void
+export function ZodResponse<TSchema extends UnknownSchema>({ status, description, type }: { status: number, description: string, type: (ZodDto<TSchema> & { io: "input" })|[ZodDto<TSchema> & { io: "input" }] }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => Array<input<TSchema>>|Promise<Array<input<TSchema>>>|input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void {
   if (Array.isArray(type)) {
-    // @ts-expect-error - Runtime check
-    assert(type[0].isOutputZodDto !== true, 'ZodResponse should be called with the DTO directly, not DTO.Output');
+    assert(type[0].io === "input", 'ZodResponse automatically uses the output version of the DTO, there is no need to use DTO.Output');
 
     return applyDecorators(
       ZodSerializerDto(type),
-      // @ts-expect-error
       ApiResponse({ status, description, type: ['_zod' in type[0].schema ? type[0].Output : type[0]] }),
     )
 
   } else {
-      // @ts-expect-error - Runtime check
-      assert(type.isOutputZodDto !== true, 'ZodResponse should be called with the DTO directly, not DTO.Output');
+    assert(type.io === "input", 'ZodResponse automatically uses the output version of the DTO, there is no need to use DTO.Output');
 
     return applyDecorators(
       ZodSerializerDto(type),
-      // @ts-expect-error
       ApiResponse({ status, description, type: '_zod' in type.schema ? type.Output : type }),
     )
   }

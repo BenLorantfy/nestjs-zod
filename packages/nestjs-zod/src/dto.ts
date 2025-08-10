@@ -2,7 +2,7 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, REPLACE_ROOT_WITH_ARRAY_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
@@ -11,10 +11,9 @@ export interface ZodDto<
 > {
   new (): ReturnType<TSchema['parse']>
   isZodDto: true
-  isOutputZodDto: false
   schema: TSchema
   create(input: unknown): ReturnType<TSchema['parse']>
-  Output: Omit<ZodDto<UnknownSchema>, 'isOutputZodDto'> & { isOutputZodDto: true }
+  Output: ZodDto<UnknownSchema>
   _OPENAPI_METADATA_FACTORY(): unknown
 }
 
@@ -23,8 +22,8 @@ export function createZodDto<
 >(schema: TSchema) {
   class AugmentedZodDto {
     public static readonly isZodDto = true
-    public static readonly isOutputZodDto = false
     public static readonly schema = schema
+    public static readonly io = "input"
 
     public static create(input: unknown) {
       return this.schema.parse(input)
@@ -35,8 +34,8 @@ export function createZodDto<
       
       class AugmentedZodDto {
         public static readonly isZodDto = true
-        public static readonly isOutputZodDto = true
         public static readonly schema = schema
+        public static readonly io = "output"
     
         public static create(input: unknown) {
           return this.schema.parse(input)
@@ -57,7 +56,7 @@ export function createZodDto<
     }
   }
 
-  return AugmentedZodDto as unknown as ZodDto<TSchema>
+  return AugmentedZodDto as unknown as ZodDto<TSchema> & { io: "input" }
 }
 
 function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }), io: 'input' | 'output') {
@@ -69,7 +68,7 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
     return {};
   }
 
-  const jsonSchema = '_zod' in schema ? toJSONSchema(schema, {
+  const generatedJsonSchema = '_zod' in schema ? toJSONSchema(schema, {
     io,
     override: ({ jsonSchema }) => {
         if (io === 'output' && 'id' in jsonSchema) {
@@ -77,6 +76,16 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
         }
     } 
   }) : zodV3ToOpenAPI(schema)
+
+  const jsonSchema = generatedJsonSchema.type === 'array' ? {
+    type: 'object', 
+    properties: { 
+      array: {
+        ...generatedJsonSchema,
+        [REPLACE_ROOT_WITH_ARRAY_KEY]: true
+      } 
+    } 
+  } : generatedJsonSchema;
 
   // @ts-expect-error
   assert(isObjectType(jsonSchema), 'createZodDto must be called with an object type');
