@@ -2,7 +2,7 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, REPLACE_ROOT_WITH_ARRAY_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
@@ -68,7 +68,7 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
     return {};
   }
 
-  const jsonSchema = '_zod' in schema ? toJSONSchema(schema, {
+  const generatedJsonSchema = '_zod' in schema ? toJSONSchema(schema, {
     io,
     override: ({ jsonSchema }) => {
         if (io === 'output' && 'id' in jsonSchema) {
@@ -76,6 +76,16 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
         }
     } 
   }) : zodV3ToOpenAPI(schema)
+
+  const jsonSchema = generatedJsonSchema.type === 'array' ? {
+    type: 'object', 
+    properties: { 
+      array: {
+        ...generatedJsonSchema,
+        [REPLACE_ROOT_WITH_ARRAY_KEY]: true
+      } 
+    } 
+  } : generatedJsonSchema;
 
   // @ts-expect-error
   assert(isObjectType(jsonSchema), 'createZodDto must be called with an object type');

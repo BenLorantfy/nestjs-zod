@@ -6,6 +6,7 @@ import { ZodResponse } from "./response";
 import { get } from "lodash";
 import request from 'supertest';
 import { setupApp } from "./testUtils";
+import { ApiResponse } from "@nestjs/swagger";
 
 test('serializes the return value and sets the openapi doc', async () => {
     class BookDto extends createZodDto(z.object({
