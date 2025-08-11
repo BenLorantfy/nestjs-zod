@@ -135,6 +135,15 @@ Or if you have a DTO:
 class PostDto extends createZodDto(...) {}
 const post = PostDto.schema.parse(...)
 ```
+### OpenAPI generation
+Note that the `nestjs-zod` OpenAPI generation for zod v4 schemas internally uses [`z.toJSONSchema`](https://zod.dev/json-schema) (with some minor tweaks in some cases) which is built into zod.
+
+There are some differences between the built-in zod `JSONSchema` generation and nestjs-zod's old `JSONSchema` / `OpenAPI` generation:
+1. Zod distinguishes between "input" and "output" `OpenAPI` schemas.  Each zod schema has an "input" `JSONSchema`, which represents the data shape required to pass validation, and an "output" `JSONSchema`, which represents the return value of parsing.  By default, DTOs created via `createZodDto` will generate the "input" `OpenAPI` schema.  To use the "output" version, you can use the `.Output` DTO property.  For example: `@ApiResponse({ type: Car.Output })`.  Alternatively, the "output" version is automatically used when using `@ZodResponse` (a new feature in nestjs-zod v5)
+2. Zod defines some types as ["unrepresentable"](https://zod.dev/json-schema#unrepresentable), which means zod will throw an error if you try to generate a JSONSchema from them.  For example, `z.date()` is not representable in JSON (instead, you probably want to use `z.iso.date()` or `z.iso.datetime()` which validate `string`, not `Date`)
+
+The new OpenAPI generation enables new features, such as differentiated input/output schemas, reusable named sub-schemas, recursive schemas, etc.  Check the `nestjs-zod` README.md and the [zod documentation](https://zod.dev/json-schema) itself for more information.
+
 
 ## From version 3.x to 4.x
 
