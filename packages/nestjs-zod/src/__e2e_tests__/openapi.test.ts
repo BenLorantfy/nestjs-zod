@@ -196,44 +196,15 @@ describe('unions', () => {
     });
 });
 
-describe('nullable fields', () => {
-    test('v4', async () => {
-        class BookDto extends createZodDto(z.object({
-            title: z.string().nullable(),
-        })) { }
-    
-        @Controller()
-        class BookController {
-            constructor() { }
-    
-            @Post()
-            createBook(@Body() book: BookDto) {
-                return book;
-            }
-        }
-    
-        const doc = await getSwaggerDoc(BookController);
-        expect(get(doc, 'components.schemas.BookDto.properties.title')).toEqual({
-            // This is the correct syntax for OpenAPI version 3.1
-            // In 3.0, you're supposed to use `nullable: true` instead.  Maybe
-            // we should add a parameter for consumers to specify which version
-            // of OpenAPI they are using?
-            // TODO: consider defaulting this to 3.0 because nest-swagger seems to generate 3.0
-            anyOf: [
-                {
-                    type: 'string'
-                },
-                {
-                    type: 'null'
-                }
-            ]
-        });
-        expect(JSON.stringify(doc)).not.toContain(PREFIX);
-    })
-    
-    test('v3', async () => {
-        class BookDto extends createZodDto(z3.object({
-            title: z3.string().nullable(),
+describe('basic nullable fields', () => {
+    test.each([
+        'v4',
+        'v3',
+    ])('%s', async (version) => {
+        const zod = (version === 'v4' ? z : z3) as typeof z;
+
+        class BookDto extends createZodDto(zod.object({
+            title: zod.string().nullable(),
         })) { }
     
         @Controller()
@@ -249,11 +220,153 @@ describe('nullable fields', () => {
         const doc = await getSwaggerDoc(BookController);
         expect(get(doc, 'components.schemas.BookDto.properties.title')).toEqual({
             type: 'string',
-            nullable: true
+            nullable: true,
         });
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
-    })
+    });
 })
+
+test('nested complex nullable fields', async () => {
+    class BookDto extends createZodDto(z.object({
+        author: z.object({
+            name: z.union([z.string(),z.number(),z.null()]),
+        })
+    })) { }
+
+    @Controller()
+    class BookController {
+        constructor() { }
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+            return book;
+        }
+    }
+
+    const doc = await getSwaggerDoc(BookController);
+    expect(get(doc, 'components.schemas.BookDto.properties.author.properties.name')).toEqual({
+        anyOf: [
+            {
+                type: 'string',
+                nullable: true,
+            },
+            {
+                type: 'number',
+                nullable: true,
+            }
+        ]
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+});
+
+test('nullable fields in referenced schema', async () => {
+    const Author = z.object({
+        name: z.string().nullable(),
+    }).meta({ id: 'Author127346182374' })
+
+    class BookDto extends createZodDto(z.object({
+        author: Author
+    })) { }
+
+    @Controller()
+    class BookController {
+        constructor() { }
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+            return book;
+        }
+    }
+
+    const doc = await getSwaggerDoc(BookController);
+    expect(get(doc, 'components.schemas.Author127346182374.properties.name')).toEqual({
+        type: 'string',
+        nullable: true,
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+})
+
+test('nullable fields in openapi 3.1', async () => {
+    const Author = z.object({
+        name: z.string().nullable(),
+    }).meta({ id: 'Author9081234598473598' })
+    
+    class BookDto extends createZodDto(z.object({
+        title: z.string().nullable(),
+        author: Author,
+    })) { }
+
+    @Controller()
+    class BookController {
+        constructor() { }
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+            return book;
+        }
+    }
+
+    const app = await createApp(BookController);
+
+    // If the OpenAPI version is set directly on the openapi document, then by
+    // default cleanupOpenApiDoc should use 3.1
+    const doc = cleanupOpenApiDoc(
+        SwaggerModule.createDocument(app, new DocumentBuilder().setOpenAPIVersion('3.1.1').build())
+    )
+    expect(get(doc, 'components.schemas.BookDto.properties.title')).toEqual({
+        // If the OpenAPI version is 3.1, we should use `anyOf` 
+        // and `{ type: 'null' }` instead of `nullable`
+        anyOf: [
+            {
+                type: 'string',
+            },
+            {
+                type: 'null',
+            }
+        ]
+    });
+    expect(get(doc, 'components.schemas.Author9081234598473598.properties.name')).toEqual({
+        anyOf: [
+            {
+                type: 'string',
+            },
+            {
+                type: 'null',
+            }
+        ]
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+
+    // Alternatively, the user can leave the version on the OpenAPI document
+    // unchanged (in which case it seems nestjs defaults to 3.0), but set the
+    // version on the cleanupOpenApiDoc to 3.1
+    const doc2 = cleanupOpenApiDoc(SwaggerModule.createDocument(app, new DocumentBuilder().build()), {
+        version: '3.1'
+    });
+    expect(get(doc2, 'components.schemas.BookDto.properties.title')).toEqual({
+        // If the OpenAPI version is 3.1, we should use `anyOf` 
+        // and `{ type: 'null' }` instead of `nullable`
+        anyOf: [
+            {
+                type: 'string',
+            },
+            {
+                type: 'null',
+            }
+        ]
+    });
+    expect(get(doc2, 'components.schemas.Author9081234598473598.properties.name')).toEqual({
+        anyOf: [
+            {
+                type: 'string',
+            },
+            {
+                type: 'null',
+            }
+        ]
+    });
+    expect(JSON.stringify(doc2)).not.toContain(PREFIX);
+});
 
 describe('optional fields', () => {
     test.each([
@@ -1296,32 +1409,7 @@ test('does not touch refs for schemas that are not from a zod dto', async () => 
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
 })
 
-test.skip('names output schema Book instead of BookDto if only using as output', async () => {        
-    class BookDto extends createZodDto(z.object({
-        title: z.string(),
-    }).meta({ id: 'Book' })) { }
-
-    @Controller()
-    class BookController {
-        constructor() { }
-
-        @Get()
-        @ApiOkResponse({ type: BookDto.Output })
-        getBook() {
-            return {};
-        }
-    }
-
-    const doc = await getSwaggerDoc(BookController);
-
-    // Renames the schema component itself
-    expect(Object.keys(doc.components?.schemas || {})).toEqual(['Book']);
-
-    // Renames the reference to the schema
-    expect(get(doc, 'paths./.post.responses.200.content.application/json.schema.$ref')).toEqual("#/components/schemas/Book");
-})
-
-async function getSwaggerDoc(controllerClass: Type<unknown>, { cleanUp = true } = {}) {
+async function createApp(controllerClass: Type<unknown>) {
     @Module({
         imports: [],
         controllers: [controllerClass],
@@ -1332,6 +1420,17 @@ async function getSwaggerDoc(controllerClass: Type<unknown>, { cleanUp = true } 
     const app = await NestFactory.create(AppModule, {
         logger: false
     });
+
+    return app;
+}
+
+async function getSwaggerDoc(controllerClass: Type<unknown>, { 
+    cleanUp = true, 
+}: { 
+    cleanUp?: boolean, 
+} = {}) {
+    const app = await createApp(controllerClass);
+        
     const doc = SwaggerModule.createDocument(app, new DocumentBuilder().build());
     if (cleanUp) {
         return cleanupOpenApiDoc(doc);

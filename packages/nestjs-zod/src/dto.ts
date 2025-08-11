@@ -2,7 +2,7 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, REPLACE_ROOT_WITH_ARRAY_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, REPLACE_ROOT_WITH_ARRAY_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
@@ -90,7 +90,7 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
   // @ts-expect-error
   assert(isObjectType(jsonSchema), 'createZodDto must be called with an object type');
   
-  const hasRefs = checkSchemaHasRefs(jsonSchema);
+  const { hasRefs, hasNull} = getSchemaMetadata(jsonSchema);
 
   let properties: Record<string, unknown> = {};
   for (let [propertyKey, propertySchema] of Object.entries(jsonSchema.properties)) {
@@ -112,6 +112,10 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
       // `cleanupOpenApiDoc`
       type: propertySchema.type || '', 
     };
+
+    if (hasNull) {
+      newPropertySchema[HAS_NULL_KEY] = true;
+    }
 
     if (hasRefs) {
       newPropertySchema[PARENT_HAS_REFS_KEY] = true;
@@ -159,16 +163,23 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
   return properties;
 }
 
-function checkSchemaHasRefs(jsonSchema: JSONSchema.BaseSchema) {
+function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
   let hasRefs = false;
+  let hasNull = false;
   walkJsonSchema(jsonSchema, (schema) => {
+    if (schema.type === 'null') {
+      hasNull = true;
+    }
     if (schema.$ref) {
       hasRefs = true;
     }
     return schema;
   });
 
-  return hasRefs;
+  return {
+    hasRefs,
+    hasNull,
+  }
 }
 
 export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema> {
