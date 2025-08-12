@@ -205,8 +205,11 @@ Check out the [example app](./packages/example/) for a full example of how to in
 
 ### Request Validation
 #### `createZodDto` (Create a DTO from a Zod schema)
+```ts
+function createZodDto<TSchema extends UnknownSchema>(schema: TSchema): ZodDto<TSchema>;
+```
 
-`createZodDto` is used to create a nestjs DTO from a zod schema.  These zod DTOs can be used in place of `class-validator` / `class-transformer` DTOs. **Note:** For this feature to work, please ensure [`ZodValidationPipe`](#zodvalidationpipe-get-nestjs-to-validate-using-zod) is setup correctly
+Creates a nestjs DTO from a zod schema.  These zod DTOs can be used in place of `class-validator` / `class-transformer` DTOs. **Note:** For this feature to work, please ensure [`ZodValidationPipe`](#zodvalidationpipe-get-nestjs-to-validate-using-zod) is setup correctly
 
 See an example below of how to create a zod DTO:
 
@@ -225,6 +228,9 @@ class CredentialsDto extends createZodDto(CredentialsSchema) {}
 
 > [!NOTE]
 > We need to use the `class <dtoname> extends createZodDto(...` syntax because nestjs/typescript requires classes be used for DTOs
+
+##### Parameters
+- `schema` - A zod schema.  You can "bring your own zod", including zod v3 schemas, v4 schemas, zod mini schemas, etc.  The only requirement is that the schema has a method called `parse`
 
 ##### Using Zod DTOs
 
@@ -325,6 +331,8 @@ const MyZodValidationPipe = createZodValidationPipe({
     new BadRequestException('Ooops'),
 })
 ```
+##### Parameters
+- `options.createValidationException` A callback that will be called with the zod error when a parsing error occurs.  Should return a new instance of `Error`
 
 #### `ZodValidationException`
 
@@ -363,13 +371,21 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
 ### Response Validation
 
 #### `ZodSerializerDto` (Set zod DTO to serialize responses with)
+```ts
+function ZodSerializerDto(dto: ZodDto<UnknownSchema> | UnknownSchema | [ZodDto<UnknownSchema>] | [UnknownSchema])
+```
+Parses / serializes the return value of a controller method using the provided zod schema.  This is especially useful to prevent accidental data leaks.
 
 > [!NOTE]
 > Instead of `ZodSerializerDto`, consider using [`ZodResponse`](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas), which has some improvements over `ZodSerializerDto`
 
-To ensure that a response conforms to a certain shape, you can use the `ZodSerializerDto` method decorator.  **Note:** For this feature to work, please ensure [`ZodSerializerInterceptor`](#zodserializerinterceptor-get-nestjs-to-serialize-responses-with-zod) is setup correctly
+> [!NOTE]
+> For this feature to work, please ensure [`ZodSerializerInterceptor`](#zodserializerinterceptor-get-nestjs-to-serialize-responses-with-zod) is setup correctly
 
-This is especially useful to prevent accidental data leaks.
+##### Parameters
+- `options.dto` - A ZodDto (or zod schema) to serialize the response with.  If passed with array syntax (`[MyDto]`) then it will parse as an array.  Note that the array syntax does not work with [`zod/mini`](https://zod.dev/packages/mini), because it requires the schema have an `.array()` method
+
+##### Example
 
 ```ts
 const UserSchema = z.object({ username: string() })
@@ -422,8 +438,14 @@ export class BooksController {
 
 #### `ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)
 
-To ensure `ZodSerializerDto` works correctly, `ZodSerializerInterceptor` needs to be used and setup correctly.  This should be done in the `AppModule` like so:
+To ensure `ZodSerializerDto` works correctly, `ZodSerializerInterceptor` needs to be added to the `AppModule`
 
+> [!NOTE]
+> Also see [`ZodSerializationException`](#zodserializationexception) for information about customizing the serialization error handling
+
+##### Example
+
+This should be done in the `AppModule` like so:
 ```ts
 @Module({
   ...
@@ -435,10 +457,21 @@ To ensure `ZodSerializerDto` works correctly, `ZodSerializerInterceptor` needs t
 export class AppModule {}
 ```
 
-Also see [`ZodSerializationException`](#zodserializationexception) for information about customizing the serialization error handling
-
 #### `ZodResponse` (Sync run-time, compile-time, and docs-time schemas)
 
+```ts
+function ZodResponse<TSchema extends UnknownSchema>({ status, description, type }: { status?: number, description?: string, type: ZodDto<TSchema> & { io: "input" } }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void
+function ZodResponse<TSchema extends RequiredBy<UnknownSchema, 'array'>>({ status, description, type }: { status?: number, description?: string, type: [ZodDto<TSchema> & { io: "input" }] }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => Array<input<TSchema>>|Promise<Array<input<TSchema>>>>, 'value'>) => void
+```
+
+Consolidation of multiple decorators that allows setting the run-time, compile-time, and docs-time schema all at once
+
+##### Parameters
+- `params.status` - Optionally sets the "happy-path" `status` of the response.  If provided, sets the status code using `@HttpCode` from `nestjs/common` and using `@ApiResponse` from `nestjs/swagger`
+- `params.description` - Optionally sets a description of the response using `@ApiResponse`
+- `params.type` - Sets the run-time (via `@ZodSerializerDto`), compile-time (via TypeScript), and docs-time (via `@ApiResponse`) response type.  
+
+##### Example
 You may find yourself duplicating type information:
 
 ```tsx
@@ -492,6 +525,9 @@ See the example app [here](/packages/example/src/http-exception.filter.ts) for m
 
 ### OpenAPI (Swagger) support
 
+> [!NOTE]
+> For additional documentation, follow [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application [here](/packages/example/)
+
 If you have `@nestjs/swagger` setup, documentation will automatically be generated for:
 - Request bodies, if you use `@Body() body: MyDto`
 - Response bodies, if you use `@ApiOkResponse({ type: MyDto.Output })` (or [`@ZodResponse({ type: MyDto })`](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas))
@@ -507,13 +543,19 @@ However, please ensure `cleanupOpenApiDoc` is setup correctly as detailed below
 ```ts
 function cleanupOpenApiDoc(doc: OpenAPIObject, options?: { version?: '3.1' | '3.0' | 'auto' }): OpenAPIObject
 ```
-
-> [!NOTE]
-> For additional documentation, follow [Nest.js' Swagger Module Guide](https://docs.nestjs.com/openapi/introduction), or you can see the example application [here](/packages/example/)
+Cleans up the generated OpenAPI doc by applying some post-processing
 
 > [!NOTE]
 > There used to be a function called `patchNestJsSwagger`.  This function has been replaced by `cleanupOpenApiDoc`
 
+##### Parameters
+- `doc` - The OpenAPI doc generated by `SwaggerModule.createDocument`
+- `options.version` - The OpenAPI version to use while cleaning up the document. 
+  - `auto` (default) - Uses the version specified in the OpenAPI document (The version in the OpenAPI can be changed by using the `setOpenAPIVersion` method on the swagger document builder).
+  - `3.1` - Nullable fields will use `anyOf` and `{ type: 'null' }`
+  - `3.0` - Nullable fields will use `nullable: true`
+
+##### Example
 To complete the swagger integration/setup, `cleanupOpenApiDoc` needs to be called with the generated open api doc.  This function performs some necessary post-processing
 
 ```diff
@@ -527,12 +569,6 @@ To complete the swagger integration/setup, `cleanupOpenApiDoc` needs to be calle
 - SwaggerModule.setup('api', app, openApiDoc);
 + SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
 ```
-##### Parameters
-- `doc` - The OpenAPI doc generated by `SwaggerModule.createDocument`
-- `options.version` - The OpenAPI version to use while cleaning up the document. 
-  - `auto` (default) - Uses the version specified in the OpenAPI document (The version in the OpenAPI can be changed by using the `setOpenAPIVersion` method on the swagger document builder).
-  - `3.1` - Nullable fields will use `anyOf` and `{ type: 'null' }`
-  - `3.0` - Nullable fields will use `nullable: true`
 
 #### Output schemas
 
@@ -554,6 +590,45 @@ However, it's recommended to use [`@ZodResponse`](#zodresponse-sync-run-time-com
 @ZodResponse({
   type: MyDto // <-- No need to do `.Output` here
 })
+```
+#### Reusable schemas
+You can also externalize and reuse schemas across multiple DTOs.  If you add `.meta({ id: "MySchema" })` to any zod schema, then that schema will be added directly to `components.schemas` in the OpenAPI documentation.  For example, this code:
+```ts
+const Author = z.object({ name: z.string() }).meta({ id: "Author" })
+
+class BookDto extends createZodDto(z.object({ title: z.string(), author: Author })) { }
+class BlogPostDto extends createZodDto(z.object({ title: z.string(), author: Author })) { }
+```
+Will result in this OpenAPI document:
+```json
+{
+  "components": {
+    "schemas": {
+      "Author": {
+        // ...
+      },
+      "BookDto": {
+        "type": "object",
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/Author"
+          },
+          "required": ["author"]
+        }
+      },
+      "BlogPostDto": {
+        "type": "object",
+        "properties": {
+          "author": {
+            "$ref": "#/components/schemas/Author"
+          },
+          "required": ["author"]
+        }
+      }
+    }
+  },
+  // ...
+}
 ```
 
 #### `zodV3ToOpenAPI` _**(DEPRECATED)**_
