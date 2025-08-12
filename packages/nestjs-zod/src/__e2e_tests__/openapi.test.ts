@@ -678,6 +678,59 @@ test('named output schemas', async () => {
     expect(get(doc, 'components.schemas.Book2_Output.id')).toEqual('Book2_Output');
 })
 
+test('output schemas with named sub-schemas', async () => {     
+    const Author = z.object({ name: z.string() }).meta({ id: "Author908908290384" });
+    
+    class BookDto extends createZodDto(z.object({
+        title: z.string(),
+        author: Author,
+    })) { }
+
+    @Controller()
+    class BookController {
+        constructor() { }
+
+        @Post()
+        @ApiOkResponse({ type: BookDto.Output })
+        getBook() {
+            return {};
+        }
+    }
+
+    const doc = await getSwaggerDoc(BookController);
+
+    // Both the DTO and the nested zod schema should be renamed and suffixed with _Output
+    expect(Object.keys(doc.components?.schemas || {})).toEqual(['Author908908290384_Output', 'BookDto_Output']);
+
+    // Renames the reference to the schema
+    expect(get(doc, 'paths./.post.responses.200.content.application/json.schema.$ref')).toEqual("#/components/schemas/BookDto_Output");
+    expect(get(doc, 'components.schemas.BookDto_Output.properties.author.$ref')).toEqual("#/components/schemas/Author908908290384_Output");
+
+    // ID should also be renamed
+    expect(get(doc, 'components.schemas.Author908908290384_Output.id')).toEqual('Author908908290384_Output');
+})
+
+test('properly adds sub-schemas for array schemas', async () => {
+    const Author = z.object({ name: z.string() }).meta({ id: "Author3459835601" });
+    
+    class BookDto extends createZodDto(z.array(Author)) { }
+
+    @Controller()
+    class BookController {
+        constructor() { }
+
+        @Post()
+        @ApiOkResponse({ type: BookDto.Output })
+        getBook() {
+            return {};
+        }
+    }
+
+    const doc = await getSwaggerDoc(BookController);
+    expect(Object.keys(doc.components?.schemas || {})).toEqual(['Author3459835601_Output', 'BookDto_Output']);
+    expect(get(doc, 'components.schemas.BookDto_Output.items.$ref')).toEqual('#/components/schemas/Author3459835601_Output');
+})
+
 test('query param union', async () => {
     class QueryParamsDto extends createZodDto(z.object({
         filter: z.union([
