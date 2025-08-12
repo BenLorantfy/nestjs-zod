@@ -4,7 +4,7 @@ on:
   push:
     branches: ['main']
   pull_request:
-    branches: ['main']
+    branches: ['main', 'v5']
 
 jobs:
   test-and-build:
@@ -29,7 +29,45 @@ jobs:
         run: cd packages/nestjs-zod && pnpm test
       - name: Build nestjs-zod
         run: cd packages/nestjs-zod && pnpm build
+      - name: Build example-dual-zods app
+        run: cd packages/example-dual-zods && pnpm run build
+      - name: Test example-dual-zods app
+        run: cd packages/example-dual-zods && pnpm run test
       - name: Build example app
-        run: cd packages/example && pnpm run build
+        run: cd packages/example && pnpm build
       - name: Test example app
-        run: cd packages/example && pnpm run test:e2e
+        run: cd packages/example && pnpm test
+      - name: Cache Playwright Browsers
+        id: playwright-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('packages/example-dual-zods/package.json') }}
+          restore-keys: |
+            playwright-${{ runner.os }}-
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: cd packages/example-dual-zods && pnpm exec playwright install --with-deps
+      - name: Test example-dual-zods app swagger
+        run: |
+          cd packages/example-dual-zods && pnpm run start &
+          cd packages/example-dual-zods && pnpm run test:swagger
+      - name: Get current date
+        if: github.head_ref == 'v5'
+        id: date
+        run: echo "date=$(date -u +'%Y%m%dT%H%M%S')" >> $GITHUB_OUTPUT
+      - name: Set beta version
+        if: github.head_ref == 'v5'
+        uses: reedyuk/npm-version@1.1.1
+        with:
+          version: 5.0.0-beta.${{ steps.date.outputs.date }}
+          package: 'packages/nestjs-zod'
+      - name: Publish beta version
+        if: github.head_ref == 'v5'
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          cd packages/nestjs-zod
+          npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
+          npm publish --tag next
+

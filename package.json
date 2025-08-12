@@ -1,6 +1,6 @@
 {
     "name": "nestjs-zod-monorepo",
-    "description": "All NestJS + Zod utilities you need",
+    "description": "All the NestJS + Zod utilities you need",
     "version": "0.0.1",
     "private": true,
     "dependencies": {

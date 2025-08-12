@@ -1,4 +1,4 @@
-import { ZodSchema, ZodTypeDef } from 'zod'
+import { ZodSchema, ZodTypeDef } from 'zod/v3'
 
 export function from<
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

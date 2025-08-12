@@ -3,14 +3,13 @@ import {
   HttpStatus,
   InternalServerErrorException,
 } from '@nestjs/common'
-import { ZodError } from '@nest-zod/z'
 
 export class ZodValidationException extends BadRequestException {
-  constructor(private error: ZodError) {
+  constructor(private error: unknown) {
     super({
       statusCode: HttpStatus.BAD_REQUEST,
       message: 'Validation failed',
-      errors: error.errors,
+      errors: (error && typeof error === 'object' && 'issues' in error) ? error.issues : undefined,
     })
   }
 
@@ -20,7 +19,7 @@ export class ZodValidationException extends BadRequestException {
 }
 
 export class ZodSerializationException extends InternalServerErrorException {
-  constructor(private error: ZodError) {
+  constructor(private error: unknown) {
     super()
   }
 
@@ -29,7 +28,7 @@ export class ZodSerializationException extends InternalServerErrorException {
   }
 }
 
-export type ZodExceptionCreator = (error: ZodError) => Error
+export type ZodExceptionCreator = (error: unknown) => Error
 
 export const createZodValidationException: ZodExceptionCreator = (error) => {
   return new ZodValidationException(error)

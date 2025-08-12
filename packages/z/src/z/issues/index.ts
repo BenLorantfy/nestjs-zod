@@ -3,7 +3,7 @@ import {
   IssueData,
   ParseContext,
   ZodIssueOptionalMessage,
-} from 'zod'
+} from 'zod/v3'
 import { ZodAnyDateStringIssue } from './date-string'
 import { ZodTooBigIssue, ZodTooSmallIssue } from './overrided'
 import { ZodAnyPasswordIssue } from './password'

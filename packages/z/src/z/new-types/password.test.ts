@@ -1,4 +1,4 @@
-import { SafeParseReturnType, ZodSchema } from 'zod'
+import { SafeParseReturnType, ZodSchema } from 'zod/v3'
 import { password } from './password'
 
 describe('password', () => {
