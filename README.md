@@ -295,6 +295,9 @@ class AuthController {
 }
 ```
 #### `createZodValidationPipe` (Creating custom validation pipe)
+```ts
+export function createZodValidationPipe({ createValidationException }: ZodValidationPipeOptions = {}): ZodValidationPipeClass
+```
 
 Creates a custom zod validation pipe
 
@@ -309,7 +312,7 @@ const MyZodValidationPipe = createZodValidationPipe({
 })
 ```
 ##### Parameters
-- `options.createValidationException` A callback that will be called with the zod error when a parsing error occurs.  Should return a new instance of `Error`
+- `params.createValidationException` - A callback that will be called with the zod error when a parsing error occurs.  Should return a new instance of `Error`
 
 #### `ZodValidationException`
 
@@ -443,6 +446,9 @@ function ZodResponse<TSchema extends RequiredBy<UnknownSchema, 'array'>>({ statu
 
 Consolidation of multiple decorators that allows setting the run-time, compile-time, and docs-time schema all at once
 
+> [!NOTE]
+> For this feature to work, please ensure [`ZodSerializerInterceptor`](#zodserializerinterceptor-get-nestjs-to-serialize-responses-with-zod) and [`cleanupOpenApiDoc`](#cleanupopenapidoc-ensure-proper-openapi-output) are setup correctly
+
 ##### Parameters
 - `params.status` - Optionally sets the "happy-path" `status` of the response.  If provided, sets the status code using `@HttpCode` from `nestjs/common` and using `@ApiResponse` from `nestjs/swagger`
 - `params.description` - Optionally sets a description of the response using `@ApiResponse`
@@ -533,7 +539,7 @@ Cleans up the generated OpenAPI doc by applying some post-processing
   - `3.0` - Nullable fields will use `nullable: true`
 
 ##### Example
-To complete the swagger integration/setup, `cleanupOpenApiDoc` needs to be called with the generated open api doc.  This function performs some necessary post-processing
+To complete the swagger integration/setup, `cleanupOpenApiDoc` needs to be called with the generated open api doc, like so:
 
 ```diff
   const openApiDoc = SwaggerModule.createDocument(app, 
@@ -577,7 +583,7 @@ class BookDto extends createZodDto(z.object({ title: z.string(), author: Author 
 class BlogPostDto extends createZodDto(z.object({ title: z.string(), author: Author })) { }
 ```
 Will result in this OpenAPI document:
-```json
+```jsonc
 {
   "components": {
     "schemas": {
