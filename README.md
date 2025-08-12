@@ -208,11 +208,20 @@ Check out the [example app](./packages/example/) for a full example of how to in
 ```ts
 function createZodDto<TSchema extends UnknownSchema>(schema: TSchema): ZodDto<TSchema>;
 ```
+Creates a nestjs DTO from a zod schema.  These zod DTOs can be used in place of `class-validator` / `class-transformer` DTOs. Zod DTOs are responsible for three things:
 
-Creates a nestjs DTO from a zod schema.  These zod DTOs can be used in place of `class-validator` / `class-transformer` DTOs. **Note:** For this feature to work, please ensure [`ZodValidationPipe`](#zodvalidationpipe-get-nestjs-to-validate-using-zod) is setup correctly
+1. Providing a schema for `ZodValidationPipe` to validate incoming client data against
+2. Providing a compile-time typescript type from the Zod schema
+3. Providing an OpenAPI schema when using `nestjs/swagger`
 
-See an example below of how to create a zod DTO:
+> [!NOTE]
+> For this feature to work, please ensure [`ZodValidationPipe`](#zodvalidationpipe-get-nestjs-to-validate-using-zod) is setup correctly
 
+##### Parameters
+- `schema` - A zod schema.  You can "bring your own zod", including zod v3 schemas, v4 schemas, zod mini schemas, etc.  The only requirement is that the schema has a method called `parse`
+
+##### Example
+###### Creating a zod DTO
 ```ts
 import { createZodDto } from 'nestjs-zod'
 import { z } from 'zod'
@@ -225,21 +234,7 @@ const CredentialsSchema = z.object({
 // class is required for using DTO as a type
 class CredentialsDto extends createZodDto(CredentialsSchema) {}
 ```
-
-> [!NOTE]
-> We need to use the `class <dtoname> extends createZodDto(...` syntax because nestjs/typescript requires classes be used for DTOs
-
-##### Parameters
-- `schema` - A zod schema.  You can "bring your own zod", including zod v3 schemas, v4 schemas, zod mini schemas, etc.  The only requirement is that the schema has a method called `parse`
-
-##### Using Zod DTOs
-
-Zod DTOs are responsible for three things:
-
-1. Providing a schema for `ZodValidationPipe` to validate incoming client data against
-2. Providing a compile-time typescript type from the Zod schema
-3. Providing an OpenAPI schema when using `nestjs/swagger`
-
+###### Using a zod DTO
 ```ts
 @Controller('auth')
 class AuthController {
@@ -267,7 +262,8 @@ class AuthController {
 
 When the data is invalid it throws a [ZodValidationException](#zodvalidationexception).
 
-##### Globally (recommended)
+##### Example
+###### Globally (recommended)
 
 ```ts
 import { ZodValidationPipe } from 'nestjs-zod'
@@ -284,8 +280,7 @@ import { APP_PIPE } from '@nestjs/core'
 export class AppModule {}
 ```
 
-##### Locally
-
+###### Locally
 ```ts
 import { ZodValidationPipe } from 'nestjs-zod'
 
@@ -299,29 +294,11 @@ class AuthController {
   async signIn() {}
 }
 ```
-
-Also, you can instantly pass a Schema or DTO:
-
-```ts
-import { ZodValidationPipe } from 'nestjs-zod'
-import { UserDto, UserSchema } from './auth.contracts'
-
-// using schema
-@UsePipes(new ZodValidationPipe(UserSchema))
-// using DTO
-@UsePipes(new ZodValidationPipe(UserDto))
-class AuthController {}
-
-class AuthController {
-  // the same applies to route-level
-  async signIn() {}
-}
-```
-
 #### `createZodValidationPipe` (Creating custom validation pipe)
 
-You can also create a custom validation pipe if desired:
+Creates a custom zod validation pipe
 
+##### Example
 ```ts
 import { createZodValidationPipe } from 'nestjs-zod'
 
