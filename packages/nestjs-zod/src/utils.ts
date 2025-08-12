@@ -30,6 +30,36 @@ export function fixAllRefs({ schema, defRenames, rootSchemaName }: { schema: JSO
     })
 }
 
+export function fixNull(schema: JSONSchema.BaseSchema) {
+  return walkJsonSchema(schema, (s) => {
+    if (Object.keys(s).length === 1 && s.anyOf) {
+      const nullSchema = s.anyOf.findIndex(subSchema => subSchema.type === 'null');
+      if (nullSchema !== -1) {
+        s.anyOf.splice(nullSchema, 1);
+      }
+
+      if (s.anyOf.length === 1) {
+        return {
+          ...s.anyOf[0],
+          nullable: true,
+        }
+      }
+
+      return {
+        anyOf: s.anyOf.map(subSchema => ({
+          ...subSchema,
+          nullable: true,
+        })),
+      }
+    }
+
+
+    return s;
+  }, {
+    clone: true
+  });
+}
+
 import deepmerge from 'deepmerge'
 
 export function walkJsonSchema(schema: JSONSchema.BaseSchema, callback: (schema: JSONSchema.BaseSchema) => JSONSchema.BaseSchema, options?: { clone?: boolean }) {

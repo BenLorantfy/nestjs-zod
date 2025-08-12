@@ -2,7 +2,7 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, REPLACE_ROOT_WITH_ARRAY_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, REPLACE_ROOT_WITH_ARRAY_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
@@ -68,14 +68,7 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
     return {};
   }
 
-  const generatedJsonSchema = '_zod' in schema ? toJSONSchema(schema, {
-    io,
-    override: ({ jsonSchema }) => {
-        if (io === 'output' && 'id' in jsonSchema) {
-            jsonSchema.id = `${jsonSchema.id}_Output`;
-        }
-    } 
-  }) : zodV3ToOpenAPI(schema)
+  const { $defs, ...generatedJsonSchema } = generateJsonSchema(schema, io);
 
   const jsonSchema = generatedJsonSchema.type === 'array' ? {
     type: 'object', 
@@ -84,13 +77,17 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
         ...generatedJsonSchema,
         [REPLACE_ROOT_WITH_ARRAY_KEY]: true
       } 
-    } 
-  } : generatedJsonSchema;
+    },
+    $defs,
+  } : {
+    ...generatedJsonSchema,
+    $defs,
+  };
 
   // @ts-expect-error
   assert(isObjectType(jsonSchema), 'createZodDto must be called with an object type');
   
-  const hasRefs = checkSchemaHasRefs(jsonSchema);
+  const { hasRefs, hasNull} = getSchemaMetadata(jsonSchema);
 
   let properties: Record<string, unknown> = {};
   for (let [propertyKey, propertySchema] of Object.entries(jsonSchema.properties)) {
@@ -112,6 +109,10 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
       // `cleanupOpenApiDoc`
       type: propertySchema.type || '', 
     };
+
+    if (hasNull) {
+      newPropertySchema[HAS_NULL_KEY] = true;
+    }
 
     if (hasRefs) {
       newPropertySchema[PARENT_HAS_REFS_KEY] = true;
@@ -159,16 +160,70 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
   return properties;
 }
 
-function checkSchemaHasRefs(jsonSchema: JSONSchema.BaseSchema) {
+function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }), io: 'input' | 'output') {
+  const generatedJsonSchema = '_zod' in schema ? toJSONSchema(schema, {
+    io,
+    override: ({ jsonSchema }) => {
+        if (io === 'output' && 'id' in jsonSchema) {
+            jsonSchema.id = `${jsonSchema.id}_Output`;
+        }
+    } 
+  }) : zodV3ToOpenAPI(schema)
+
+  const $defs = ('$defs' in generatedJsonSchema && generatedJsonSchema.$defs) ? generatedJsonSchema.$defs : undefined;
+
+  // Ensure the $ref is pointing to the correct schema
+  // @ts-expect-error
+  const newSchema = walkJsonSchema(generatedJsonSchema, (schema) => {
+    if (schema.$ref && schema.$ref.startsWith('#/$defs/')) {
+      const defKey = schema.$ref.replace('#/$defs/', '');
+      const defId = $defs?.[defKey].id;
+      if (defId) {
+        schema.$ref = `#/$defs/${defId}`;
+      }
+
+    }
+    return schema;
+  }, { clone: true});
+
+  // Ensure the key in the $defs object is the same as the id of the schema
+  const newDefs: Record<string, JSONSchema.BaseSchema> = {};
+  Object.entries($defs || {}).forEach(([defKey, defValue]) => {
+    if (defValue.id) {
+      const newKey = defValue.id || defKey;
+      if (newDefs[newKey]) {
+        throw new Error(`[nestjs-zod] Duplicate id in $defs: ${newKey}`);
+      }
+      newDefs[newKey] = defValue;
+    } else {
+      newDefs[defKey] = defValue;
+    }
+  });
+
+  if ($defs) {
+    newSchema.$defs = newDefs;
+  }
+
+  return newSchema;
+}
+
+function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
   let hasRefs = false;
+  let hasNull = false;
   walkJsonSchema(jsonSchema, (schema) => {
+    if (schema.type === 'null') {
+      hasNull = true;
+    }
     if (schema.$ref) {
       hasRefs = true;
     }
     return schema;
   });
 
-  return hasRefs;
+  return {
+    hasRefs,
+    hasNull,
+  }
 }
 
 export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema> {
