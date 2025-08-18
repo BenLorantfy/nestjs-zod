@@ -1,10 +1,16 @@
 import { applyDecorators, HttpCode } from '@nestjs/common';
-import { ApiResponse } from '@nestjs/swagger';
 import { ZodSerializerDto } from './serializer';
 import { ZodDto } from './dto';
 import { assert } from './assert';
 import { input } from 'zod/v4/core';
 import { RequiredBy, UnknownSchema } from './types';
+
+let ApiResponse: typeof import('@nestjs/swagger').ApiResponse | undefined
+try {
+  ApiResponse = require('@nestjs/swagger').ApiResponse
+} catch (e) {
+
+}
 
 /**
  * `@ZodResponse` can be used to set the response information for a method.
@@ -46,6 +52,8 @@ import { RequiredBy, UnknownSchema } from './types';
 export function ZodResponse<TSchema extends UnknownSchema>({ status, description, type }: { status?: number, description?: string, type: ZodDto<TSchema> & { io: "input" } }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void
 export function ZodResponse<TSchema extends RequiredBy<UnknownSchema, 'array'>>({ status, description, type }: { status?: number, description?: string, type: [ZodDto<TSchema> & { io: "input" }] }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => Array<input<TSchema>>|Promise<Array<input<TSchema>>>>, 'value'>) => void
 export function ZodResponse<TSchema extends UnknownSchema>({ status, description, type }: { status?: number, description?: string, type: (ZodDto<TSchema> & { io: "input" })|[ZodDto<TSchema> & { io: "input" }] }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => Array<input<TSchema>>|Promise<Array<input<TSchema>>>|input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void {
+  assert(ApiResponse, 'ZodResponse requires @nestjs/swagger to be installed');
+
   if (Array.isArray(type)) {
     assert(type[0].io === "input", 'ZodResponse automatically uses the output version of the DTO, there is no need to use DTO.Output');
 
