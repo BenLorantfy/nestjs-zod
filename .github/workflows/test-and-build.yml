@@ -52,22 +52,22 @@ jobs:
         run: |
           cd packages/example-dual-zods && pnpm run start &
           cd packages/example-dual-zods && pnpm run test:swagger
-      - name: Get current date
-        if: github.head_ref == 'v5'
-        id: date
-        run: echo "date=$(date -u +'%Y%m%dT%H%M%S')" >> $GITHUB_OUTPUT
-      - name: Set beta version
-        if: github.head_ref == 'v5'
-        uses: reedyuk/npm-version@1.1.1
-        with:
-          version: 5.0.0-beta.${{ steps.date.outputs.date }}
-          package: 'packages/nestjs-zod'
-      - name: Publish beta version
-        if: github.head_ref == 'v5'
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: |
-          cd packages/nestjs-zod
-          npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
-          npm publish --tag next
+      # - name: Get current date
+      #   if: github.head_ref == 'v5'
+      #   id: date
+      #   run: echo "date=$(date -u +'%Y%m%dT%H%M%S')" >> $GITHUB_OUTPUT
+      # - name: Set beta version
+      #   if: github.head_ref == 'v5'
+      #   uses: reedyuk/npm-version@1.1.1
+      #   with:
+      #     version: 5.0.0-beta.${{ steps.date.outputs.date }}
+      #     package: 'packages/nestjs-zod'
+      # - name: Publish beta version
+      #   if: github.head_ref == 'v5'
+      #   env:
+      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      #   run: |
+      #     cd packages/nestjs-zod
+      #     npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
+      #     npm publish --tag next
 
