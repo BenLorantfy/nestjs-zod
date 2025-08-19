@@ -2,7 +2,7 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, REPLACE_ROOT_WITH_ARRAY_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, UNWRAP_ROOT_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
@@ -42,7 +42,7 @@ export function createZodDto<
         }
 
         public static _OPENAPI_METADATA_FACTORY() {
-          return openApiMetadataFactory(this.schema, "output");
+          return openApiMetadataFactory({ schema: this.schema, io: "output" });
         }
       }
 
@@ -52,14 +52,20 @@ export function createZodDto<
     }
 
     public static _OPENAPI_METADATA_FACTORY() {
-      return openApiMetadataFactory(this.schema, "input");
+      return openApiMetadataFactory({ schema: this.schema, io: "input" });
     }
   }
 
   return AugmentedZodDto as unknown as ZodDto<TSchema> & { io: "input" }
 }
 
-function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }), io: 'input' | 'output') {
+function openApiMetadataFactory({ 
+  schema, 
+  io,
+}: { 
+  schema: UnknownSchema | z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }), 
+  io: 'input' | 'output',
+}) {
   if (!('_zod' in schema) && '_def' in schema && io === 'output') {
     throw new Error('[nestjs-zod] Output schemas are not supported for zod@v3');
   }
@@ -70,29 +76,39 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
 
   const { $defs, ...generatedJsonSchema } = generateJsonSchema(schema, io);
 
-  const jsonSchema = generatedJsonSchema.type === 'array' ? {
-    type: 'object', 
+  /**
+   * nestjs expects us to return a record of properties
+   *
+   * However, in some cases, we can't return a record of properties.  For
+   * example, arrays, intersections, and unions can not be represented like this
+   *
+   * As a workaround, we wrap the schema in a "root" object.  Then in the
+   * `cleanupOpenApiDoc` function, we unwrap the root object.
+   */
+  const jsonSchema: JSONSchema.JSONSchema & {
+    type: "object";
+    required?: string[];
+    properties?: Record<string, Record<string, unknown>>;
+  } = !isObjectType(generatedJsonSchema) ? {
+    type: 'object' as const, 
     properties: { 
-      array: {
+      root: {
         ...generatedJsonSchema,
-        [REPLACE_ROOT_WITH_ARRAY_KEY]: true
-      } 
+        [UNWRAP_ROOT_KEY]: true
+      }
     },
     $defs,
   } : {
     ...generatedJsonSchema,
     $defs,
   };
-
-  // @ts-expect-error
-  assert(isObjectType(jsonSchema), 'createZodDto must be called with an object type');
   
   const { hasRefs, hasNull} = getSchemaMetadata(jsonSchema);
 
   let properties: Record<string, unknown> = {};
-  for (let [propertyKey, propertySchema] of Object.entries(jsonSchema.properties)) {
+  for (let [propertyKey, propertySchema] of Object.entries(jsonSchema.properties || {})) {
     const newPropertySchema: Record<string, unknown> = {
-      // TOOD: figure out why this fails at compile time
+      // TODO: figure out why this fails at compile time
       ...(propertySchema as Record<string, unknown>),
 
       // Note: nestjs throws the following error message if `type` is
@@ -132,7 +148,7 @@ function openApiMetadataFactory(schema: UnknownSchema | z3.ZodTypeAny | ($ZodTyp
     // As an apparent (and undocumented) workaround, nestjs expects you to
     // return `selfRequired: true` (for objects) or `required: true` (for
     // non-objects) if the field is required
-    const required = Boolean(jsonSchema.required?.includes(propertyKey));
+    const required = Boolean('required' in jsonSchema && jsonSchema.required?.includes(propertyKey));
     if (newPropertySchema.type === 'object') {
       newPropertySchema.selfRequired = required;
     } else {
@@ -230,6 +246,6 @@ export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema> {
   return Boolean(metatype && (typeof metatype === 'object' || typeof metatype === 'function') && 'isZodDto' in metatype && metatype.isZodDto);
 }
 
-function isObjectType(jsonSchema: JSONSchema.BaseSchema): jsonSchema is JSONSchema.BaseSchema & { type: 'object', required?: string[]; properties: Record<string, Record<string, unknown>> } {
-  return jsonSchema.type === 'object' && 'properties' in jsonSchema && typeof jsonSchema.properties === 'object' && !!jsonSchema.properties;
+function isObjectType(jsonSchema: JSONSchema.BaseSchema): jsonSchema is JSONSchema.BaseSchema & { type: 'object', required?: string[]; properties?: Record<string, Record<string, unknown>> } {
+  return jsonSchema.type === 'object';
 }

@@ -81,14 +81,8 @@
     "zod": "^3.25.0 || ^4.0.0"
   },
   "peerDependenciesMeta": {
-    "@nestjs/common": {
-      "optional": true
-    },
     "@nestjs/swagger": {
       "optional": true
-    },
-    "zod": {
-      "optional": false
     }
   },
   "dependencies": {
