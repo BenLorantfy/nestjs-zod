@@ -196,6 +196,97 @@ describe('unions', () => {
     });
 });
 
+describe('intersections', () => {
+    test('v4', async () => {
+        class BookDto extends createZodDto(
+            z.intersection(
+                z.object({
+                    numPages: z.string(),
+                }),
+                z.object({
+                    numPages: z.number(),
+                })
+            )
+        ) { }
+    
+        @Controller()
+        class BookController {
+            constructor() { }
+    
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+    
+        const doc = await getSwaggerDoc(BookController);
+        expect(get(doc, 'components.schemas.BookDto')).toEqual(expect.objectContaining({
+            allOf: [
+                {
+                    type: 'object',
+                    properties: {
+                        numPages: {
+                            type: 'string',
+                        }
+                    },
+                    required: [
+                        'numPages'
+                    ]
+                },
+                {
+                    type: 'object',
+                    properties: {
+                        numPages: {
+                            type: 'number',
+                        }
+                    },
+                    required: [
+                        'numPages'
+                    ]
+                }
+            ]
+        }));
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+
+    test('v3', async () => {
+        class BookDto extends createZodDto(
+            z3.intersection(
+                z3.object({
+                    numPages: z3.string(),
+                }),
+                z3.object({
+                    numPages: z3.number(),
+                })
+            )
+        ) { }
+    
+        @Controller()
+        class BookController {
+            constructor() { }
+    
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+    
+        const doc = await getSwaggerDoc(BookController);
+        expect(get(doc, 'components.schemas.BookDto')).toEqual({
+            type: 'object',
+            properties: {
+                numPages: {
+                    type: 'number',
+                }
+            },
+            required: [
+                'numPages'
+            ]
+        });
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+})
+
 describe('basic nullable fields', () => {
     test.each([
         'v4',
@@ -539,7 +630,7 @@ test('throws error if using array DTO for parameters', async () => {
         }
     }
 
-    await expect(getSwaggerDoc(BookController)).rejects.toThrow('[cleanupOpenApiDoc] Array DTOs are not supported for query or url parameters')
+    await expect(getSwaggerDoc(BookController)).rejects.toThrow('[cleanupOpenApiDoc] Query or url parameters must be an object type')
 })
 
 test('named schemas', async () => {        

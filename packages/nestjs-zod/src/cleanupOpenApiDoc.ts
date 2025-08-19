@@ -2,7 +2,7 @@ import type { OpenAPIObject } from '@nestjs/swagger';
 import deepmerge from 'deepmerge';
 import { JSONSchema } from 'zod/v4/core';
 import { fixAllRefs, fixNull } from './utils';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, REPLACE_ROOT_WITH_ARRAY_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY } from './const';
 import { isDeepStrictEqual } from 'node:util';
 
 type DtoSchema = Exclude<Exclude<OpenAPIObject['components'], undefined>['schemas'], undefined>[string];
@@ -158,16 +158,17 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
 
         // When the consumer does this `createZodDto(z.array(...))`, then
         // `_OPENAPI_METADATA_FACTORY` will return: 
-        // `{ array: { type: 'array', [REPLACE_ROOT_WITH_ARRAY_KEY]: true } }`
+        // `{ root: { type: 'array', [UNWRAP_ROOT_KEY]: true } }`
         // This is a workaround for the fact that the factory doesn't support
         // returning array schemas directly.  
-        // If we see `REPLACE_ROOT_WITH_ARRAY_KEY`, then we unwrap the array
+        // If we see `UNWRAP_ROOT_KEY`, then we unwrap the array
         // schema (replace the root object schema with the array schema)
-        if (newOpenapiSchema.properties && 'array' in newOpenapiSchema.properties && 'type' in newOpenapiSchema.properties.array && newOpenapiSchema.properties.array.type === 'array' && REPLACE_ROOT_WITH_ARRAY_KEY in newOpenapiSchema.properties.array) {
-            const replaceRoot = newOpenapiSchema.properties.array[REPLACE_ROOT_WITH_ARRAY_KEY];
-            delete newOpenapiSchema.properties.array[REPLACE_ROOT_WITH_ARRAY_KEY];
+        if (newOpenapiSchema.properties && 'root' in newOpenapiSchema.properties && UNWRAP_ROOT_KEY in newOpenapiSchema.properties.root) {
+            const replaceRoot = newOpenapiSchema.properties.root[UNWRAP_ROOT_KEY];
+            delete newOpenapiSchema.properties.root[UNWRAP_ROOT_KEY];
             if (replaceRoot) {
-                newOpenapiSchema = newOpenapiSchema.properties.array;
+                // @ts-expect-error TODO: fix this
+                newOpenapiSchema = newOpenapiSchema.properties.root;
             }
         }
 
@@ -216,8 +217,8 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                     }
                 }
 
-                if (REPLACE_ROOT_WITH_ARRAY_KEY in parameter) {
-                    throw new Error(`[cleanupOpenApiDoc] Array DTOs are not supported for query or url parameters`);
+                if (UNWRAP_ROOT_KEY in parameter) {
+                    throw new Error(`[cleanupOpenApiDoc] Query or url parameters must be an object type`);
                 }
 
                 // Add each $def as a schema
