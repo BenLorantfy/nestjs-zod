@@ -46,7 +46,7 @@
 
 1. Install the package:
     ```bash
-    npm install nestjs-zod # Note: zod >= 3.25.0 is also required
+    npm install nestjs-zod # Note: zod >= 3.25.0 || ^4.0.0 is also required
     ```
 2. Add `ZodValidationPipe` to the `AppModule`
     <details>
