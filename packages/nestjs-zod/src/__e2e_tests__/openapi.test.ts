@@ -1465,6 +1465,71 @@ test('recursive unnamed sub-schemas', async () => {
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
 })
 
+test('recursive unnamed sub-schema with record', async () => {
+    const Dog = z.object({
+        name: z.string(),
+        get children() {
+            return z.record(z.string(), Dog);
+        }
+    })
+
+    const DogPerson = z.object({
+        name: z.string(),
+        dog: Dog,
+    })
+
+    class DogPersonDto extends createZodDto(DogPerson) { }
+
+    @Controller()
+    class MyController {
+        constructor() { }
+
+        @Get('/dog-person')
+        @ApiResponse({
+            type: DogPersonDto,
+        })
+        getDogPerson() {
+            return {};
+        }
+    }
+
+    const doc = await getSwaggerDoc(MyController);
+    expect(doc.components?.schemas).toEqual({
+        DogPersonDto: {
+            type: 'object',
+            properties: {
+                name: {
+                    type: 'string',
+                },
+                dog: {
+                    '$ref': '#/components/schemas/DogPersonDto__schema0'
+                }
+            },
+            required: ['name', 'dog']
+        },
+        DogPersonDto__schema0: {
+            type: 'object',
+            properties: {
+                name: {
+                    type: 'string',
+                },
+                children: {
+                    type: 'object',
+                    propertyNames: {
+                        type: 'string',
+                    },
+                    additionalProperties: {
+                        '$ref': '#/components/schemas/DogPersonDto__schema0'
+                    }
+                }
+            },
+            required: ['name', 'children']
+        }
+    });
+    expect(get(doc, 'paths./dog-person.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/DogPersonDto');
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+})
+
 test('throws an error if trying to use recursive schemas in parameters', async () => {
     const QueryParams = z.object({
         name: z.string(),
