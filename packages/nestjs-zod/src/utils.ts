@@ -100,6 +100,10 @@ export function walkJsonSchema(schema: JSONSchema.BaseSchema, callback: (schema:
     schema.allOf = schema.allOf.map(subSchema => walkJsonSchema(subSchema, callback));
   }
 
+  if (typeof schema.additionalProperties === 'object') {
+    schema.additionalProperties = walkJsonSchema(schema.additionalProperties, callback);
+  }
+
 //   // Handle not
 //   if (schema.not) {
 //     schema.not = walkJsonSchema(schema.not, callback);
