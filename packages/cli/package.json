@@ -1,0 +1,12 @@
+{
+    "name": "@nest-zod/cli",
+    "description": "CLI for NestJS + Zod",
+    "type": "commonjs",
+    "devDependencies": {
+        "@types/jscodeshift": "^17.3.0",
+        "jscodeshift": "^17.3.0"
+    },
+    "dependencies": {
+        "enquirer": "^2.4.1"
+    }
+}
