@@ -2,7 +2,7 @@ import type { OpenAPIObject } from '@nestjs/swagger';
 import deepmerge from 'deepmerge';
 import { JSONSchema } from 'zod/v4/core';
 import { fixAllRefs, fixNull } from './utils';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY } from './const';
 import { isDeepStrictEqual } from 'node:util';
 
 type DtoSchema = Exclude<Exclude<OpenAPIObject['components'], undefined>['schemas'], undefined>[string];
@@ -73,8 +73,14 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
 
             // Rename the schema if using `meta({ id: "NewName" })`
             if (PARENT_ID_KEY in propertySchema && typeof propertySchema[PARENT_ID_KEY] === 'string') {
+                Object.assign(newOpenapiSchema, { id: propertySchema[PARENT_ID_KEY] });
                 newSchemaName = propertySchema[PARENT_ID_KEY];
                 delete propertySchema[PARENT_ID_KEY];
+            }
+
+            if (PARENT_ADDITIONAL_PROPERTIES_KEY in propertySchema && typeof propertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY] === 'boolean') {
+                newOpenapiSchema.additionalProperties = propertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY];
+                delete propertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY];
             }
 
             // Add each $def as a schema
