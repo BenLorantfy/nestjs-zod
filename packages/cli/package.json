@@ -1,5 +1,5 @@
 {
-    "name": "@nest-zod/cli",
+    "name": "nestjs-zod-cli",
     "description": "CLI for NestJS + Zod",
     "type": "commonjs",
     "devDependencies": {
