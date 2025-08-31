@@ -1804,6 +1804,69 @@ describe('issue#187', () => {
     })
 })
 
+describe('issue#188', () => {
+    test('nullable and union', async () => {
+        const NullableFieldAndUnionFieldSchema = z.object({
+            username: z.string().nullable(),
+            union: z.union([
+              z.object({
+                userId: z.string(),
+              }),
+              z.object({
+                roundId: z.string(),
+              }),
+            ]),
+          });
+        
+          
+          class NullableFieldAndUnionFieldDto extends createZodDto(NullableFieldAndUnionFieldSchema) {}
+
+          @Controller()
+          class ThingController {
+            @Get('thing')
+            async thing(@Body() body: NullableFieldAndUnionFieldDto) {
+              throw new Error()
+            }
+          }
+
+          const doc = await getSwaggerDoc(ThingController);
+          expect(doc.components?.schemas).toEqual({
+            NullableFieldAndUnionFieldDto: {
+                properties: {
+                    username: {
+                        type: 'string',
+                        nullable: true,
+                    },
+                    union: {
+                        anyOf: [
+                            {
+                                properties: {
+                                    userId: {
+                                        type: 'string',
+                                    }
+                                },
+                                required: ['userId'],
+                                type: 'object'
+                            },
+                            {
+                                properties: {
+                                    roundId: {
+                                        type: 'string',
+                                    }
+                                },
+                                required: ['roundId'],
+                                type: 'object'
+                            }
+                        ]
+                    }
+                },
+                required: ['username', 'union'],
+                type: 'object'
+            }
+          })
+    })
+})
+
 async function createApp(controllerClass: Type<unknown>) {
     @Module({
         imports: [],
