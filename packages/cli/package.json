@@ -1,13 +1,13 @@
 {
     "name": "nestjs-zod-cli",
     "description": "CLI for nestjs-zod",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "type": "commonjs",
     "devDependencies": {
         "@types/jscodeshift": "^17.3.0"
     },
     "bin": {
-        "nestjs-zod-cli": "bin/index.js"
+        "nestjs-zod-cli": "index.js"
     },
     "dependencies": {
         "enquirer": "^2.4.1",
