@@ -74,7 +74,7 @@ function openApiMetadataFactory({
     return {};
   }
 
-  const { $defs, ...generatedJsonSchema } = generateJsonSchema(schema, io);
+  const { $defs, $schema, ...generatedJsonSchema } = generateJsonSchema(schema, io);
 
   /**
    * nestjs expects us to return a record of properties
@@ -89,7 +89,7 @@ function openApiMetadataFactory({
     type: "object";
     required?: string[];
     properties?: Record<string, Record<string, unknown>>;
-  } = !isObjectType(generatedJsonSchema) ? {
+  } = !isObjectTypeWithProperties(generatedJsonSchema) ? {
     type: 'object' as const, 
     properties: { 
       root: {
@@ -250,6 +250,6 @@ export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema> {
   return Boolean(metatype && (typeof metatype === 'object' || typeof metatype === 'function') && 'isZodDto' in metatype && metatype.isZodDto);
 }
 
-function isObjectType(jsonSchema: JSONSchema.BaseSchema): jsonSchema is JSONSchema.BaseSchema & { type: 'object', required?: string[]; properties?: Record<string, Record<string, unknown>> } {
-  return jsonSchema.type === 'object';
+function isObjectTypeWithProperties(jsonSchema: JSONSchema.BaseSchema): jsonSchema is JSONSchema.BaseSchema & { type: 'object', required?: string[]; properties?: Record<string, Record<string, unknown>> } {
+  return jsonSchema.type === 'object' && !!jsonSchema.properties && Object.keys(jsonSchema.properties).length > 0;
 }

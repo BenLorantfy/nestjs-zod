@@ -1618,141 +1618,190 @@ test('does not touch refs for schemas that are not from a zod dto', async () => 
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
 })
 
-test('issue#187 - correctly reuses schema when used directly as a DTO and when used as a sub-schema', async () => {
-    class Thing extends createZodDto(
-      z.object({ name: z.string() }).meta({
-        id: 'Thing',
-      })
-    ) {}
-  
-    class Box extends createZodDto(z.object({ thing: Thing.schema })) {}
-  
-    @Controller()
-    class ThingController {
-      @Get('boxed')
-      @ApiResponse({ type: Box })
-      async boxed(@Body() request: Box) {
-        throw new Error()
-      }
-  
-      @Get('directResponse')
-      @ApiResponse({ type: Thing })
-      async direct1Response() {
-        throw new Error()
-      }
-    }
-  
-    const doc = await getSwaggerDoc(ThingController, { cleanUp: true })
-    expect(doc.components?.schemas).toEqual({
-        Box: {
-            properties: {
-                thing: {
-                    '$ref': '#/components/schemas/Thing'
-                }
-            },
-            required: ['thing'],
-            type: 'object'
-        },
-        Thing: {
+describe('issue#187', () => {
+    test('correctly reuses schema when used directly as a DTO and when used as a sub-schema', async () => {
+        class Thing extends createZodDto(
+          z.object({ name: z.string() }).meta({
             id: 'Thing',
-            properties: {
-                name: {
-                    type: 'string',
-                }
-            },
-            required: ['name'],
-            type: 'object'
+          })
+        ) {}
+      
+        class Box extends createZodDto(z.object({ thing: Thing.schema })) {}
+      
+        @Controller()
+        class ThingController {
+          @Get('boxed')
+          @ApiResponse({ type: Box })
+          async boxed(@Body() request: Box) {
+            throw new Error()
+          }
+      
+          @Get('thing')
+          @ApiResponse({ type: Thing })
+          async direct1Response() {
+            throw new Error()
+          }
         }
-    });
-    expect(get(doc, 'paths./boxed.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Box');
-    expect(get(doc, 'paths./directResponse.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Thing');
-    expect(JSON.stringify(doc)).not.toContain(PREFIX);
-})
-
-test('issue#187 - correctly reuses schema when used directly as an Output DTO and when used as a sub-schema', async () => {
-    class Thing2 extends createZodDto(
-      z.object({ nameObj: z.object({ name: z.string() }) }).meta({
-        id: 'Thing2',
-      })
-    ) {}
-  
-    class Box extends createZodDto(z.object({ thing: Thing2.schema })) {}
-  
-    @Controller()
-    class ThingController {
-      @Get('boxed')
-      @ApiResponse({ type: Box.Output })
-      async boxed(@Body() request: Box) {
-        throw new Error()
-      }
-  
-      @Get('directResponse')
-      @ApiResponse({ type: Thing2.Output })
-      async direct1Response() {
-        throw new Error()
-      }
-    }
-  
-    const doc = await getSwaggerDoc(ThingController, { cleanUp: true })
-    expect(doc.components?.schemas).toEqual({
-        Box: {
-            properties: {
-                thing: {
-                    '$ref': '#/components/schemas/Thing2'
-                }
+      
+        const doc = await getSwaggerDoc(ThingController, { cleanUp: true })
+        expect(doc.components?.schemas).toEqual({
+            Box: {
+                properties: {
+                    thing: {
+                        '$ref': '#/components/schemas/Thing'
+                    }
+                },
+                required: ['thing'],
+                type: 'object'
             },
-            required: ['thing'],
-            type: 'object'
-        },
-        Box_Output: {
-            additionalProperties: false,
-            properties: {
-                thing: {
-                    '$ref': '#/components/schemas/Thing2_Output'
-                }
-            },
-            required: ['thing'],
-            type: 'object',
-        },
-        Thing2: {
+            Thing: {
+                id: 'Thing',
+                properties: {
+                    name: {
+                        type: 'string',
+                    }
+                },
+                required: ['name'],
+                type: 'object'
+            }
+        });
+        expect(get(doc, 'paths./boxed.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Box');
+        expect(get(doc, 'paths./thing.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Thing');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+    
+    test('correctly reuses schema when used directly as an Output DTO and when used as a sub-schema', async () => {
+        class Thing2 extends createZodDto(
+          z.object({ nameObj: z.object({ name: z.string() }) }).meta({
             id: 'Thing2',
-            properties: {
-                nameObj: {
-                    properties: {
-                        name: {
-                            type: 'string',
-                        }
-                    },
-                    required: ['name'],
-                    type: 'object'
-                }
-            },
-            required: ['nameObj'],
-            type: 'object'
-        },
-        Thing2_Output: {
-            id: 'Thing2_Output',
-            additionalProperties: false,
-            properties: {
-                nameObj: {
-                    additionalProperties: false,
-                    properties: {
-                        name: {
-                            type: 'string'
-                        }
-                    },
-                    required: ['name'],
-                    type: 'object'
-                }
-            },
-            required: ['nameObj'],
-            type: 'object'
+          })
+        ) {}
+      
+        class Box extends createZodDto(z.object({ thing: Thing2.schema })) {}
+      
+        @Controller()
+        class ThingController {
+          @Get('boxed')
+          @ApiResponse({ type: Box.Output })
+          async boxed(@Body() request: Box) {
+            throw new Error()
+          }
+      
+          @Get('thing2')
+          @ApiResponse({ type: Thing2.Output })
+          async direct1Response() {
+            throw new Error()
+          }
         }
-    });
-
-    expect(get(doc, 'paths./boxed.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Box_Output');
-    expect(get(doc, 'paths./directResponse.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Thing2_Output');
-    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      
+        const doc = await getSwaggerDoc(ThingController, { cleanUp: true })
+        expect(doc.components?.schemas).toEqual({
+            Box: {
+                properties: {
+                    thing: {
+                        '$ref': '#/components/schemas/Thing2'
+                    }
+                },
+                required: ['thing'],
+                type: 'object'
+            },
+            Box_Output: {
+                additionalProperties: false,
+                properties: {
+                    thing: {
+                        '$ref': '#/components/schemas/Thing2_Output'
+                    }
+                },
+                required: ['thing'],
+                type: 'object',
+            },
+            Thing2: {
+                id: 'Thing2',
+                properties: {
+                    nameObj: {
+                        properties: {
+                            name: {
+                                type: 'string',
+                            }
+                        },
+                        required: ['name'],
+                        type: 'object'
+                    }
+                },
+                required: ['nameObj'],
+                type: 'object'
+            },
+            Thing2_Output: {
+                id: 'Thing2_Output',
+                additionalProperties: false,
+                properties: {
+                    nameObj: {
+                        additionalProperties: false,
+                        properties: {
+                            name: {
+                                type: 'string'
+                            }
+                        },
+                        required: ['name'],
+                        type: 'object'
+                    }
+                },
+                required: ['nameObj'],
+                type: 'object'
+            }
+        });
+    
+        expect(get(doc, 'paths./boxed.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Box_Output');
+        expect(get(doc, 'paths./thing2.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Thing2_Output');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+    
+    test('correctly reuses empty schema when used directly as a DTO and when used as a sub-schema', async () => {
+        class EmptyObject extends createZodDto(
+          z.object({}).meta({
+            id: 'EmptyObject',
+          })
+        ) {}
+      
+        class BoxedEmptyObject extends createZodDto(z.object({ emptyObject: EmptyObject.schema })) {}
+      
+        @Controller()
+        class EmptyObjectController {
+          @Get('boxed')
+          @ApiResponse({ type: BoxedEmptyObject })
+          async boxed() {
+            throw new Error()
+          }
+      
+          @Get('emptyObject')
+          @ApiResponse({ type: EmptyObject })
+          async emptyObject() {
+            throw new Error()
+          }
+        }
+      
+        const doc = await getSwaggerDoc(EmptyObjectController, { cleanUp: true })
+        expect(doc.components?.schemas).toEqual({
+            BoxedEmptyObject: {
+                properties: {
+                    emptyObject: {
+                        '$ref': '#/components/schemas/EmptyObject'
+                    }
+                },
+                required: ['emptyObject'],
+                type: 'object'
+            },
+            EmptyObject: {
+                id: 'EmptyObject',
+                type: 'object',
+                properties: {}
+            }
+        });
+        expect(get(doc, 'paths./boxed.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/BoxedEmptyObject');
+        expect(get(doc, 'paths./emptyObject.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/EmptyObject');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    
+    })
 })
 
 async function createApp(controllerClass: Type<unknown>) {
