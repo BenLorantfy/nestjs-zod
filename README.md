@@ -44,6 +44,17 @@
 
 ## Getting Started
 
+### Automatic Setup
+`nestjs-zod` can be automatically setup by running the following command:
+```bash
+npx nestjs-zod-cli /path/to/nestjs/project
+```
+This command runs a codemod that adds the validation pipe, serialization interceptor, http exception filter, and swagger cleanup function
+
+Alternatively, you can follow the manual setup steps below
+
+### Manual Setup
+
 1. Install the package:
     ```bash
     npm install nestjs-zod # Note: zod ^3.25.0 || ^4.0.0 is also required

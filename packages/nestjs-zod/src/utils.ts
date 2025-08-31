@@ -34,9 +34,11 @@ export function fixNull(schema: JSONSchema.BaseSchema) {
   return walkJsonSchema(schema, (s) => {
     if (Object.keys(s).length === 1 && s.anyOf) {
       const nullSchema = s.anyOf.findIndex(subSchema => subSchema.type === 'null');
-      if (nullSchema !== -1) {
-        s.anyOf.splice(nullSchema, 1);
+      if (nullSchema === -1) {
+        return s;
       }
+
+      s.anyOf.splice(nullSchema, 1);
 
       if (s.anyOf.length === 1) {
         return {

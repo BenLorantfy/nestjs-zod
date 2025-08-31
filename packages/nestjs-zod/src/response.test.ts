@@ -54,6 +54,7 @@ test('serializes the return value and sets the openapi doc', async () => {
 
     expect(get(openApiDoc, `components.schemas.${schemaName}`)).toEqual({
         type: 'object',
+        additionalProperties: false,
         properties: {
             id: { type: 'string', default: 'new-book' }
         },
@@ -139,6 +140,7 @@ test('serializes the return value and sets the openapi doc when using arrays', a
 
     expect(get(openApiDoc, `components.schemas.${schemaName}`)).toEqual({
         type: 'object',
+        additionalProperties: false,
         properties: {
             id: { type: 'string', default: 'new-book' }
         },

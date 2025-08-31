@@ -112,6 +112,10 @@ Or you can make the DTO itself an array:
 + @ZodSerializerDto(BookListDto)
 ```
 
+### [BREAKING] Minimum zod version raised to `^3.25.0 || ^4.0.0`
+
+Consumers need to upgrade `zod` to at-least `^3.25.0`
+
 ### Deprecated `createZodGuard`, `UseZodGuard`, and `ZodGuard`
 
 `createZodGuard` and friends have been deprecated.  This was a mistake to add to the library, for a few reasons:

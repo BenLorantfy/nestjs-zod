@@ -2,7 +2,7 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, UNWRAP_ROOT_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, UNWRAP_ROOT_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
@@ -74,7 +74,7 @@ function openApiMetadataFactory({
     return {};
   }
 
-  const { $defs, ...generatedJsonSchema } = generateJsonSchema(schema, io);
+  const { $defs, $schema, ...generatedJsonSchema } = generateJsonSchema(schema, io);
 
   /**
    * nestjs expects us to return a record of properties
@@ -89,7 +89,7 @@ function openApiMetadataFactory({
     type: "object";
     required?: string[];
     properties?: Record<string, Record<string, unknown>>;
-  } = !isObjectType(generatedJsonSchema) ? {
+  } = !isObjectTypeWithProperties(generatedJsonSchema) ? {
     type: 'object' as const, 
     properties: { 
       root: {
@@ -170,6 +170,10 @@ function openApiMetadataFactory({
       newPropertySchema[PARENT_ID_KEY] = jsonSchema.id;
     }
 
+    if (typeof jsonSchema.additionalProperties === 'boolean') {
+      newPropertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY] = jsonSchema.additionalProperties;
+    }
+
     properties[propertyKey] = newPropertySchema;
   }
 
@@ -246,6 +250,6 @@ export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema> {
   return Boolean(metatype && (typeof metatype === 'object' || typeof metatype === 'function') && 'isZodDto' in metatype && metatype.isZodDto);
 }
 
-function isObjectType(jsonSchema: JSONSchema.BaseSchema): jsonSchema is JSONSchema.BaseSchema & { type: 'object', required?: string[]; properties?: Record<string, Record<string, unknown>> } {
-  return jsonSchema.type === 'object';
+function isObjectTypeWithProperties(jsonSchema: JSONSchema.BaseSchema): jsonSchema is JSONSchema.BaseSchema & { type: 'object', required?: string[]; properties?: Record<string, Record<string, unknown>> } {
+  return jsonSchema.type === 'object' && !!jsonSchema.properties && Object.keys(jsonSchema.properties).length > 0;
 }

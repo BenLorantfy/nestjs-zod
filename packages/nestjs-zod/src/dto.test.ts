@@ -67,9 +67,9 @@ describe('zod/v4', () => {
     class UserDto extends createZodDto(UserSchema) {}
 
     expect(UserDto.Output._OPENAPI_METADATA_FACTORY()).toEqual({
-      username: { type: 'string', required: true },
-      password: { type: 'string', required: true },
-      myField: { type: 'string', required: true, default: 'myField' }
+      username: expect.objectContaining({ type: 'string', required: true }),
+      password: expect.objectContaining({ type: 'string', required: true }),
+      myField: expect.objectContaining({ type: 'string', required: true, default: 'myField' })
     })
   })
 })
