@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const {run: jscodeshift} = require('jscodeshift/src/Runner')
 const path = require('node:path');
 const { exec } = require('node:child_process');
