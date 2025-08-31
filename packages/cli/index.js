@@ -58,7 +58,7 @@ async function main() {
   logger.info('Updating app.module.ts');
   try {
     const result1 = await jscodeshift(
-      path.resolve('appModuleTransform.js'), 
+      path.join(__dirname, 'appModuleTransform.js'),
       [path.join(projectFolder, 'src', 'app.module.ts')], 
       options
     )
@@ -76,7 +76,7 @@ async function main() {
     logger.info('Updating main.ts');
     try {
       const result2 = await jscodeshift(
-        path.resolve('swaggerTransform.js'), 
+        path.join(__dirname, 'swaggerTransform.js'), 
         [path.join(projectFolder, 'src', 'main.ts')], 
         options
       )
