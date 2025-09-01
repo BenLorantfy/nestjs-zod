@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common'
 import { ZodDto } from './dto'
 import { ZodExceptionCreator } from './exception'
-import { UnknownSchema } from './types'
 import { validate } from './validate'
+import { UnknownSchema } from './types'
 
 export type Source = 'body' | 'query' | 'params'
 
@@ -56,7 +56,5 @@ export const ZodGuard = createZodGuard()
  * @deprecated `UseZodGuard` will be removed in a future version, since guards
  * are not intended for validation purposes.
  */
-export const UseZodGuard = (
-  source: Source,
-  schemaOrDto: UnknownSchema | ZodDto<UnknownSchema>
-) => UseGuards(new ZodGuard(source, schemaOrDto))
+export const UseZodGuard = (source: Source, schemaOrDto: UnknownSchema | ZodDto<UnknownSchema>) =>
+  UseGuards(new ZodGuard(source, schemaOrDto))

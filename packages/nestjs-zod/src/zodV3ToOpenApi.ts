@@ -1,7 +1,7 @@
 import { Type } from '@nestjs/common'
 import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
+import { z } from 'zod/v3';
 import deepmerge from 'deepmerge'
-import { z } from 'zod/v3'
 
 export interface ExtendedSchemaObject extends SchemaObject {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -207,9 +207,9 @@ export function zodV3ToOpenAPI(
       zodV3ToOpenAPI(right, visited),
       {
         arrayMerge: (target, source) => {
-          const mergedSet = new Set([...target, ...source])
-          return Array.from(mergedSet)
-        },
+          const mergedSet = new Set([...target, ...source]);
+          return Array.from(mergedSet);
+        }
       }
     )
     Object.assign(object, merged)

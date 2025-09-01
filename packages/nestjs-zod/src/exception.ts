@@ -9,10 +9,7 @@ export class ZodValidationException extends BadRequestException {
     super({
       statusCode: HttpStatus.BAD_REQUEST,
       message: 'Validation failed',
-      errors:
-        error && typeof error === 'object' && 'issues' in error
-          ? error.issues
-          : undefined,
+      errors: (error && typeof error === 'object' && 'issues' in error) ? error.issues : undefined,
     })
   }
 

@@ -1,14 +1,16 @@
-import { applyDecorators, HttpCode } from '@nestjs/common'
-import { input } from 'zod/v4/core'
-import { assert } from './assert'
-import { ZodDto } from './dto'
-import { ZodSerializerDto } from './serializer'
-import { RequiredBy, UnknownSchema } from './types'
+import { applyDecorators, HttpCode } from '@nestjs/common';
+import { ZodSerializerDto } from './serializer';
+import { ZodDto } from './dto';
+import { assert } from './assert';
+import { input } from 'zod/v4/core';
+import { RequiredBy, UnknownSchema } from './types';
 
 let ApiResponse: typeof import('@nestjs/swagger').ApiResponse | undefined
 try {
   ApiResponse = require('@nestjs/swagger').ApiResponse
-} catch (error) {}
+} catch (e) {
+
+}
 
 /**
  * `@ZodResponse` can be used to set the response information for a method.
@@ -25,11 +27,11 @@ try {
  *    is provided
  * 4. Lastly, it also throws a typescript error if the return value of the
  *    method does not match the DTO's input schema.
- *
+ * 
  * `@ZodResponse` is powerful because it keeps the run-time, compile-time, and
  * docs-time response representations in sync
  *
- *
+ * 
  * @example
  * ```ts
  * @Get()
@@ -38,7 +40,7 @@ try {
  *   return { id: '1' };
  * }
  * ```
- *
+ * 
  * @example
  * ```ts
  * @Get()
@@ -47,104 +49,28 @@ try {
  *   return [{ id: '1' }, { id: '2' }];
  * }
  */
-export function ZodResponse<TSchema extends UnknownSchema>({
-  status,
-  description,
-  type,
-}: {
-  status?: number
-  description?: string
-  type: ZodDto<TSchema> & { io: 'input' }
-}): (
-  target: object,
-  propertyKey?: string | symbol,
-  descriptor?: Pick<
-    TypedPropertyDescriptor<
-      (...args: any[]) => input<TSchema> | Promise<input<TSchema>>
-    >,
-    'value'
-  >
-) => void
-export function ZodResponse<
-  TSchema extends RequiredBy<UnknownSchema, 'array'>
->({
-  status,
-  description,
-  type,
-}: {
-  status?: number
-  description?: string
-  type: [ZodDto<TSchema> & { io: 'input' }]
-}): (
-  target: object,
-  propertyKey?: string | symbol,
-  descriptor?: Pick<
-    TypedPropertyDescriptor<
-      (...args: any[]) => Array<input<TSchema>> | Promise<Array<input<TSchema>>>
-    >,
-    'value'
-  >
-) => void
-export function ZodResponse<TSchema extends UnknownSchema>({
-  status,
-  description,
-  type,
-}: {
-  status?: number
-  description?: string
-  type:
-    | (ZodDto<TSchema> & { io: 'input' })
-    | [ZodDto<TSchema> & { io: 'input' }]
-}): (
-  target: object,
-  propertyKey?: string | symbol,
-  descriptor?: Pick<
-    TypedPropertyDescriptor<
-      (
-        ...args: any[]
-      ) =>
-        | Array<input<TSchema>>
-        | Promise<Array<input<TSchema>>>
-        | input<TSchema>
-        | Promise<input<TSchema>>
-    >,
-    'value'
-  >
-) => void {
-  assert(ApiResponse, 'ZodResponse requires @nestjs/swagger to be installed')
+export function ZodResponse<TSchema extends UnknownSchema>({ status, description, type }: { status?: number, description?: string, type: ZodDto<TSchema> & { io: "input" } }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void
+export function ZodResponse<TSchema extends RequiredBy<UnknownSchema, 'array'>>({ status, description, type }: { status?: number, description?: string, type: [ZodDto<TSchema> & { io: "input" }] }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => Array<input<TSchema>>|Promise<Array<input<TSchema>>>>, 'value'>) => void
+export function ZodResponse<TSchema extends UnknownSchema>({ status, description, type }: { status?: number, description?: string, type: (ZodDto<TSchema> & { io: "input" })|[ZodDto<TSchema> & { io: "input" }] }): (target: object, propertyKey?: string | symbol, descriptor?: Pick<TypedPropertyDescriptor<(...args: any[]) => Array<input<TSchema>>|Promise<Array<input<TSchema>>>|input<TSchema>|Promise<input<TSchema>>>, 'value'>) => void {
+  assert(ApiResponse, 'ZodResponse requires @nestjs/swagger to be installed');
 
   if (Array.isArray(type)) {
-    assert(
-      type[0].io === 'input',
-      'ZodResponse automatically uses the output version of the DTO, there is no need to use DTO.Output'
-    )
+    assert(type[0].io === "input", 'ZodResponse automatically uses the output version of the DTO, there is no need to use DTO.Output');
 
-    return applyDecorators(
-      ...[
-        ...(status ? [HttpCode(status)] : []),
-        ZodSerializerDto(type),
-        ApiResponse({
-          status,
-          description,
-          type: ['_zod' in type[0].schema ? type[0].Output : type[0]],
-        }),
-      ]
-    )
-  }
-  assert(
-    type.io === 'input',
-    'ZodResponse automatically uses the output version of the DTO, there is no need to use DTO.Output'
-  )
-
-  return applyDecorators(
-    ...[
+    return applyDecorators(...[
       ...(status ? [HttpCode(status)] : []),
       ZodSerializerDto(type),
-      ApiResponse({
-        status,
-        description,
-        type: '_zod' in type.schema ? type.Output : type,
-      }),
-    ]
-  )
+      ApiResponse({ status, description, type: ['_zod' in type[0].schema ? type[0].Output : type[0]] }),
+    ])
+
+  } else {
+    assert(type.io === "input", 'ZodResponse automatically uses the output version of the DTO, there is no need to use DTO.Output');
+
+    return applyDecorators(...[
+      ...(status ? [HttpCode(status)] : []),
+      ZodSerializerDto(type),
+      ApiResponse({ status, description, type: '_zod' in type.schema ? type.Output : type }),
+    ])
+  }
 }
+

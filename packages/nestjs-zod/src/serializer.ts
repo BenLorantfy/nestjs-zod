@@ -8,11 +8,11 @@ import {
   StreamableFile,
 } from '@nestjs/common'
 import { map, Observable } from 'rxjs'
-import { assert } from './assert'
 import { ZodDto } from './dto'
+import { validate } from './validate'
 import { createZodSerializationException } from './exception'
 import { UnknownSchema } from './types'
-import { validate } from './validate'
+import { assert } from './assert'
 
 // NOTE (external)
 // We need to deduplicate them here due to the circular dependency
@@ -21,22 +21,13 @@ const REFLECTOR = 'Reflector'
 
 export const ZodSerializerDtoOptions = 'ZOD_SERIALIZER_DTO_OPTIONS' as const
 
-export function ZodSerializerDto(
-  dto:
-    | ZodDto<UnknownSchema>
-    | UnknownSchema
-    | [ZodDto<UnknownSchema>]
-    | [UnknownSchema]
-) {
+export function ZodSerializerDto(dto: ZodDto<UnknownSchema> | UnknownSchema | [ZodDto<UnknownSchema>] | [UnknownSchema]) {
   if (Array.isArray(dto)) {
     const schema = 'schema' in dto[0] ? dto[0].schema : dto[0]
-    assert(
-      'array' in schema && typeof schema.array === 'function',
-      'ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method'
-    )
+    assert('array' in schema && typeof schema.array === 'function', 'ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method')
   }
-
-  return SetMetadata(ZodSerializerDtoOptions, dto)
+  
+  return SetMetadata(ZodSerializerDtoOptions, dto);
 }
 
 @Injectable()
@@ -52,14 +43,8 @@ export class ZodSerializerInterceptor implements NestInterceptor {
         if (typeof res !== 'object' || res instanceof StreamableFile) return res
 
         if (Array.isArray(responseSchema)) {
-          const schema =
-            'schema' in responseSchema[0]
-              ? responseSchema[0].schema
-              : responseSchema[0]
-          assert(
-            'array' in schema && typeof schema.array === 'function',
-            'ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method'
-          )
+          const schema = 'schema' in responseSchema[0] ? responseSchema[0].schema : responseSchema[0]
+          assert('array' in schema && typeof schema.array === 'function', 'ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method')
 
           return validate(res, schema.array(), createZodSerializationException)
         }
@@ -71,12 +56,7 @@ export class ZodSerializerInterceptor implements NestInterceptor {
 
   protected getContextResponseSchema(
     context: ExecutionContext
-  ):
-    | ZodDto<UnknownSchema>
-    | UnknownSchema
-    | [ZodDto<UnknownSchema>]
-    | [UnknownSchema]
-    | undefined {
+  ): ZodDto<UnknownSchema> | UnknownSchema | [ZodDto<UnknownSchema>] | [UnknownSchema] | undefined {
     return this.reflector.getAllAndOverride(ZodSerializerDtoOptions, [
       context.getHandler(),
       context.getClass(),
