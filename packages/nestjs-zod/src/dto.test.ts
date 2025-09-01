@@ -72,6 +72,51 @@ describe('zod/v4', () => {
       myField: expect.objectContaining({ type: 'string', required: true, default: 'myField' })
     })
   })
+
+  it('should handle z.date() correctly for output DTOs', () => {
+    const UserSchema = z4.object({
+      username: z4.string(),
+      birthDate: z4.date(),
+    })
+  
+    class UserDto extends createZodDto(UserSchema) {}
+
+    // Should not throw an error when creating the Output DTO
+    expect(() => UserDto.Output._OPENAPI_METADATA_FACTORY()).not.toThrow()
+    
+    // Should generate correct OpenAPI metadata for date field
+    const metadata = UserDto.Output._OPENAPI_METADATA_FACTORY()
+    expect(metadata).toEqual({
+      username: expect.objectContaining({ type: 'string', required: true }),
+      birthDate: expect.objectContaining({ 
+        type: 'string', 
+        format: 'date-time',
+        required: true 
+      })
+    })
+  })
+
+  it('should handle z.date() correctly for input DTOs', () => {
+    const UserSchema = z4.object({
+      username: z4.string(),
+      birthDate: z4.date(),
+    })
+  
+    class UserDto extends createZodDto(UserSchema) {}
+
+    // Input DTOs should still work normally (though date may not generate ideal schema)
+    expect(() => UserDto._OPENAPI_METADATA_FACTORY()).not.toThrow()
+    
+    // For input DTOs, date fields should have empty type (handled by existing system)
+    const metadata = UserDto._OPENAPI_METADATA_FACTORY()
+    expect(metadata).toEqual({
+      username: expect.objectContaining({ type: 'string', required: true }),
+      birthDate: expect.objectContaining({ 
+        type: '',
+        required: true 
+      })
+    })
+  })
 })
 
 describe('zod/v3', () => {
