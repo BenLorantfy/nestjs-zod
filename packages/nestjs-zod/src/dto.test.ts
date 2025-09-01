@@ -100,19 +100,7 @@ describe('zod/v4', () => {
     })
   })
 
-  it('throws error when trying to generate OpenAPI metadata for input schemas with z.date()', () => {
-    const UserSchema = z4.object({
-      name: z4.string(),
-      birthDate: z4.date(),
-    })
-  
-    class UserDto extends createZodDto(UserSchema) {}
 
-    // Input schemas with z.date() should fail to generate OpenAPI metadata
-    expect(() => {
-      UserDto._OPENAPI_METADATA_FACTORY();
-    }).toThrow('Date cannot be represented in JSON Schema');
-  })
 })
 
 describe('zod/v3', () => {

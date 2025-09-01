@@ -183,7 +183,6 @@ function openApiMetadataFactory({
 function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }), io: 'input' | 'output') {
   const generatedJsonSchema = '_zod' in schema ? toJSONSchema(schema, {
     io,
-    unrepresentable: 'any',
     override: ({ jsonSchema, zodSchema }) => {
         if (io === 'output' && 'id' in jsonSchema) {
             jsonSchema.id = `${jsonSchema.id}_Output`;
@@ -195,10 +194,6 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
                 // For output schemas, convert to string with date-time format
                 jsonSchema.type = 'string';
                 jsonSchema.format = 'date-time';
-                delete jsonSchema.additionalProperties;
-            } else {
-                // For input schemas, throw an error as dates are not supported
-                throw new Error('Date cannot be represented in JSON Schema');
             }
         }
     } 
