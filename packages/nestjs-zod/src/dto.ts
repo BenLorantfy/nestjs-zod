@@ -189,11 +189,17 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
             jsonSchema.id = `${jsonSchema.id}_Output`;
         }
         
-        // Handle z.date() for output schemas - convert to string with date-time format
-        if (io === 'output' && zodSchema._zod?.def?.type === 'date') {
-            jsonSchema.type = 'string';
-            jsonSchema.format = 'date-time';
-            delete jsonSchema.additionalProperties;
+        // Handle z.date() fields
+        if (zodSchema._zod?.def?.type === 'date') {
+            if (io === 'output') {
+                // For output schemas, convert to string with date-time format
+                jsonSchema.type = 'string';
+                jsonSchema.format = 'date-time';
+                delete jsonSchema.additionalProperties;
+            } else {
+                // For input schemas, throw an error as dates are not supported
+                throw new Error('Date cannot be represented in JSON Schema');
+            }
         }
     } 
   }) : zodV3ToOpenAPI(schema)

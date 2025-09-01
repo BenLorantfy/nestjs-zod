@@ -1867,6 +1867,41 @@ describe('issue#188', () => {
     })
 })
 
+test('z.date() fields in output DTOs generate correct OpenAPI schema', async () => {
+    const UserSchema = z.object({
+        name: z.string(),
+        birthDate: z.date(),
+        createdAt: z.date().optional(),
+    })
+
+    class UserDto extends createZodDto(UserSchema) { }
+
+    @Controller()
+    class UserController {
+        constructor() { }
+
+        @Post()
+        @ApiResponse({ type: UserDto.Output })
+        createUser(@Body() user: UserDto) {
+            return user;
+        }
+    }
+
+    const doc = await getSwaggerDoc(UserController);
+    
+    // Verify that date fields are converted to string with date-time format in output schema
+    expect(get(doc, 'components.schemas.UserDto_Output.properties.birthDate')).toEqual({
+        type: 'string',
+        format: 'date-time'
+    });
+    expect(get(doc, 'components.schemas.UserDto_Output.properties.createdAt')).toEqual({
+        type: 'string',
+        format: 'date-time'
+    });
+    expect(get(doc, 'components.schemas.UserDto_Output.required')).toEqual(['name', 'birthDate']);
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+})
+
 async function createApp(controllerClass: Type<unknown>) {
     @Module({
         imports: [],
