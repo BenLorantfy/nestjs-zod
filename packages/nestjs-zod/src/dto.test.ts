@@ -72,6 +72,47 @@ describe('zod/v4', () => {
       myField: expect.objectContaining({ type: 'string', required: true, default: 'myField' })
     })
   })
+
+  it('handles z.date() fields in output schemas with format: date-time', () => {
+    const UserSchema = z4.object({
+      name: z4.string(),
+      birthDate: z4.date(),
+      createdAt: z4.date().optional(),
+    })
+  
+    class UserDto extends createZodDto(UserSchema) {}
+
+    // Should not crash when generating OpenAPI metadata
+    const metadata = UserDto.Output._OPENAPI_METADATA_FACTORY();
+    
+    expect(metadata).toEqual({
+      name: expect.objectContaining({ type: 'string', required: true }),
+      birthDate: expect.objectContaining({ 
+        type: 'string', 
+        format: 'date-time', 
+        required: true 
+      }),
+      createdAt: expect.objectContaining({ 
+        type: 'string', 
+        format: 'date-time', 
+        required: false 
+      })
+    })
+  })
+
+  it('throws error when using z.date() in input schemas', () => {
+    const UserSchema = z4.object({
+      name: z4.string(),
+      birthDate: z4.date(),
+    })
+  
+    class UserDto extends createZodDto(UserSchema) {}
+
+    // Should throw when trying to generate OpenAPI metadata for input schema with z.date()
+    expect(() => UserDto._OPENAPI_METADATA_FACTORY()).toThrow('Date cannot be represented in JSON Schema')
+  })
+
+
 })
 
 describe('zod/v3', () => {

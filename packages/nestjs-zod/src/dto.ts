@@ -183,9 +183,18 @@ function openApiMetadataFactory({
 function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }), io: 'input' | 'output') {
   const generatedJsonSchema = '_zod' in schema ? toJSONSchema(schema, {
     io,
-    override: ({ jsonSchema }) => {
+    override: ({ jsonSchema, zodSchema }) => {
         if (io === 'output' && 'id' in jsonSchema) {
             jsonSchema.id = `${jsonSchema.id}_Output`;
+        }
+        
+        // Handle z.date() fields
+        if (zodSchema._zod?.def?.type === 'date') {
+            if (io === 'output') {
+                // For output schemas, convert to string with date-time format
+                jsonSchema.type = 'string';
+                jsonSchema.format = 'date-time';
+            }
         }
     } 
   }) : zodV3ToOpenAPI(schema)
