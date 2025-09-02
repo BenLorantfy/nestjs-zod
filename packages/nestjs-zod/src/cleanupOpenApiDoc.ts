@@ -175,6 +175,14 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
             if (replaceRoot) {
                 // @ts-expect-error TODO: fix this
                 newOpenapiSchema = newOpenapiSchema.properties.root;
+                // @ts-expect-error TODO: is ID a valid openapi field?
+                if (newOpenapiSchema.id) {
+                  // @ts-expect-error TODO: is ID a valid openapi field?
+                  newSchemaName = newOpenapiSchema.id
+                  renames[oldSchemaName] = newSchemaName;
+                  // @ts-expect-error TODO: is ID a valid openapi field?
+                  newOpenapiSchema["id"] = newSchemaName;
+                }
             }
         }
 
@@ -198,6 +206,13 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                         requestBodyObject.schema.$ref = requestBodyObject.schema.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
                     }
                 }
+                if (requestBodyObject.schema && "items" in requestBodyObject.schema && requestBodyObject.schema.items && "$ref" in requestBodyObject.schema.items) {
+                    const oldSchemaName = getSchemaNameFromRef(requestBodyObject.schema.items.$ref);
+                    if (renames[oldSchemaName]) {
+                        const newSchemaName = renames[oldSchemaName];
+                        requestBodyObject.schema.items.$ref = requestBodyObject.schema.items.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
+                    }
+                }
             }
 
             for (let statusCodeObject of Object.values(methodObject?.responses || {})) {
@@ -208,6 +223,13 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                         if (renames[oldSchemaName]) {
                             const newSchemaName = renames[oldSchemaName];
                             responseBodyObject.schema.$ref = responseBodyObject.schema.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
+                        }
+                    }
+                    if (responseBodyObject.schema && "items" in responseBodyObject.schema && responseBodyObject.schema.items && "$ref" in responseBodyObject.schema.items) {
+                        const oldSchemaName = getSchemaNameFromRef(responseBodyObject.schema.items.$ref);
+                        if (renames[oldSchemaName]) {
+                          const newSchemaName = renames[oldSchemaName];
+                          responseBodyObject.schema.items.$ref = responseBodyObject.schema.items.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
                         }
                     }
                 }
