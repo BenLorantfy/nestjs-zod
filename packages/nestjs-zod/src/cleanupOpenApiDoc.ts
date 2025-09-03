@@ -175,7 +175,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
             if (replaceRoot) {
                 // @ts-expect-error TODO: fix this
                 newOpenapiSchema = newOpenapiSchema.properties.root;
-                // @ts-expect-error TODO: is ID a valid openapi field?
+              // @ts-expect-error TODO: is ID a valid openapi field?
                 if (newOpenapiSchema.id) {
                   // @ts-expect-error TODO: is ID a valid openapi field?
                   newSchemaName = newOpenapiSchema.id
