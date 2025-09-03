@@ -4,9 +4,13 @@ export function fixAllRefs({ schema, defRenames, rootSchemaName }: { schema: JSO
     return walkJsonSchema(schema, (s) => {
         if (s.$ref) {
           if (s.$ref.startsWith('#/$defs/')) {
-            const oldDefName = s.$ref.replace('#/$defs/', '');
-            const newDefName = defRenames?.[oldDefName];
-            if (newDefName) {
+            let oldDefName = s.$ref.replace('#/$defs/', '');
+
+            if (oldDefName.endsWith('_Output')) {
+              const newDefName = defRenames?.[oldDefName] || oldDefName;
+              s.$ref = `#/$defs/${newDefName}`;
+            } else {
+              const newDefName = defRenames?.[oldDefName] || `${oldDefName}_Output`;
               s.$ref = `#/$defs/${newDefName}`;
             }
           }
