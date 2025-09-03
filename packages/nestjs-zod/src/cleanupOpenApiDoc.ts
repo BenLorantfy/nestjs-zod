@@ -207,11 +207,11 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                     }
                 }
                 if (requestBodyObject.schema && "items" in requestBodyObject.schema && requestBodyObject.schema.items && "$ref" in requestBodyObject.schema.items) {
-                    const oldSchemaName = getSchemaNameFromRef(requestBodyObject.schema.items.$ref);
-                    if (renames[oldSchemaName]) {
-                        const newSchemaName = renames[oldSchemaName];
-                        requestBodyObject.schema.items.$ref = requestBodyObject.schema.items.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
-                    }
+                  const oldSchemaName = getSchemaNameFromRef(requestBodyObject.schema.items.$ref);
+                  if (renames[oldSchemaName]) {
+                      const newSchemaName = renames[oldSchemaName];
+                      requestBodyObject.schema.items.$ref = requestBodyObject.schema.items.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
+                  }
                 }
             }
 
