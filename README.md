@@ -553,7 +553,6 @@ Cleans up the generated OpenAPI doc by applying some post-processing
 |---------|---------------------------------------|----------------------------------------------------|
 | null    | `{ type: 'string', nullable: true }`  | `{ anyOf: [{ type: 'string'}, { type: 'null' }] }` |
 | literal | `{ type: 'string', enum: ['hello'] }` | `{ type: 'string', const: 'hello' }`               |
-|         |                                       |                                                    |
 
 ##### Example
 To complete the swagger integration/setup, `cleanupOpenApiDoc` needs to be called with the generated open api doc, like so:
