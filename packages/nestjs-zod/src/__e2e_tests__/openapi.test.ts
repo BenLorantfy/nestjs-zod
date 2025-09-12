@@ -9,6 +9,9 @@ import get from 'lodash/get';
 import { PREFIX } from '../const';
 import { IsString } from 'class-validator';
 import z3 from 'zod/v3';
+import request from 'supertest';
+import { setupApp } from '../testUtils';
+import { ZodSerializerDto } from '../serializer';
 
 describe('basic request body', () => {
     test.each([
@@ -1864,6 +1867,28 @@ describe('issue#188', () => {
                 type: 'object'
             }
           })
+    })
+})
+
+describe('issue#197', () => {
+    it('should validate when returning primitive', async () => {
+        class ThingDto extends createZodDto(z.object({
+            name: z.string(),
+        })) {}
+
+        @Controller('things')
+        class ThingController {
+            @Get()
+            @ZodSerializerDto(ThingDto)
+            async thing() {
+                return 'hello';
+            }
+        }
+
+        const { app } = await setupApp(ThingController);
+        const response = await request(app.getHttpServer()).get('/things');
+        expect(response.status).toBe(500);
+        expect(response.body).toEqual({ message: 'Internal Server Error', statusCode: 500 });
     })
 })
 

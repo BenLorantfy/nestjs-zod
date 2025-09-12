@@ -40,7 +40,7 @@ export class ZodSerializerInterceptor implements NestInterceptor {
     return next.handle().pipe(
       map((res: object | object[]) => {
         if (!responseSchema) return res
-        if (typeof res !== 'object' || res instanceof StreamableFile) return res
+        if (res instanceof StreamableFile) return res
 
         if (Array.isArray(responseSchema)) {
           const schema = 'schema' in responseSchema[0] ? responseSchema[0].schema : responseSchema[0]
