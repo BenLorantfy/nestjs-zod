@@ -187,7 +187,8 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
         if (io === 'output' && 'id' in jsonSchema) {
             jsonSchema.id = `${jsonSchema.id}_Output`;
         }
-    } 
+    },
+    unrepresentable: 'any' 
   }) : zodV3ToOpenAPI(schema)
 
   const $defs = ('$defs' in generatedJsonSchema && generatedJsonSchema.$defs) ? generatedJsonSchema.$defs : undefined;
