@@ -30,7 +30,17 @@ export function fixAllRefs({ schema, defRenames, rootSchemaName }: { schema: JSO
     })
 }
 
-export function fixNull(schema: JSONSchema.BaseSchema) {
+/**
+ * By default, zod generates openapi schemas that are compatible with OpenAPI
+ * 3.1.  But OpenAPI 3.0 supports a weird flavour of JSONSchema they call the
+ * "subset superset"
+ *
+ * This function converts the schema to the OpenAPI 3.0 subset superset format.
+ *
+ * See more information here:
+ * https://www.apimatic.io/blog/2021/09/migrating-to-and-from-openapi-3-1
+ */
+export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
   return walkJsonSchema(schema, (s) => {
     if (Object.keys(s).length === 1 && s.anyOf) {
       const nullSchema = s.anyOf.findIndex(subSchema => subSchema.type === 'null');
@@ -55,6 +65,10 @@ export function fixNull(schema: JSONSchema.BaseSchema) {
       }
     }
 
+    if (s.const) {
+      s.enum = [s.const];
+      delete s.const;
+    }
 
     return s;
   }, {

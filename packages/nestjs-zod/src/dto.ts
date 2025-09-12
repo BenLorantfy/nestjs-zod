@@ -2,7 +2,7 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, UNWRAP_ROOT_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, UNWRAP_ROOT_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
@@ -103,7 +103,7 @@ function openApiMetadataFactory({
     $defs,
   };
   
-  const { hasRefs, hasNull} = getSchemaMetadata(jsonSchema);
+  const { hasRefs, hasNull, hasConst } = getSchemaMetadata(jsonSchema);
 
   let properties: Record<string, unknown> = {};
   for (let [propertyKey, propertySchema] of Object.entries(jsonSchema.properties || {})) {
@@ -125,6 +125,10 @@ function openApiMetadataFactory({
       // `cleanupOpenApiDoc`
       type: propertySchema.type || '', 
     };
+
+    if (hasConst) {
+      newPropertySchema[HAS_CONST_KEY] = true;
+    }
 
     if (hasNull) {
       newPropertySchema[HAS_NULL_KEY] = true;
@@ -230,6 +234,7 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
 function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
   let hasRefs = false;
   let hasNull = false;
+  let hasConst = false;
   walkJsonSchema(jsonSchema, (schema) => {
     if (schema.type === 'null') {
       hasNull = true;
@@ -237,12 +242,16 @@ function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
     if (schema.$ref) {
       hasRefs = true;
     }
+    if (schema.const) {
+      hasConst = true;
+    }
     return schema;
   });
 
   return {
     hasRefs,
     hasNull,
+    hasConst,
   }
 }
 

@@ -1,9 +1,11 @@
 import type { OpenAPIObject } from '@nestjs/swagger';
 import deepmerge from 'deepmerge';
 import { JSONSchema } from 'zod/v4/core';
-import { fixAllRefs, fixNull } from './utils';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY } from './const';
+import { fixAllRefs, convertToOpenApi3Point0 } from './utils';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY } from './const';
 import { isDeepStrictEqual } from 'node:util';
+import type { ParameterObject, ReferenceObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
+import { assert } from './assert';
 
 type DtoSchema = Exclude<Exclude<OpenAPIObject['components'], undefined>['schemas'], undefined>[string];
 
@@ -47,12 +49,18 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
         let addedDefs = false;
         let hasRefs = false;
         let hasNull = false;
+        let hasConst = false;
         const defRenames: Record<string, string> = {};
 
         // Clone so we can mutate
         let newOpenapiSchema = deepmerge<typeof oldOpenapiSchema>({}, oldOpenapiSchema);
 
         for (let propertySchema of Object.values(newOpenapiSchema.properties || {})) {
+            if (HAS_CONST_KEY in propertySchema) {
+                hasConst = Boolean(propertySchema[HAS_CONST_KEY]);
+                delete propertySchema[HAS_CONST_KEY];
+            }
+
             if (HAS_NULL_KEY in propertySchema) {
                 hasNull = Boolean(propertySchema[HAS_NULL_KEY]);
                 delete propertySchema[HAS_NULL_KEY];
@@ -103,7 +111,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                         let fixedDef = fixAllRefs({ schema: defSchema, rootSchemaName: newSchemaName, defRenames })  
 
                         if (version === '3.0') {
-                            fixedDef = fixNull(fixedDef);
+                            fixedDef = convertToOpenApi3Point0(fixedDef);
                         }
 
                         const newDefSchemaKey = defRenames[defSchemaId] || defSchemaId;
@@ -157,9 +165,9 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
         //
         // This is the default behavior, since nestjs/swagger seems to generate
         // a 3.0 document by default
-        if (hasNull && version === '3.0') {
+        if ((hasNull || hasConst) && version === '3.0') {
             // @ts-expect-error TODO: fix this
-            newOpenapiSchema = fixNull(newOpenapiSchema);
+            newOpenapiSchema = convertToOpenApi3Point0(newOpenapiSchema);
         }
 
         // When the consumer does this `createZodDto(z.array(...))`, then
@@ -213,19 +221,11 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                 }
             }
 
-            for (let parameter of methodObject?.parameters || []) {
-                // I don't fully understand why nestjs is moving this property
-                // out of schema and into the root level of the parameter object 🤷
-                if (EMPTY_TYPE_KEY in parameter) {
-                    delete parameter[EMPTY_TYPE_KEY];
-                    if ('schema' in parameter && parameter.schema && 'type' in parameter.schema) {
-                        delete parameter.schema.type;
-                    }
-                }
+            for (let i = 0; i < (methodObject?.parameters || []).length; i++) {
+                assert(methodObject?.parameters, 'parameters is required');
 
-                if (UNWRAP_ROOT_KEY in parameter) {
-                    throw new Error(`[cleanupOpenApiDoc] Query or url parameters must be an object type`);
-                }
+                let parameter = methodObject.parameters[i];
+                parameter = fixParameter(parameter, version);
 
                 // Add each $def as a schema
                 if (DEFS_KEY in parameter) {
@@ -252,25 +252,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                     }
                 }
 
-                if (PARENT_HAS_REFS_KEY in parameter) {
-                    delete parameter[PARENT_HAS_REFS_KEY];
-
-                    if ('schema' in parameter) {
-                        try {
-                            // @ts-expect-error TODO: fix this
-                            parameter.schema = fixAllRefs({ schema: parameter.schema });
-                        } catch (err) {
-                            if (err instanceof Error && err.message.startsWith('[fixAllRefs]')) {
-                                throw new Error(`[cleanupOpenApiDoc] Recursive schemas are not supported for parameters`, { cause: err });
-                            }
-                            throw err;
-                        }
-                    }
-                }
-
-                if (PARENT_ID_KEY in parameter) {
-                    delete parameter[PARENT_ID_KEY];
-                }
+                methodObject.parameters[i] = parameter;
             }
         }
     }
@@ -283,6 +265,65 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
             schemas,
         }
     }
+}
+
+/**
+ * Fixes various issues with parameters:
+ * 1. Removes empty `type` fields
+ * 2. Moves `const` from the root level of the parameter object to the schema
+ * 3. Fixes refs to point to components.schemas
+ * 4. Removes some nestjs-zod markers
+ */
+function fixParameter(parameterInput: ParameterObject | ReferenceObject, version: '3.1' | '3.0') {
+    const parameter = deepmerge<typeof parameterInput>({}, parameterInput);
+
+    // nestjs seems to move some stuff out of the schema and into the root level of the parameter object 🤷
+    if (EMPTY_TYPE_KEY in parameter) {
+        delete parameter[EMPTY_TYPE_KEY];
+        if ('schema' in parameter && parameter.schema && 'type' in parameter.schema) {
+            delete parameter.schema.type;
+        }
+    }
+
+    if (UNWRAP_ROOT_KEY in parameter) {
+        throw new Error(`[cleanupOpenApiDoc] Query or url parameters must be an object type`);
+    }
+
+    if ('const' in parameter && 'schema' in parameter && parameter.schema) {
+        Object.assign(parameter.schema, { const: parameter.const });
+        delete parameter.const;
+    }
+
+    if (PARENT_ID_KEY in parameter) {
+        delete parameter[PARENT_ID_KEY];
+    }
+
+    if (PARENT_HAS_REFS_KEY in parameter) {
+        delete parameter[PARENT_HAS_REFS_KEY];
+
+        if ('schema' in parameter) {
+            try {
+                // @ts-expect-error TODO: fix this
+                parameter.schema = fixAllRefs({ schema: parameter.schema });
+            } catch (err) {
+                if (err instanceof Error && err.message.startsWith('[fixAllRefs]')) {
+                    throw new Error(`[cleanupOpenApiDoc] Recursive schemas are not supported for parameters`, { cause: err });
+                }
+                throw err;
+            }
+        }
+    }
+
+    if (HAS_CONST_KEY in parameter) {
+        delete parameter[HAS_CONST_KEY];
+
+        if (version === '3.0' && 'schema' in parameter && parameter.schema) {
+            // @ts-expect-error TODO: fix this
+            parameter.schema = convertToOpenApi3Point0(parameter.schema);
+        }
+    }
+
+    return parameter;
 }
 
 function getSchemaNameFromRef(ref: string) {
