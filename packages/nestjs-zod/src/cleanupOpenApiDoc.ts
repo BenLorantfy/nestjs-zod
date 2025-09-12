@@ -4,10 +4,10 @@ import { JSONSchema } from 'zod/v4/core';
 import { fixAllRefs, convertToOpenApi3Point0 } from './utils';
 import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY } from './const';
 import { isDeepStrictEqual } from 'node:util';
-import type { ParameterObject, ReferenceObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import { assert } from './assert';
 
 type DtoSchema = Exclude<Exclude<OpenAPIObject['components'], undefined>['schemas'], undefined>[string];
+type OpenAPIParameter = Exclude<Exclude<Exclude<OpenAPIObject['paths'], undefined>['/'], undefined>['parameters'], undefined>[number];
 
 /**
  * This function performs some post-processing on the OpenAPI document.  It
@@ -274,7 +274,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
  * 3. Fixes refs to point to components.schemas
  * 4. Removes some nestjs-zod markers
  */
-function fixParameter(parameterInput: ParameterObject | ReferenceObject, version: '3.1' | '3.0') {
+function fixParameter(parameterInput: OpenAPIParameter, version: '3.1' | '3.0') {
     const parameter = deepmerge<typeof parameterInput>({}, parameterInput);
 
     // nestjs seems to move some stuff out of the schema and into the root level of the parameter object 🤷
