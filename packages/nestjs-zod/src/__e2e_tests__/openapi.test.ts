@@ -828,8 +828,8 @@ test('properly adds sub-schemas for array schemas', async () => {
 test('query param union', async () => {
     class QueryParamsDto extends createZodDto(z.object({
         filter: z.union([
-            z.literal('published'),
-            z.literal('unpublished')
+            z.string(),
+            z.number()
         ]),
     })) { }
 
@@ -854,11 +854,9 @@ test('query param union', async () => {
                 anyOf: [
                     {
                         type: 'string',
-                        const: 'published'
                     },
                     {
-                        type: 'string',
-                        const: 'unpublished'
+                        type: 'number',
                     }
                 ]
             }
@@ -1870,7 +1868,7 @@ describe('issue#188', () => {
     })
 })
 
-describe('issue#197', () => {
+describe('issue#197 - returning primitives', () => {
     it('should validate when returning primitive', async () => {
         class ThingDto extends createZodDto(z.object({
             name: z.string(),
@@ -1889,6 +1887,109 @@ describe('issue#197', () => {
         const response = await request(app.getHttpServer()).get('/things');
         expect(response.status).toBe(500);
         expect(response.body).toEqual({ message: 'Internal Server Error', statusCode: 500 });
+    })
+})
+
+describe('issue#196 - const support', () => {
+    it('should use const syntax for OpenAPI 3.1', async () => {
+        class ThingDto extends createZodDto(z.object({
+            literal: z.literal('hello'),
+        })) { }
+
+        class QueryParamsDto extends createZodDto(z.object({
+            literal: z.literal('hello'),
+        })) { }
+    
+        @Controller()
+        class ThingController {
+            constructor() { }
+    
+            @Get()
+            @ApiResponse({ type: ThingDto })
+            getThing(@Query() query: QueryParamsDto) {
+                return {};
+            }
+        }
+    
+        const app = await createApp(ThingController);
+    
+        // If the OpenAPI version is set directly on the openapi document, then by
+        // default cleanupOpenApiDoc should use 3.1
+        const doc = cleanupOpenApiDoc(
+            SwaggerModule.createDocument(app, new DocumentBuilder().setOpenAPIVersion('3.1.1').build())
+        )
+
+        expect(get(doc, 'components.schemas.ThingDto')).toEqual({
+            properties: {
+                literal: {
+                    const: 'hello',
+                    type: 'string',
+                },
+            },
+            required: ['literal'],
+            type: 'object',
+        });
+        expect(get(doc, 'paths./.get.parameters')).toEqual([
+            {
+                in: 'query',
+                name: 'literal',
+                required: true,
+                schema: { type: 'string', const: 'hello' }
+            }
+        ]);
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+
+    // OpenAPI 3.0 does not support const syntax, so we should use enum syntax
+    // instead with a single value
+    // See: https://www.apimatic.io/blog/2021/09/migrating-to-and-from-openapi-3-1
+    it('should use enum syntax for OpenAPI 3.0', async () => {
+        class ThingDto extends createZodDto(z.object({
+            literal: z.literal('hello'),
+        })) { }
+
+        class QueryParamsDto extends createZodDto(z.object({
+            literal: z.literal('hello'),
+        })) { }
+    
+        @Controller()
+        class ThingController {
+            constructor() { }
+    
+            @Get()
+            @ApiResponse({ type: ThingDto })
+            getThing(@Query() query: QueryParamsDto) {
+                return {};
+            }
+        }
+    
+        const app = await createApp(ThingController);
+    
+        // If the OpenAPI version is set directly on the openapi document, then by
+        // default cleanupOpenApiDoc should use 3.1
+        const doc = cleanupOpenApiDoc(
+            SwaggerModule.createDocument(app, new DocumentBuilder().setOpenAPIVersion('3.0.0').build())
+        )
+
+        expect(get(doc, 'components.schemas.ThingDto')).toEqual({
+            properties: {
+                literal: {
+                    enum: ['hello'],
+                    type: 'string',
+                },
+            },
+            required: ['literal'],
+            type: 'object',
+        });
+        expect(get(doc, 'paths./.get.parameters')).toEqual([
+            {
+                in: 'query',
+                name: 'literal',
+                required: true,
+                schema: { type: 'string', enum: ['hello'] }
+            }
+        ]);
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
     })
 })
 

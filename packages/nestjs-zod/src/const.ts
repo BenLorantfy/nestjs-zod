@@ -6,3 +6,4 @@ export const PARENT_ADDITIONAL_PROPERTIES_KEY = `${PREFIX}-parent-additional-pro
 export const PARENT_HAS_REFS_KEY = `${PREFIX}-parent-has-refs`;
 export const UNWRAP_ROOT_KEY = `${PREFIX}-unwrap-root`;
 export const HAS_NULL_KEY = `${PREFIX}-has-null`;
+export const HAS_CONST_KEY = `${PREFIX}-has-const`;
