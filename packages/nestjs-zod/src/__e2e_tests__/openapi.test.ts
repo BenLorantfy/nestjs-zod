@@ -13,6 +13,10 @@ import request from 'supertest';
 import { setupApp } from '../testUtils';
 import { ZodSerializerDto } from '../serializer';
 
+beforeEach(() => {
+    z.globalRegistry.clear()
+})
+
 describe('basic request body', () => {
     test.each([
         ctx({ version: 'v4', cleanUp: false }),
@@ -770,6 +774,42 @@ test('named output schemas', async () => {
     // IDs should be correct
     expect(get(doc, 'components.schemas.Book2.id')).toEqual('Book2');
     expect(get(doc, 'components.schemas.Book2_Output.id')).toEqual('Book2_Output');
+})
+
+test('nested output schemas', async () => {
+    const AuthorSchema = z
+        .object({
+            id: z.string(),
+        })
+        .meta({ id: 'Author' });
+
+    const BookSchema = z
+        .object({
+            author: AuthorSchema,
+        })
+        .meta({ id: 'Book' });
+
+    const OrderSchema = z.object({
+        details: BookSchema,
+    });
+
+    class OrderDto extends createZodDto(OrderSchema) { }
+
+    @Controller()
+    class BookController {
+        constructor() { }
+
+        @Get()
+        @ApiOkResponse({ type: OrderDto.Output })
+        getOrder() {
+            return {};
+        }
+    }
+
+    const doc = await getSwaggerDoc(BookController);
+    expect(Object.keys(doc.components?.schemas || {})).toEqual(['Book_Output', 'Author_Output', 'OrderDto_Output']);
+    expect(get(doc, 'components.schemas.OrderDto_Output.properties.details.$ref')).toEqual('#/components/schemas/Book_Output');
+    expect(get(doc, 'components.schemas.Book_Output.properties.author.$ref')).toEqual('#/components/schemas/Author_Output');
 })
 
 test('output schemas with named sub-schemas', async () => {     
