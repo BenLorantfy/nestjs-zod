@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Module, Post, Query, Type } from '@nestjs/common';
+import { Body, Controller, Get, Module, Post, Put, Query, Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ApiBody, ApiOkResponse, ApiProperty, ApiResponse, DocumentBuilder } from '@nestjs/swagger';
 import z from 'zod/v4';
@@ -796,7 +796,7 @@ test('nested output schemas', async () => {
     class OrderDto extends createZodDto(OrderSchema) { }
 
     @Controller()
-    class BookController {
+    class OrderController {
         constructor() { }
 
         @Get()
@@ -804,10 +804,22 @@ test('nested output schemas', async () => {
         getOrder() {
             return {};
         }
+
+        @Put()
+        @ApiOkResponse({ type: OrderDto })
+        putOrder() {
+            return {};
+        }
     }
 
-    const doc = await getSwaggerDoc(BookController);
-    expect(Object.keys(doc.components?.schemas || {})).toEqual(['Book_Output', 'Author_Output', 'OrderDto_Output']);
+    const doc = await getSwaggerDoc(OrderController);
+    expect(Object.keys(doc.components?.schemas || {})).toEqual(['Book_Output', 'Author_Output', 'OrderDto_Output', 'Book', 'Author', 'OrderDto']);
+
+    // Input schemas reference other input schemas:
+    expect(get(doc, 'components.schemas.OrderDto.properties.details.$ref')).toEqual('#/components/schemas/Book');
+    expect(get(doc, 'components.schemas.Book.properties.author.$ref')).toEqual('#/components/schemas/Author');
+
+    // Output schemas reference other output schemas:
     expect(get(doc, 'components.schemas.OrderDto_Output.properties.details.$ref')).toEqual('#/components/schemas/Book_Output');
     expect(get(doc, 'components.schemas.Book_Output.properties.author.$ref')).toEqual('#/components/schemas/Author_Output');
 })
