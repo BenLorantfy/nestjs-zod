@@ -217,7 +217,7 @@ Check out the [example app](./packages/example/) for a full example of how to in
 ### Request Validation
 #### `createZodDto` (Create a DTO from a Zod schema)
 ```ts
-function createZodDto<TSchema extends UnknownSchema>(schema: TSchema): ZodDto<TSchema>;
+function createZodDto<TSchema extends UnknownSchema, TCodec extends boolean = false>(schema: TSchema, options?: { codec: TCodec }): ZodDto<TSchema, TCodec>;
 ```
 Creates a nestjs DTO from a zod schema.  These zod DTOs can be used in place of `class-validator` / `class-transformer` DTOs. Zod DTOs are responsible for three things:
 
@@ -230,8 +230,10 @@ Creates a nestjs DTO from a zod schema.  These zod DTOs can be used in place of 
 
 ##### Parameters
 - `schema` - A zod schema.  You can "bring your own zod", including zod v3 schemas, v4 schemas, zod mini schemas, etc.  The only requirement is that the schema has a method called `parse`
+- `options`
+  - `options.codec` - If set to `true`, then when serializing responses `nestjs-zod` will use `encode` instead of `parse`.  See more information about codecs in the [zod documentation](https://zod.dev/codecs)
 
-##### Example
+##### Examples
 ###### Creating a zod DTO
 ```ts
 import { createZodDto } from 'nestjs-zod'
@@ -249,21 +251,38 @@ class CredentialsDto extends createZodDto(CredentialsSchema) {}
 ```ts
 @Controller('auth')
 class AuthController {
-  // with global ZodValidationPipe (recommended)
-  async signIn(@Body() credentials: CredentialsDto) {}
-  async signIn(@Param() signInParams: SignInParamsDto) {}
-  async signIn(@Query() signInQuery: SignInQueryDto) {}
-
-  // with route-level ZodValidationPipe
-  @UsePipes(ZodValidationPipe)
   async signIn(@Body() credentials: CredentialsDto) {}
 }
+```
+###### Codec example
+```ts
+const stringToDate = z.codec(
+  z.iso.datetime(),
+  z.date(),
+  {
+    decode: (isoString) => new Date(isoString),
+    encode: (date) => date.toISOString(),
+  }
+);
 
-// with controller-level ZodValidationPipe
-@UsePipes(ZodValidationPipe)
-@Controller('auth')
-class AuthController {
-  async signIn(@Body() credentials: CredentialsDto) {}
+class BookDto extends createZodDto(z.object({
+  title: z.string(),
+  dateWritten: stringToDate
+}), {
+  codec: true
+}) { }
+
+@Controller('books')
+class BookController {
+  constructor() { }
+  
+  @Post()
+  @ZodResponse({ 
+    type: BookDto
+  })
+  createBook(@Body() book: BookDto) {
+    return book;
+  }
 }
 ```
 
