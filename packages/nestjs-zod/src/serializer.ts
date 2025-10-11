@@ -21,7 +21,7 @@ const REFLECTOR = 'Reflector'
 
 export const ZodSerializerDtoOptions = 'ZOD_SERIALIZER_DTO_OPTIONS' as const
 
-export function ZodSerializerDto(dto: ZodDto<UnknownSchema, boolean> | UnknownSchema | [ZodDto<UnknownSchema, boolean>] | [UnknownSchema]) {
+export function ZodSerializerDto(dto: ZodDto | UnknownSchema | [ZodDto] | [UnknownSchema]) {
   if (Array.isArray(dto)) {
     const schema = 'schema' in dto[0] ? dto[0].schema : dto[0]
     assert('array' in schema && typeof schema.array === 'function', 'ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method')
@@ -103,7 +103,7 @@ export class ZodSerializerInterceptor implements NestInterceptor {
 
   protected getContextResponseSchema(
     context: ExecutionContext
-  ): ZodDto<UnknownSchema, boolean> | UnknownSchema | [ZodDto<UnknownSchema, boolean>] | [UnknownSchema] | undefined {
+  ): ZodDto | UnknownSchema | [ZodDto] | [UnknownSchema] | undefined {
     return this.reflector.getAllAndOverride(ZodSerializerDtoOptions, [
       context.getHandler(),
       context.getClass(),

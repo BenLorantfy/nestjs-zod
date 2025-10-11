@@ -17,7 +17,7 @@ interface ZodBodyGuardOptions {
 
 type ZodGuardClass = new (
   source: Source,
-  schemaOrDto: UnknownSchema | ZodDto<UnknownSchema, boolean>
+  schemaOrDto: UnknownSchema | ZodDto
 ) => CanActivate
 
 /**
@@ -31,7 +31,7 @@ export function createZodGuard({
   class ZodGuard {
     constructor(
       private source: Source,
-      private schemaOrDto: UnknownSchema | ZodDto<UnknownSchema, boolean>
+      private schemaOrDto: UnknownSchema | ZodDto
     ) {}
 
     canActivate(context: ExecutionContext) {
@@ -56,5 +56,5 @@ export const ZodGuard = createZodGuard()
  * @deprecated `UseZodGuard` will be removed in a future version, since guards
  * are not intended for validation purposes.
  */
-export const UseZodGuard = (source: Source, schemaOrDto: UnknownSchema | ZodDto<UnknownSchema, boolean>) =>
+export const UseZodGuard = (source: Source, schemaOrDto: UnknownSchema | ZodDto) =>
   UseGuards(new ZodGuard(source, schemaOrDto))

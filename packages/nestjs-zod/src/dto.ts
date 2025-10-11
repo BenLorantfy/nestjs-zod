@@ -7,8 +7,8 @@ import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
 export interface ZodDto<
-  TSchema extends UnknownSchema,
-  TCodec extends boolean
+  TSchema extends UnknownSchema = UnknownSchema,
+  TCodec extends boolean = false
 > {
   new (): ReturnType<TSchema['parse']>
   isZodDto: true
@@ -261,7 +261,7 @@ function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
   }
 }
 
-export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema, boolean> {
+export function isZodDto(metatype: unknown): metatype is ZodDto {
   return Boolean(metatype && (typeof metatype === 'object' || typeof metatype === 'function') && 'isZodDto' in metatype && metatype.isZodDto);
 }
 

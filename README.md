@@ -382,7 +382,7 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
 
 #### `ZodSerializerDto` (Set zod DTO to serialize responses with)
 ```ts
-function ZodSerializerDto(dto: ZodDto<UnknownSchema> | UnknownSchema | [ZodDto<UnknownSchema>] | [UnknownSchema])
+function ZodSerializerDto(dto: ZodDto | UnknownSchema | [ZodDto] | [UnknownSchema])
 ```
 Parses / serializes the return value of a controller method using the provided zod schema.  This is especially useful to prevent accidental data leaks.
 
