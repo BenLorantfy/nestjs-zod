@@ -254,37 +254,6 @@ class AuthController {
   async signIn(@Body() credentials: CredentialsDto) {}
 }
 ```
-###### Codec example
-```ts
-const stringToDate = z.codec(
-  z.iso.datetime(),
-  z.date(),
-  {
-    decode: (isoString) => new Date(isoString),
-    encode: (date) => date.toISOString(),
-  }
-);
-
-class BookDto extends createZodDto(z.object({
-  title: z.string(),
-  dateWritten: stringToDate
-}), {
-  codec: true
-}) { }
-
-@Controller('books')
-class BookController {
-  constructor() { }
-  
-  @Post()
-  @ZodResponse({ 
-    type: BookDto
-  })
-  createBook(@Body() book: BookDto) {
-    return book;
-  }
-}
-```
 
 #### `ZodValidationPipe` (Get nestjs to validate using zod)
 
@@ -609,6 +578,45 @@ However, it's recommended to use [`@ZodResponse`](#zodresponse-sync-run-time-com
   type: MyDto // <-- No need to do `.Output` here
 })
 ```
+#### Codecs
+Zod 4.1 introduced a new feature called "codecs".  There is more information about codecs in the [zod documentation](https://zod.dev/codecs)
+
+`nestjs-zod` supports `codecs`.  If the `codec: true` option is used when creating the zod DTO, then `parse` will be used for request bodies, and `encode` will be used when serializing response bodies.
+
+`codecs` can allow using _one_ zod schema, instead of two, for both the request and response
+
+```ts
+const stringToDate = z.codec(
+  z.iso.datetime(),
+  z.date(),
+  {
+    decode: (isoString) => new Date(isoString),
+    encode: (date) => date.toISOString(),
+  }
+);
+
+class BookDto extends createZodDto(z.object({
+  title: z.string(),
+  dateWritten: stringToDate
+}), {
+  codec: true
+}) { }
+
+@Controller('books')
+class BookController {
+  constructor() { }
+  
+  @Post()
+  @ZodResponse({ 
+    type: BookDto
+  })
+  createBook(@Body() book: BookDto) {
+    return book;
+  }
+}
+```
+
+
 #### Reusable schemas
 You can also externalize and reuse schemas across multiple DTOs.  If you add `.meta({ id: "MySchema" })` to any zod schema, then that schema will be added directly to `components.schemas` in the OpenAPI documentation.  For example, this code:
 ```ts
