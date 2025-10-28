@@ -4,7 +4,10 @@
   "version": "0.0.0-set-by-ci",
   "main": "./dist/index.js",
   "exports": {
-    ".": "./dist/index.js",
+    ".": {
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.js"
+    },
     "./z": {
       "import": "./dist/z.mjs",
       "default": "./dist/z.js"
@@ -14,7 +17,7 @@
       "default": "./dist/dto.js"
     }
   },
-  "module": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
