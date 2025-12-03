@@ -73,7 +73,7 @@ describe('zod/v4', () => {
     })
   })
 
-  it('should created nested defs', () => {
+  it('should create nested defs', () => {
     const StatusEnum = z4.enum(['pending', 'completed', 'error']).meta({ id: 'Status' })
 
     const OrderSchema = z4.object({
