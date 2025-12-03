@@ -39,12 +39,14 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
 
     for (let [oldSchemaName, oldOpenapiSchema] of Object.entries(doc.components?.schemas || {})) {
         // Ignore schemas without PREFIX property, which are not added by us
+        // @ts-expect-error TODO: fix this
         if (!(PREFIX in oldOpenapiSchema.properties)) {
             schemas[oldSchemaName] = oldOpenapiSchema;
             continue;
         }
 
         let newSchemaName = oldSchemaName;
+        // @ts-expect-error TODO: fix this
         let openApiSchema = oldOpenapiSchema.properties[PREFIX]
         const defRenames: Record<string, string> = {};
 
@@ -69,12 +71,14 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
             // This can happen if the def is part of a recursive schema
             // (for example, `___schema0`)
             for (let [defSchemaId, defSchema] of Object.entries(defs)) {
+                // @ts-expect-error TODO: fix this
                 if (!('id' in defSchema)) {
                     defRenames[defSchemaId] = `${newSchemaName}${defSchemaId}`;
                 }
             }
 
             for (let [defSchemaId, defSchema] of Object.entries(defs)) {
+                // @ts-expect-error TODO: fix this
                 let fixedDef = fixAllRefs({ schema: defSchema, rootSchemaName: newSchemaName, defRenames })
 
                 if (version === '3.0') {
@@ -120,7 +124,6 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
         // This is the default behavior, since nestjs/swagger seems to generate
         // a 3.0 document by default
         if (version === '3.0') {
-            // @ts-expect-error TODO: fix this
             openApiSchema = convertToOpenApi3Point0(openApiSchema);
         }
 
@@ -159,6 +162,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                 }
             }
 
+            // @ts-expect-error TODO: fix this
             if (methodObject?.parameters?.some(parameter => parameter.name === PREFIX)) {
                 const parameters = [];
 
@@ -166,17 +170,20 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                     assert(methodObject?.parameters, 'parameters is required');
 
                     let parameter = methodObject.parameters[i];
-
+                    // @ts-expect-error TODO: fix this
                     if (parameter.name === PREFIX) {
+                        // @ts-expect-error TODO: fix this
                         if (parameter.schema.type !== 'object') {
                             throw new Error(`[cleanupOpenApiDoc] Query or url parameters must be an object type`);
                         }
                         if ('$defs' in parameter) {
                             const defs = parameter.$defs
 
+                            // @ts-expect-error TODO: fix this
                             for (let [defSchemaId, defSchema] of Object.entries(defs)) {
                                 let fixedDef;
                                 try {
+                                    // @ts-expect-error TODO: fix this
                                     fixedDef = fixAllRefs({ schema: defSchema });
                                 } catch (err) {
                                     if (err instanceof Error && err.message.startsWith('[fixAllRefs]')) {

@@ -102,6 +102,7 @@ function openApiMetadataFactory({
     }
   };
 
+  // @ts-expect-error TODO: fix this
   for (let [propertyKey, propertySchema] of Object.entries<Record<string, unknown>>(properties || {})) {
     const newPropertySchema: Record<string, unknown> = {
       // Note: nestjs throws the following error message if `type` is
@@ -172,6 +173,7 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
     return schema;
   }
 
+  // @ts-expect-error TODO: fix this
   const newSchema = walkJsonSchema(generatedJsonSchema, fixRefs, { clone: true});
 
   // Ensure the key in the $defs object is the same as the id of the schema
