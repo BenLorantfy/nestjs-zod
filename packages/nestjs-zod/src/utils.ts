@@ -9,19 +9,17 @@ export function fixAllRefs({ schema, defRenames, rootSchemaName }: { schema: JSO
             if (newDefName) {
               s.$ref = `#/$defs/${newDefName}`;
             }
+
+            s.$ref = s.$ref.replace('#/$defs/', '#/components/schemas/');
           }
 
 
-            s.$ref = s.$ref.replace('#/$defs/', '#/components/schemas/');
-
-
-            
-            if (s.$ref === '#') {
-              if (!rootSchemaName) {
-                throw new Error('[fixAllRefs] rootSchemaName is required when fixing a ref to #');
-              }
-              s.$ref = `#/components/schemas/${rootSchemaName}`;
+          if (s.$ref === '#') {
+            if (!rootSchemaName) {
+              throw new Error('[fixAllRefs] rootSchemaName is required when fixing a ref to #');
             }
+            s.$ref = `#/components/schemas/${rootSchemaName}`;
+          }
         }
 
         return s;
