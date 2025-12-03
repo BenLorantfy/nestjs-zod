@@ -72,6 +72,28 @@ describe('zod/v4', () => {
       myField: expect.objectContaining({ type: 'string', required: true, default: 'myField' })
     })
   })
+
+  it('should created nested defs', () => {
+    const StatusEnum = z4.enum(['pending', 'completed', 'error']).meta({ id: 'Status' })
+
+    const OrderSchema = z4.object({
+      id: z4.uuid(),
+      number: z4.number(),
+      status: StatusEnum,
+    }).meta({
+      id: 'Order'
+    });
+
+    const OrdersResponseSchema = z4.object({
+      orders: z4.array(OrderSchema),
+    })
+
+    class OrdersResponseDto extends createZodDto(OrdersResponseSchema) {}
+
+    const metadata = OrdersResponseDto.Output._OPENAPI_METADATA_FACTORY() as any
+
+    expect(metadata.orders['x-nestjs_zod-$defs'].Order_Output.properties.status.$ref).toEqual('#/$defs/Status_Output')
+  });
 })
 
 describe('zod/v3', () => {

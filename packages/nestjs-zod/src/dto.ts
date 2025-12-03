@@ -198,7 +198,7 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
 
   // Ensure the $ref is pointing to the correct schema
   // @ts-expect-error
-  const newSchema = walkJsonSchema(generatedJsonSchema, (schema) => {
+  const fixRefs = (schema) => {
     if (schema.$ref && schema.$ref.startsWith('#/$defs/')) {
       const defKey = schema.$ref.replace('#/$defs/', '');
       const defId = $defs?.[defKey].id;
@@ -208,19 +208,23 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
 
     }
     return schema;
-  }, { clone: true});
+  }
+
+  const newSchema = walkJsonSchema(generatedJsonSchema, fixRefs, { clone: true});
 
   // Ensure the key in the $defs object is the same as the id of the schema
   const newDefs: Record<string, JSONSchema.BaseSchema> = {};
   Object.entries($defs || {}).forEach(([defKey, defValue]) => {
-    if (defValue.id) {
-      const newKey = defValue.id || defKey;
+    const newDefValue = walkJsonSchema(defValue, fixRefs, { clone: true});
+
+    if (newDefValue.id) {
+      const newKey = newDefValue.id || defKey;
       if (newDefs[newKey]) {
         throw new Error(`[nestjs-zod] Duplicate id in $defs: ${newKey}`);
       }
-      newDefs[newKey] = defValue;
+      newDefs[newKey] = newDefValue;
     } else {
-      newDefs[defKey] = defValue;
+      newDefs[defKey] = newDefValue;
     }
   });
 
