@@ -12,6 +12,7 @@ import z3 from 'zod/v3';
 import request from 'supertest';
 import { setupApp } from '../testUtils';
 import { ZodSerializerDto } from '../serializer';
+import { ZodResponse } from '../response';
 
 describe('basic request body', () => {
     test.each([
@@ -1529,6 +1530,88 @@ test('recursive unnamed sub-schema with record', async () => {
     });
     expect(get(doc, 'paths./dog-person.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/DogPersonDto');
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+})
+
+test('recursive identified sub-schema', async () => {
+    const StatusEnum = z.enum(['pending', 'completed', 'error']).meta({ id: 'Status' })
+
+    const OrderSchema = z.object({
+        id: z.string(),
+        number: z.number(),
+        status: StatusEnum,
+    }).meta({
+        id: 'Order'
+    });
+
+    const OrdersResponseSchema = z.object({
+        orders: z.array(OrderSchema),
+    }).meta({
+        id: 'OrdersResponse'
+    })
+
+    class OrdersResponseDto extends createZodDto(OrdersResponseSchema) {}
+
+    @Controller()
+    class MyController {
+        constructor() { }
+
+        @Get('/orders')
+        @ZodResponse({
+            status: 200,
+            type: OrdersResponseDto,
+        })
+        getOrders() {
+            const order = {
+                id: '123',
+                number: 1,
+                status: 'pending'
+            } as const
+
+            return {
+                orders: [order]
+            };
+        }
+    }
+
+    const doc = await getSwaggerDoc(MyController);
+    expect(doc.components?.schemas).toEqual({
+        Order_Output: {
+            id: 'Order_Output',
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+                id: {
+                    type: 'string',
+                },
+                number: {
+                    type: 'number',
+                },
+                status: {
+                    '$ref': '#/components/schemas/Status_Output'
+                }
+            },
+            required: ['id', 'number', 'status']
+        },
+        OrdersResponse_Output: {
+            id: 'OrdersResponse_Output',
+            type: 'object',
+            additionalProperties: false,
+            properties: {
+                orders: {
+                    type: 'array',
+                    items: {
+                        '$ref': '#/components/schemas/Order_Output'
+                    }
+                }
+            },
+            required: ['orders']
+        },
+        Status_Output: {
+            id: 'Status_Output',
+            type: 'string',
+            enum: ['pending', 'completed', 'error']
+        }
+    });
 })
 
 test('throws an error if trying to use recursive schemas in parameters', async () => {
