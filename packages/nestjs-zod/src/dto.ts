@@ -145,7 +145,7 @@ function openApiMetadataFactory({
     propertiesMetadata[propertyKey] = newPropertySchema;
   }
 
-  return propertiesMetadata
+  return propertiesMetadata;
 }
 
 function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }), io: 'input' | 'output') {

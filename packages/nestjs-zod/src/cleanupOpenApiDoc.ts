@@ -40,7 +40,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
     for (let [oldSchemaName, oldOpenapiSchema] of Object.entries(doc.components?.schemas || {})) {
         // Ignore schemas without PREFIX property, which are not added by us
         // @ts-expect-error TODO: fix this
-        if (!(PREFIX in oldOpenapiSchema.properties)) {
+        if (!oldOpenapiSchema.properties || !(PREFIX in oldOpenapiSchema.properties)) {
             schemas[oldSchemaName] = oldOpenapiSchema;
             continue;
         }
@@ -173,7 +173,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                     // @ts-expect-error TODO: fix this
                     if (parameter.name === PREFIX) {
                         // @ts-expect-error TODO: fix this
-                        if (parameter.schema.type !== 'object') {
+                        if (!parameter.schema || parameter.schema.type !== 'object') {
                             throw new Error(`[cleanupOpenApiDoc] Query or url parameters must be an object type`);
                         }
                         if ('$defs' in parameter) {
@@ -194,7 +194,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
 
                                 if (version === '3.0') {
                                     // @ts-expect-error TODO: fix this
-                                    fixedDef = convertToOpenApi3Point0(defSchema);
+                                    fixedDef = convertToOpenApi3Point0(fixedDef);
                                 }
 
                                 if (schemas[defSchemaId] && !isDeepStrictEqual(schemas[defSchemaId], fixedDef)) {
