@@ -13,6 +13,10 @@ import request from 'supertest';
 import { setupApp } from '../testUtils';
 import { ZodSerializerDto } from '../serializer';
 
+beforeEach(() => {
+    z.globalRegistry.clear()
+})
+
 describe('basic request body', () => {
     test.each([
         ctx({ version: 'v4', cleanUp: false }),
@@ -1616,6 +1620,43 @@ test('does not touch refs for schemas that are not from a zod dto', async () => 
     const doc = await getSwaggerDoc(MyController);
     expect(get(doc, 'components.schemas.MySchema.properties.things.items.$ref')).toEqual('#/$defs/MyThing');
     expect(get(doc, 'paths./.post.parameters[0].schema.items.$ref')).toEqual('#/$defs/MyFilter');
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+})
+
+test('add title metadata', async () => {
+    const Node = z.object({
+        name: z.string(),
+    }).meta({
+        id: 'Node',
+        title: 'Node',
+    });
+
+    class NodeDto extends createZodDto(Node) { }
+
+    @Controller()
+    class WorkflowController {
+        constructor() { }
+
+        @Post()
+        createWorkflow(@Body() workflow: NodeDto) {
+            return workflow;
+        }
+    }
+
+    const doc = await getSwaggerDoc(WorkflowController);
+    expect(doc.components?.schemas).toEqual({
+        Node: {
+            id: 'Node',
+            title: 'Node',
+            properties: {
+                name: {
+                    type: 'string'
+                }
+            },
+            required: ['name'],
+            type: 'object'
+        }
+    });
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
 })
 

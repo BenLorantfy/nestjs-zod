@@ -2,7 +2,7 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, UNWRAP_ROOT_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, UNWRAP_ROOT_KEY, PARENT_TITLE_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
@@ -172,6 +172,13 @@ function openApiMetadataFactory({
     // back to each property, under a custom field name
     if (jsonSchema.id) {
       newPropertySchema[PARENT_ID_KEY] = jsonSchema.id;
+    }
+
+    // nestjs expects us to return a record of properties, instead of a
+    // proper jsonschema.  This means `title` is lost.  So here, we add it
+    // back to each property, under a custom field name
+    if (jsonSchema.title) {
+      newPropertySchema[PARENT_TITLE_KEY] = jsonSchema.title;
     }
 
     if (typeof jsonSchema.additionalProperties === 'boolean') {
