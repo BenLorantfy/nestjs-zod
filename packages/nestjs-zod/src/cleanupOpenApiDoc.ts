@@ -193,7 +193,6 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                                 }
 
                                 if (version === '3.0') {
-                                    // @ts-expect-error TODO: fix this
                                     fixedDef = convertToOpenApi3Point0(fixedDef);
                                 }
 
