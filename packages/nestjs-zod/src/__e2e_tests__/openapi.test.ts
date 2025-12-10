@@ -517,6 +517,7 @@ describe('arrays', () => {
     
             @Post()
             @ApiBody({ type: [BookDto] })
+            @ApiResponse({ type: [BookDto] })
             createBook(@Body() book: BookDto[]) {
                 return book;
             }
@@ -558,7 +559,21 @@ describe('arrays', () => {
                             },
                             required: true
                         },
-                        responses: expect.anything(),
+                        responses: {
+                            default: {
+                                description: '',
+                                content: {
+                                    'application/json': {
+                                        schema: {
+                                            type: 'array',
+                                            items: {
+                                                '$ref': '#/components/schemas/BookDto'
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
                         tags: [
                             "Book"
                         ]
