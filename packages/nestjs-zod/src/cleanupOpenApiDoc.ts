@@ -207,10 +207,13 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                     }
                 }
 
+                // @ts-ignore
                 if (requestBodyObject.schema?.items && '$ref' in requestBodyObject.schema.items) {
+                    // @ts-ignore
                     const oldSchemaName = getSchemaNameFromRef(requestBodyObject.schema.items.$ref);
                     if (renames[oldSchemaName]) {
                         const newSchemaName = renames[oldSchemaName];
+                        // @ts-ignore
                         requestBodyObject.schema.items.$ref = requestBodyObject.schema.items.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
                     }
                 }
@@ -227,10 +230,13 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                         }
                     }
 
+                    // @ts-ignore
                     if (responseBodyObject.schema?.items && '$ref' in responseBodyObject.schema.items) {
+                        // @ts-ignore
                         const oldSchemaName = getSchemaNameFromRef(responseBodyObject.schema.items.$ref);
                         if (renames[oldSchemaName]) {
                             const newSchemaName = renames[oldSchemaName];
+                            // @ts-ignore
                             responseBodyObject.schema.items.$ref = responseBodyObject.schema.items.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
                         }
                     }

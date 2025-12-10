@@ -210,7 +210,7 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
     return schema;
   }
 
-  const newSchema = walkJsonSchema(generatedJsonSchema, fixRefs, { clone: true});
+  const newSchema = walkJsonSchema(generatedJsonSchema as JSONSchema.JSONSchema, fixRefs, { clone: true});
 
   // Ensure the key in the $defs object is the same as the id of the schema
   const newDefs: Record<string, JSONSchema.BaseSchema> = {};
