@@ -217,7 +217,7 @@ Check out the [example app](./packages/example/) for a full example of how to in
 ### Request Validation
 #### `createZodDto` (Create a DTO from a Zod schema)
 ```ts
-function createZodDto<TSchema extends UnknownSchema>(schema: TSchema): ZodDto<TSchema>;
+function createZodDto<TSchema extends UnknownSchema, TCodec extends boolean = false>(schema: TSchema, options?: { codec: TCodec }): ZodDto<TSchema, TCodec>;
 ```
 Creates a nestjs DTO from a zod schema.  These zod DTOs can be used in place of `class-validator` / `class-transformer` DTOs. Zod DTOs are responsible for three things:
 
@@ -230,8 +230,10 @@ Creates a nestjs DTO from a zod schema.  These zod DTOs can be used in place of 
 
 ##### Parameters
 - `schema` - A zod schema.  You can "bring your own zod", including zod v3 schemas, v4 schemas, zod mini schemas, etc.  The only requirement is that the schema has a method called `parse`
+- `options`
+  - `options.codec` - If set to `true`, then when serializing responses `nestjs-zod` will use `encode` instead of `parse`.  See more information about codecs in the [zod documentation](https://zod.dev/codecs)
 
-##### Example
+##### Examples
 ###### Creating a zod DTO
 ```ts
 import { createZodDto } from 'nestjs-zod'
@@ -247,20 +249,6 @@ class CredentialsDto extends createZodDto(CredentialsSchema) {}
 ```
 ###### Using a zod DTO
 ```ts
-@Controller('auth')
-class AuthController {
-  // with global ZodValidationPipe (recommended)
-  async signIn(@Body() credentials: CredentialsDto) {}
-  async signIn(@Param() signInParams: SignInParamsDto) {}
-  async signIn(@Query() signInQuery: SignInQueryDto) {}
-
-  // with route-level ZodValidationPipe
-  @UsePipes(ZodValidationPipe)
-  async signIn(@Body() credentials: CredentialsDto) {}
-}
-
-// with controller-level ZodValidationPipe
-@UsePipes(ZodValidationPipe)
 @Controller('auth')
 class AuthController {
   async signIn(@Body() credentials: CredentialsDto) {}
@@ -363,7 +351,7 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
 
 #### `ZodSerializerDto` (Set zod DTO to serialize responses with)
 ```ts
-function ZodSerializerDto(dto: ZodDto<UnknownSchema> | UnknownSchema | [ZodDto<UnknownSchema>] | [UnknownSchema])
+function ZodSerializerDto(dto: ZodDto | UnknownSchema | [ZodDto] | [UnknownSchema])
 ```
 Parses / serializes the return value of a controller method using the provided zod schema.  This is especially useful to prevent accidental data leaks.
 
@@ -590,6 +578,45 @@ However, it's recommended to use [`@ZodResponse`](#zodresponse-sync-run-time-com
   type: MyDto // <-- No need to do `.Output` here
 })
 ```
+#### Codecs
+Zod 4.1 introduced a new feature called "codecs".  There is more information about codecs in the [zod documentation](https://zod.dev/codecs)
+
+`nestjs-zod` supports `codecs`.  If the `codec: true` option is used when creating the zod DTO, then `parse` will be used for request bodies, and `encode` will be used when serializing response bodies.
+
+`codecs` can allow using _one_ zod schema, instead of two, for both the request and response
+
+```ts
+const stringToDate = z.codec(
+  z.iso.datetime(),
+  z.date(),
+  {
+    decode: (isoString) => new Date(isoString),
+    encode: (date) => date.toISOString(),
+  }
+);
+
+class BookDto extends createZodDto(z.object({
+  title: z.string(),
+  dateWritten: stringToDate
+}), {
+  codec: true
+}) { }
+
+@Controller('books')
+class BookController {
+  constructor() { }
+  
+  @Post()
+  @ZodResponse({ 
+    type: BookDto
+  })
+  createBook(@Body() book: BookDto) {
+    return book;
+  }
+}
+```
+See the example app [here](/packages/example/src/people/people.dto.ts) for a full example.
+
 #### Reusable schemas
 You can also externalize and reuse schemas across multiple DTOs.  If you add `.meta({ id: "MySchema" })` to any zod schema, then that schema will be added directly to `components.schemas` in the OpenAPI documentation.  For example, this code:
 ```ts

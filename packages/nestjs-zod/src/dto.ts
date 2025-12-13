@@ -2,28 +2,34 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, UNWRAP_ROOT_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
 export interface ZodDto<
-  TSchema extends UnknownSchema
+  TSchema extends UnknownSchema = UnknownSchema,
+  TCodec extends boolean = boolean
 > {
   new (): ReturnType<TSchema['parse']>
   isZodDto: true
   schema: TSchema
+  codec: TCodec
   create(input: unknown): ReturnType<TSchema['parse']>
-  Output: ZodDto<UnknownSchema>
+  Output: ZodDto<UnknownSchema, TCodec>
   _OPENAPI_METADATA_FACTORY(): unknown
 }
 
+export const ioSymbol = Symbol('io');
+
 export function createZodDto<
-  TSchema extends UnknownSchema|z3.ZodTypeAny|($ZodType & { parse: (input: unknown) => unknown })
->(schema: TSchema) {
+  TSchema extends UnknownSchema|z3.ZodTypeAny|($ZodType & { parse: (input: unknown) => unknown }),
+  TCodec extends boolean = false,
+>(schema: TSchema, options?: { codec: TCodec }) {
   class AugmentedZodDto {
     public static readonly isZodDto = true
     public static readonly schema = schema
-    public static readonly io = "input"
+    public static readonly codec = options?.codec || false
+    public static readonly [ioSymbol] = "input"
 
     public static create(input: unknown) {
       return this.schema.parse(input)
@@ -35,7 +41,7 @@ export function createZodDto<
       class AugmentedZodDto {
         public static readonly isZodDto = true
         public static readonly schema = schema
-        public static readonly io = "output"
+        public static readonly [ioSymbol] = "output"
     
         public static create(input: unknown) {
           return this.schema.parse(input)
@@ -56,7 +62,7 @@ export function createZodDto<
     }
   }
 
-  return AugmentedZodDto as unknown as ZodDto<TSchema> & { io: "input" }
+  return AugmentedZodDto as unknown as ZodDto<TSchema, TCodec>
 }
 
 function openApiMetadataFactory({ 
@@ -255,7 +261,7 @@ function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
   }
 }
 
-export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema> {
+export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema, boolean> {
   return Boolean(metatype && (typeof metatype === 'object' || typeof metatype === 'function') && 'isZodDto' in metatype && metatype.isZodDto);
 }
 

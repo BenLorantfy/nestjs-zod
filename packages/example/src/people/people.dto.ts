@@ -1,5 +1,6 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import { stringToDate } from '../codecs';
 
 // Schemas
 export const CreatePersonSchema = z.object({
@@ -20,6 +21,7 @@ export const CreatePersonSchema = z.object({
 
 export const PersonSchema = CreatePersonSchema.extend({
   id: z.number().int().positive().describe('Unique identifier for the person'),
+  created: stringToDate
 }).meta({ id: 'Person' });
 
 export const PersonListSchema = z.object({
@@ -32,8 +34,8 @@ export const PersonFilterSchema = z.object({
 
 // DTO classes
 export class CreatePersonDto extends createZodDto(CreatePersonSchema) {}
-export class PersonDto extends createZodDto(PersonSchema) {}
-export class PersonListDto extends createZodDto(PersonListSchema) {} 
+export class PersonDto extends createZodDto(PersonSchema, { codec: true }) {}
+export class PersonListDto extends createZodDto(PersonListSchema, { codec: true }) {} 
 export class PersonFilterDto extends createZodDto(PersonFilterSchema) {}
 
 // Types

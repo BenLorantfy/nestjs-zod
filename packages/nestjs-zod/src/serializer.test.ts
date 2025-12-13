@@ -114,7 +114,7 @@ describe.each([
   test('should throw an error if the response is invalid when using arrays', async () => {
     class BookDto extends createZodDto(z.object({
       id: z.string(),
-  })) { }
+    })) { }
   
     @Controller('books')
     class BookController {
