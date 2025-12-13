@@ -47,7 +47,7 @@ jobs:
             playwright-${{ runner.os }}-
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: packages/example-dual-zods && pnpm exec playwright install --with-deps
+        run: cd packages/example-dual-zods && pnpm exec playwright install --with-deps
       - name: Test example-dual-zods app swagger
         run: |
           cd packages/example-dual-zods && pnpm run start &
