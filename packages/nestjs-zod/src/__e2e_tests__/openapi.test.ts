@@ -1048,6 +1048,98 @@ test('throws an error if a nested zod schema name conflicts with a class-validat
     await expect(getSwaggerDoc(MyController)).rejects.toEqual(new Error("[cleanupOpenApiDoc] Found multiple schemas with name `Car`.  Please review your schemas to ensure that you are not using the same schema name for different schemas"));
 });
 
+describe('issue#202 - ESM/CJS metadata interop with .describe()', () => {
+    test('descriptions are preserved when importing from main entry point', async () => {
+        // This test verifies that the ESM entry point (index.mjs) correctly
+        // preserves Zod v4 metadata (added via .describe() or .meta()) in
+        // generated OpenAPI specs. Previously, importing from the main entry
+        // point loaded CJS which used a different globalRegistry than ESM,
+        // causing metadata lookup failures.
+
+        const UserSchema = z.object({
+            id: z.string().describe('User ID'),
+            username: z.string().describe('Username for login'),
+            email: z.string().email().describe('User email address'),
+        });
+
+        class UserDto extends createZodDto(UserSchema) {}
+
+        @Controller()
+        class UserController {
+            constructor() { }
+
+            @Post()
+            createUser(@Body() user: UserDto) {
+                return user;
+            }
+        }
+
+        const doc = await getSwaggerDoc(UserController);
+        expect(get(doc, 'components.schemas.UserDto.properties.id.description')).toEqual('User ID');
+        expect(get(doc, 'components.schemas.UserDto.properties.username.description')).toEqual('Username for login');
+        expect(get(doc, 'components.schemas.UserDto.properties.email.description')).toEqual('User email address');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+
+    test('descriptions with .meta() id are preserved with field descriptions', async () => {
+        const ProductSchema = z.object({
+            name: z.string().describe('Product name'),
+            price: z.number().describe('Product price in USD'),
+        }).meta({
+            id: 'Product789',
+        });
+
+        class ProductDto extends createZodDto(ProductSchema) {}
+
+        @Controller()
+        class ProductController {
+            constructor() { }
+
+            @Post()
+            createProduct(@Body() product: ProductDto) {
+                return product;
+            }
+        }
+
+        const doc = await getSwaggerDoc(ProductController);
+        expect(get(doc, 'components.schemas.Product789.properties.name.description')).toEqual('Product name');
+        expect(get(doc, 'components.schemas.Product789.properties.price.description')).toEqual('Product price in USD');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+
+    test('nested schema descriptions are preserved', async () => {
+        const AddressSchema = z.object({
+            street: z.string().describe('Street address'),
+            city: z.string().describe('City name'),
+            zipCode: z.string().describe('ZIP or postal code'),
+        }).meta({ id: 'Address456' });
+
+        const PersonSchema = z.object({
+            name: z.string().describe('Full name'),
+            address: AddressSchema,
+        });
+
+        class PersonDto extends createZodDto(PersonSchema) {}
+
+        @Controller()
+        class PersonController {
+            constructor() { }
+
+            @Post()
+            createPerson(@Body() person: PersonDto) {
+                return person;
+            }
+        }
+
+        const doc = await getSwaggerDoc(PersonController);
+        expect(get(doc, 'components.schemas.PersonDto.properties.name.description')).toEqual('Full name');
+        expect(get(doc, 'components.schemas.Address456.properties.street.description')).toEqual('Street address');
+        expect(get(doc, 'components.schemas.Address456.properties.city.description')).toEqual('City name');
+        expect(get(doc, 'components.schemas.Address456.properties.zipCode.description')).toEqual('ZIP or postal code');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+});
+
 test('throws an error if a named schema nested in a query param conflicts with a class-validator schema name', async () => {
     class Chair {
         @IsString()
