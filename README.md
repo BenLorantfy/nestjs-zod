@@ -40,6 +40,9 @@
 <p>
 ✨ Automatically generate OpenAPI documentation using zod
 </p>
+<p>
+✨ Supports zod codecs
+</p>
 
 
 ## Getting Started
@@ -205,7 +208,9 @@ Check out the [example app](./packages/example/) for a full example of how to in
   - [`ZodSerializationException`](#zodserializationexception)
 - [OpenAPI (Swagger) support](#openapi-swagger-support)
   - [`cleanupOpenApiDoc` (Ensure proper OpenAPI output)](#cleanupopenapidoc-ensure-proper-openapi-output)
-  - [Writing more Swagger-compatible schemas](#writing-more-swagger-compatible-schemas)
+  - [Output schemas](#output-schemas)
+  - [Codecs](#codecs)
+  - [Reusable schemas](#reusable-schemas)
   - [`zodV3ToOpenAPI` (⚠️ DEPRECATED)](#zodv3toopenapi-deprecated)
 - [`validate` (⚠️ DEPRECATED)](#validate-deprecated)
 - [`ZodGuard` (⚠️ DEPRECATED)](#zodguard-deprecated)
@@ -948,4 +953,6 @@ Will result in this OpenAPI document:
 
 ## Credits
 
-This library was originally created by [risen228](https://github.com/risen228) and now maintained by [BenLorantfy](https://github.com/BenLorantfy/)
+This library was originally created by [risen228](https://github.com/risen228) and now maintained by [BenLorantfy](https://github.com/BenLorantfy/) (that's me!)
+
+I'm for hire!  You can email me at ben@lorantfy.com to setup a call
