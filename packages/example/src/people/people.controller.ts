@@ -22,6 +22,7 @@ export class PeopleController {
       speciesIds: [],
       vehicleIds: ['14', '30'],
       starshipIds: ['12', '22'],
+      created: new Date('2025-12-11T17:04:50.197Z')
     },
     {
       id: 2,
@@ -37,7 +38,8 @@ export class PeopleController {
       filmIds: ['1', '2', '3', '4', '5', '6'],
       speciesIds: ['2'],
       vehicleIds: [],
-      starshipIds: []
+      starshipIds: [],
+      created: new Date('2025-12-12T17:04:50.197Z')
     },
     {
       id: 3,
@@ -53,7 +55,8 @@ export class PeopleController {
       filmIds: ['1', '2', '3', '4', '5', '6'],
       speciesIds: ['2'],
       vehicleIds: [],
-      starshipIds: []
+      starshipIds: [],
+      created: new Date('2025-12-13T17:04:50.197Z')
     },
   ];
 
@@ -82,7 +85,8 @@ export class PeopleController {
   createPerson(@Body() createPersonDto: CreatePersonDto): Person {
     const newPerson = {
       ...createPersonDto,
-      id: Math.floor(Math.random() * 1000) + 4
+      id: Math.floor(Math.random() * 1000) + 4,
+      created: new Date()
     };
 
     this.mockPeople.push(newPerson);
