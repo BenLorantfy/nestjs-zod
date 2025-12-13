@@ -67,6 +67,9 @@ importers:
       '@nestjs/testing':
         specifier: ^11.0.1
         version: 11.1.0(@nestjs/common@11.1.5(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.5)(@nestjs/platform-express@11.1.5)
+      '@playwright/test':
+        specifier: ^1.52.0
+        version: 1.52.0
       '@swc/cli':
         specifier: ^0.6.0
         version: 0.6.0(@swc/core@1.13.0)(chokidar@4.0.3)
@@ -8347,7 +8350,7 @@ snapshots:
 
   eslint-import-resolver-custom-alias@1.3.2(eslint-plugin-import@2.26.0):
     dependencies:
-      eslint-plugin-import: 2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.7.2))(eslint-import-resolver-typescript@2.7.1)(eslint@8.57.1)
+      eslint-plugin-import: 2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@2.7.1)(eslint@8.57.1)
       glob-parent: 6.0.2
       resolve: 1.22.10
 
@@ -8369,7 +8372,7 @@ snapshots:
     dependencies:
       debug: 4.4.0
       eslint: 8.57.1
-      eslint-plugin-import: 2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.7.2))(eslint-import-resolver-typescript@2.7.1)(eslint@8.57.1)
+      eslint-plugin-import: 2.26.0(@typescript-eslint/parser@5.30.7(eslint@8.57.1)(typescript@5.8.3))(eslint-import-resolver-typescript@2.7.1)(eslint@8.57.1)
       glob: 7.2.3
       is-glob: 4.0.3
       resolve: 1.22.10

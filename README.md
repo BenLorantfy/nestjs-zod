@@ -615,7 +615,7 @@ class BookController {
   }
 }
 ```
-
+See the example app [here](/packages/example/src/people/people.dto.ts) for a full example.
 
 #### Reusable schemas
 You can also externalize and reuse schemas across multiple DTOs.  If you add `.meta({ id: "MySchema" })` to any zod schema, then that schema will be added directly to `components.schemas` in the OpenAPI documentation.  For example, this code:

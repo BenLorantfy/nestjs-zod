@@ -42,16 +42,22 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('packages/example-dual-zods/package.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('packages/example-dual-zods/package.json') }}-${{ hashFiles('packages/example/package.json') }}
           restore-keys: |
             playwright-${{ runner.os }}-
       - name: Install Playwright Browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: cd packages/example-dual-zods && pnpm exec playwright install --with-deps
+        run: |
+          cd packages/example-dual-zods && pnpm exec playwright install --with-deps
+          cd packages/example && pnpm exec playwright install --with-deps
       - name: Test example-dual-zods app swagger
         run: |
           cd packages/example-dual-zods && pnpm run start &
           cd packages/example-dual-zods && pnpm run test:swagger
+      - name: Test example app swagger
+        run: |
+          cd packages/example && pnpm run start &
+          cd packages/example && pnpm run test:swagger
       # - name: Get current date
       #   if: github.head_ref == 'v5'
       #   id: date
