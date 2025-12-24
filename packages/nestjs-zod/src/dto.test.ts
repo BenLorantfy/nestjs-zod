@@ -1,4 +1,5 @@
 import { createZodDto } from './dto'
+import { PARENT_TITLE_KEY } from './const'
 import * as z4 from 'zod/v4'
 import * as z3 from 'zod/v3';
 import * as zodMini from 'zod/v4-mini';
@@ -70,6 +71,20 @@ describe('zod/v4', () => {
       username: expect.objectContaining({ type: 'string', required: true }),
       password: expect.objectContaining({ type: 'string', required: true }),
       myField: expect.objectContaining({ type: 'string', required: true, default: 'myField' })
+    })
+  })
+
+  it('add title metadata', () => {
+    const UserSchema = z4.object({
+      username: z4.string(),
+    }).meta({
+      title: 'User'
+    })
+
+    class UserDto extends createZodDto(UserSchema) {}
+
+    expect(UserDto.Output._OPENAPI_METADATA_FACTORY()).toEqual({
+      username: expect.objectContaining({ type: 'string', required: true, [PARENT_TITLE_KEY]: 'User' }),
     })
   })
 })

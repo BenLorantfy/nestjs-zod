@@ -588,7 +588,7 @@ Zod 4.1 introduced a new feature called "codecs".  There is more information abo
 
 `nestjs-zod` supports `codecs`.  If the `codec: true` option is used when creating the zod DTO, then `parse` will be used for request bodies, and `encode` will be used when serializing response bodies.
 
-`codecs` can allow using _one_ zod schema, instead of two, for both the request and response
+`codecs` can enable, in some cases, using _one_ zod schema, instead of two, for both the request and response
 
 ```ts
 const stringToDate = z.codec(
@@ -661,6 +661,12 @@ Will result in this OpenAPI document:
   // ...
 }
 ```
+
+##### Schema names
+Note that schemas are named / displayed in SwaggerUI according to the following logic:
+1. For input schemas, (e.g. schemas used in request bodies), SwaggerUI will display the `id` property in `.meta({ id: 'MySchema' })`
+2. For output schemas, (e.g. schemas used in `@ZodResponse()`), `nestjs-zod` suffixes the `id` set by `.meta({ id: 'MySchema' })` with `_Output`, so SwaggerUI displays, for example, `MySchema_Output`.  This is important to avoid collision with input schemas.
+3. However, if `title` is set by `.meta({ title: ... })`, then SwaggerUI will display `title`.  Note that unlike `id`s, there is no duplicate checking for titles, so it's the consumer's responsibility to avoid confusion when using `title`.
 
 #### `zodV3ToOpenAPI` _**(DEPRECATED)**_
 

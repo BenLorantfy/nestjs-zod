@@ -1624,6 +1624,43 @@ test('does not touch refs for schemas that are not from a zod dto', async () => 
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
 })
 
+test('add title metadata', async () => {
+    const Node = z.object({
+        name: z.string(),
+    }).meta({
+        id: 'Node',
+        title: 'Node',
+    });
+
+    class NodeDto extends createZodDto(Node) { }
+
+    @Controller()
+    class WorkflowController {
+        constructor() { }
+
+        @Post()
+        createWorkflow(@Body() workflow: NodeDto) {
+            return workflow;
+        }
+    }
+
+    const doc = await getSwaggerDoc(WorkflowController);
+    expect(doc.components?.schemas).toEqual({
+        Node: {
+            id: 'Node',
+            title: 'Node',
+            properties: {
+                name: {
+                    type: 'string'
+                }
+            },
+            required: ['name'],
+            type: 'object'
+        }
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+})
+
 describe('issue#187', () => {
     test('correctly reuses schema when used directly as a DTO and when used as a sub-schema', async () => {
         class Thing extends createZodDto(
