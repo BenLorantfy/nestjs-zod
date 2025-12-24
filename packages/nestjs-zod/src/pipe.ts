@@ -9,7 +9,7 @@ interface ZodValidationPipeOptions {
 }
 
 type ZodValidationPipeClass = new (
-  schemaOrDto?: UnknownSchema | ZodDto<UnknownSchema>
+  schemaOrDto?: UnknownSchema | ZodDto
 ) => PipeTransform
 
 export function createZodValidationPipe({
@@ -17,7 +17,7 @@ export function createZodValidationPipe({
 }: ZodValidationPipeOptions = {}): ZodValidationPipeClass {
   @Injectable()
   class ZodValidationPipe implements PipeTransform {
-    constructor(@Optional() private schemaOrDto?: UnknownSchema | ZodDto<UnknownSchema>) {}
+    constructor(@Optional() private schemaOrDto?: UnknownSchema | ZodDto) {}
 
     public transform(value: unknown, metadata: ArgumentMetadata) {
       if (this.schemaOrDto) {

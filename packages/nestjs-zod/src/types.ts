@@ -1,5 +1,6 @@
 export interface UnknownSchema {
     parse(input: unknown): unknown;
+    encode?(input: unknown): unknown;
     array?: () => UnknownSchema;
 }
 

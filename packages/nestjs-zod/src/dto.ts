@@ -2,28 +2,34 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PREFIX, UNWRAP_ROOT_KEY, PARENT_TITLE_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY, PARENT_TITLE_KEY, PREFIX } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
 export interface ZodDto<
-  TSchema extends UnknownSchema
+  TSchema extends UnknownSchema = UnknownSchema,
+  TCodec extends boolean = boolean
 > {
   new (): ReturnType<TSchema['parse']>
   isZodDto: true
   schema: TSchema
+  codec: TCodec
   create(input: unknown): ReturnType<TSchema['parse']>
-  Output: ZodDto<UnknownSchema>
+  Output: ZodDto<UnknownSchema, TCodec>
   _OPENAPI_METADATA_FACTORY(): unknown
 }
 
+export const ioSymbol = Symbol('io');
+
 export function createZodDto<
-  TSchema extends UnknownSchema|z3.ZodTypeAny|($ZodType & { parse: (input: unknown) => unknown })
->(schema: TSchema) {
+  TSchema extends UnknownSchema|z3.ZodTypeAny|($ZodType & { parse: (input: unknown) => unknown }),
+  TCodec extends boolean = false,
+>(schema: TSchema, options?: { codec: TCodec }) {
   class AugmentedZodDto {
     public static readonly isZodDto = true
     public static readonly schema = schema
-    public static readonly io = "input"
+    public static readonly codec = options?.codec || false
+    public static readonly [ioSymbol] = "input"
 
     public static create(input: unknown) {
       return this.schema.parse(input)
@@ -35,7 +41,7 @@ export function createZodDto<
       class AugmentedZodDto {
         public static readonly isZodDto = true
         public static readonly schema = schema
-        public static readonly io = "output"
+        public static readonly [ioSymbol] = "output"
     
         public static create(input: unknown) {
           return this.schema.parse(input)
@@ -56,7 +62,7 @@ export function createZodDto<
     }
   }
 
-  return AugmentedZodDto as unknown as ZodDto<TSchema> & { io: "input" }
+  return AugmentedZodDto as unknown as ZodDto<TSchema, TCodec>
 }
 
 function openApiMetadataFactory({ 
@@ -205,7 +211,68 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
 
   // Ensure the $ref is pointing to the correct schema
   // @ts-expect-error
-  const newSchema = walkJsonSchema(generatedJsonSchema, (schema) => {
+  const newSchema = fixRefsToPointById(generatedJsonSchema, $defs);
+
+  // Ensure the key in the $defs object is the same as the id of the schema
+  const newDefs: Record<string, JSONSchema.BaseSchema> = {};
+  Object.entries($defs || {}).forEach(([defKey, defValue]) => {
+    if (defValue.id) {
+      const newKey = defValue.id || defKey;
+      if (newDefs[newKey]) {
+        throw new Error(`[nestjs-zod] Duplicate id in $defs: ${newKey}`);
+      }
+      newDefs[newKey] = fixRefsToPointById(defValue, $defs);
+    } else {
+      newDefs[defKey] = fixRefsToPointById(defValue, $defs);
+    }
+  });
+
+  if ($defs) {
+    newSchema.$defs = newDefs;
+  }
+
+  return newSchema;
+}
+
+/**
+ * Changes all $refs in a schema to point based off the schema's ID, not the
+ * keys of the $defs object.  For example, given this schema:
+ * ```json
+ * {
+ *  type: "object",
+ *  properties: {
+ *    author: {
+ *      $ref: "#/$defs/Author"
+ *    }
+ *  }
+ * }
+ * ```
+ * and this $defs object:
+ * ```json
+ * {
+ *   Author: {
+ *    id: "Author_Output",
+ *    type: "object",
+ *    properties: {
+ *      // ...
+ *    }
+ *  }
+ * }
+ * ```
+ * It will return this schema:
+ * ```json
+ * {
+ *  type: "object",
+ *  properties: {
+ *    author: {
+ *      $ref: "#/$defs/Author_Output"
+ *    }
+ *  }
+ * }
+ * ```
+ */
+function fixRefsToPointById(rootSchema: JSONSchema.JSONSchema, $defs:  Record<string, JSONSchema.JSONSchema> | undefined) {
+  return walkJsonSchema(rootSchema, (schema) => {
     if (schema.$ref && schema.$ref.startsWith('#/$defs/')) {
       const defKey = schema.$ref.replace('#/$defs/', '');
       const defId = $defs?.[defKey].id;
@@ -216,26 +283,6 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
     }
     return schema;
   }, { clone: true});
-
-  // Ensure the key in the $defs object is the same as the id of the schema
-  const newDefs: Record<string, JSONSchema.BaseSchema> = {};
-  Object.entries($defs || {}).forEach(([defKey, defValue]) => {
-    if (defValue.id) {
-      const newKey = defValue.id || defKey;
-      if (newDefs[newKey]) {
-        throw new Error(`[nestjs-zod] Duplicate id in $defs: ${newKey}`);
-      }
-      newDefs[newKey] = defValue;
-    } else {
-      newDefs[defKey] = defValue;
-    }
-  });
-
-  if ($defs) {
-    newSchema.$defs = newDefs;
-  }
-
-  return newSchema;
 }
 
 function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
@@ -262,7 +309,7 @@ function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
   }
 }
 
-export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema> {
+export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema, boolean> {
   return Boolean(metatype && (typeof metatype === 'object' || typeof metatype === 'function') && 'isZodDto' in metatype && metatype.isZodDto);
 }
 
