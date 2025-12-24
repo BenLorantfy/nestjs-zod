@@ -1998,8 +1998,8 @@ describe('issue#196 - const support', () => {
     })
 })
 
-describe('issue#220 - has correct references when there are multiple layers of reused schemas', () => {
-    it('test', async () => {
+describe('issue#220', () => {
+    it('has correct references when there are multiple layers of reused schemas', async () => {
         const AuthorSchema = z.object({
             id: z.string(),
             name: z.string(),
