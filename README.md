@@ -955,4 +955,4 @@ Will result in this OpenAPI document:
 
 This library was originally created by [risen228](https://github.com/risen228) and now maintained by [BenLorantfy](https://github.com/BenLorantfy/) (that's me!)
 
-I'm for hire!  You can email me at ben@lorantfy.com to setup a call
+I'm for hire!  Check out my resume [here](https://www.benlorantfy.com/resume).  You can email me at ben@lorantfy.com with consulting or other opportunities. 
