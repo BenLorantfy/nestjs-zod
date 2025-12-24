@@ -204,7 +204,68 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
 
   // Ensure the $ref is pointing to the correct schema
   // @ts-expect-error
-  const newSchema = walkJsonSchema(generatedJsonSchema, (schema) => {
+  const newSchema = fixRefsToPointById(generatedJsonSchema, $defs);
+
+  // Ensure the key in the $defs object is the same as the id of the schema
+  const newDefs: Record<string, JSONSchema.BaseSchema> = {};
+  Object.entries($defs || {}).forEach(([defKey, defValue]) => {
+    if (defValue.id) {
+      const newKey = defValue.id || defKey;
+      if (newDefs[newKey]) {
+        throw new Error(`[nestjs-zod] Duplicate id in $defs: ${newKey}`);
+      }
+      newDefs[newKey] = fixRefsToPointById(defValue, $defs);
+    } else {
+      newDefs[defKey] = fixRefsToPointById(defValue, $defs);
+    }
+  });
+
+  if ($defs) {
+    newSchema.$defs = newDefs;
+  }
+
+  return newSchema;
+}
+
+/**
+ * Changes all $refs in a schema to point based off the schema's ID, not the
+ * keys of the $defs object.  For example, given this schema:
+ * ```json
+ * {
+ *  type: "object",
+ *  properties: {
+ *    author: {
+ *      $ref: "#/$defs/Author"
+ *    }
+ *  }
+ * }
+ * ```
+ * and this $defs object:
+ * ```json
+ * {
+ *   Author: {
+ *    id: "Author_Output",
+ *    type: "object",
+ *    properties: {
+ *      // ...
+ *    }
+ *  }
+ * }
+ * ```
+ * It will return this schema:
+ * ```json
+ * {
+ *  type: "object",
+ *  properties: {
+ *    author: {
+ *      $ref: "#/$defs/Author_Output"
+ *    }
+ *  }
+ * }
+ * ```
+ */
+function fixRefsToPointById(rootSchema: JSONSchema.JSONSchema, $defs:  Record<string, JSONSchema.JSONSchema> | undefined) {
+  return walkJsonSchema(rootSchema, (schema) => {
     if (schema.$ref && schema.$ref.startsWith('#/$defs/')) {
       const defKey = schema.$ref.replace('#/$defs/', '');
       const defId = $defs?.[defKey].id;
@@ -215,26 +276,6 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
     }
     return schema;
   }, { clone: true});
-
-  // Ensure the key in the $defs object is the same as the id of the schema
-  const newDefs: Record<string, JSONSchema.BaseSchema> = {};
-  Object.entries($defs || {}).forEach(([defKey, defValue]) => {
-    if (defValue.id) {
-      const newKey = defValue.id || defKey;
-      if (newDefs[newKey]) {
-        throw new Error(`[nestjs-zod] Duplicate id in $defs: ${newKey}`);
-      }
-      newDefs[newKey] = defValue;
-    } else {
-      newDefs[defKey] = defValue;
-    }
-  });
-
-  if ($defs) {
-    newSchema.$defs = newDefs;
-  }
-
-  return newSchema;
 }
 
 function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {

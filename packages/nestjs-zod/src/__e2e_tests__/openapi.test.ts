@@ -12,6 +12,11 @@ import z3 from 'zod/v3';
 import request from 'supertest';
 import { setupApp } from '../testUtils';
 import { ZodSerializerDto } from '../serializer';
+import { ZodResponse } from '../response';
+
+beforeEach(() => {
+    z.globalRegistry.clear();
+})
 
 describe('basic request body', () => {
     test.each([
@@ -24,17 +29,17 @@ describe('basic request body', () => {
         class BookDto extends createZodDto(zod.object({
             title: zod.string(),
         })) { }
-    
+
         @Controller()
         class BookController {
             constructor() { }
-    
+
             @Post()
             createBook(@Body() book: BookDto) {
                 return book;
             }
         }
-    
+
         const doc = await getSwaggerDoc(BookController, { cleanUp });
         expect(doc).toEqual(expect.objectContaining({
             components: {
@@ -91,19 +96,19 @@ describe('basic query params', () => {
         class QueryParamsDto extends createZodDto(zod.object({
             filter: zod.string(),
         })) { }
-    
+
         @Controller()
         class BookController {
             constructor() { }
-    
+
             @Get()
             getBooks(@Query() query: QueryParamsDto) {
                 return [];
             }
         }
-    
+
         const doc = await getSwaggerDoc(BookController, { cleanUp });
-    
+
         expect(get(doc, 'paths./.get.parameters')).toEqual([
             {
                 in: 'query',
@@ -126,17 +131,17 @@ describe('unions', () => {
                 z.number()
             ]),
         })) { }
-    
+
         @Controller()
         class BookController {
             constructor() { }
-    
+
             @Post()
             createBook(@Body() book: BookDto) {
                 return book;
             }
         }
-    
+
         const doc = await getSwaggerDoc(BookController);
         expect(get(doc, 'components.schemas.BookDto')).toEqual({
             properties: {
@@ -156,7 +161,7 @@ describe('unions', () => {
             ],
             type: 'object'
         })
-        
+
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     });
 
@@ -164,17 +169,17 @@ describe('unions', () => {
         class BookDto extends createZodDto(z3.object({
             id: z3.union([z3.string(), z3.number()]),
         })) { }
-    
+
         @Controller()
         class BookController {
             constructor() { }
-    
+
             @Post()
             createBook(@Body() book: BookDto) {
                 return book;
             }
         }
-    
+
         const doc = await getSwaggerDoc(BookController);
         expect(get(doc, 'components.schemas.BookDto')).toEqual({
             properties: {
@@ -194,7 +199,7 @@ describe('unions', () => {
             ],
             type: 'object'
         })
-        
+
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     });
 });
@@ -211,17 +216,17 @@ describe('intersections', () => {
                 })
             )
         ) { }
-    
+
         @Controller()
         class BookController {
             constructor() { }
-    
+
             @Post()
             createBook(@Body() book: BookDto) {
                 return book;
             }
         }
-    
+
         const doc = await getSwaggerDoc(BookController);
         expect(get(doc, 'components.schemas.BookDto')).toEqual(expect.objectContaining({
             allOf: [
@@ -263,17 +268,17 @@ describe('intersections', () => {
                 })
             )
         ) { }
-    
+
         @Controller()
         class BookController {
             constructor() { }
-    
+
             @Post()
             createBook(@Body() book: BookDto) {
                 return book;
             }
         }
-    
+
         const doc = await getSwaggerDoc(BookController);
         expect(get(doc, 'components.schemas.BookDto')).toEqual({
             type: 'object',
@@ -300,17 +305,17 @@ describe('basic nullable fields', () => {
         class BookDto extends createZodDto(zod.object({
             title: zod.string().nullable(),
         })) { }
-    
+
         @Controller()
         class BookController {
             constructor() { }
-    
+
             @Post()
             createBook(@Body() book: BookDto) {
                 return book;
             }
         }
-    
+
         const doc = await getSwaggerDoc(BookController);
         expect(get(doc, 'components.schemas.BookDto.properties.title')).toEqual({
             type: 'string',
@@ -323,7 +328,7 @@ describe('basic nullable fields', () => {
 test('nested complex nullable fields', async () => {
     class BookDto extends createZodDto(z.object({
         author: z.object({
-            name: z.union([z.string(),z.number(),z.null()]),
+            name: z.union([z.string(), z.number(), z.null()]),
         })
     })) { }
 
@@ -384,7 +389,7 @@ test('nullable fields in openapi 3.1', async () => {
     const Author = z.object({
         name: z.string().nullable(),
     }).meta({ id: 'Author9081234598473598' })
-    
+
     class BookDto extends createZodDto(z.object({
         title: z.string().nullable(),
         author: Author,
@@ -473,17 +478,17 @@ describe('optional fields', () => {
         class BookDto extends createZodDto(zod.object({
             title: zod.string().optional(),
         })) { }
-    
+
         @Controller()
         class BookController {
             constructor() { }
-    
+
             @Post()
             createBook(@Body() book: BookDto) {
                 return book;
             }
         }
-    
+
         const doc = await getSwaggerDoc(BookController, { cleanUp });
         expect(get(doc, 'components.schemas.BookDto')).toEqual({
             type: 'object',
@@ -509,18 +514,18 @@ describe('arrays', () => {
         class BookDto extends createZodDto(zod.object({
             title: zod.string(),
         })) { }
-    
+
         @Controller()
         class BookController {
             constructor() { }
-    
+
             @Post()
             @ApiBody({ type: [BookDto] })
             createBook(@Body() book: BookDto[]) {
                 return book;
             }
         }
-    
+
         const doc = await getSwaggerDoc(BookController, { cleanUp });
 
         expect(doc).toEqual(expect.objectContaining({
@@ -583,16 +588,16 @@ describe('direct array schemas', () => {
             constructor() { }
 
             @Post()
-            @ApiResponse({ 
-                status: 200, 
-                description: 'Batch create books', 
+            @ApiResponse({
+                status: 200,
+                description: 'Batch create books',
                 type: BookListDto
             })
             createBooks(@Body() books: BookListDto) {
                 for (let book of books) {
                     console.log(book.title);
                 }
-                
+
                 return [];
             }
         }
@@ -636,7 +641,7 @@ test('throws error if using array DTO for parameters', async () => {
     await expect(getSwaggerDoc(BookController)).rejects.toThrow('[cleanupOpenApiDoc] Query or url parameters must be an object type')
 })
 
-test('named schemas', async () => {        
+test('named schemas', async () => {
     class BookDto extends createZodDto(z.object({
         title: z.string(),
     }).meta({ id: 'Book' })) { }
@@ -737,7 +742,7 @@ test('with nested named schema', async () => {
     }));
 })
 
-test('named output schemas', async () => {        
+test('named output schemas', async () => {
     class BookDto extends createZodDto(z.object({
         title: z.string(),
         author: z.string().default('unknown'),
@@ -755,7 +760,7 @@ test('named output schemas', async () => {
     }
 
     const doc = await getSwaggerDoc(BookController);
-    
+
     // Renames the schema component itself
     expect(Object.keys(doc.components?.schemas || {})).toEqual(['Book2', 'Book2_Output']);
 
@@ -772,9 +777,9 @@ test('named output schemas', async () => {
     expect(get(doc, 'components.schemas.Book2_Output.id')).toEqual('Book2_Output');
 })
 
-test('output schemas with named sub-schemas', async () => {     
+test('output schemas with named sub-schemas', async () => {
     const Author = z.object({ name: z.string() }).meta({ id: "Author908908290384" });
-    
+
     class BookDto extends createZodDto(z.object({
         title: z.string(),
         author: Author,
@@ -806,7 +811,7 @@ test('output schemas with named sub-schemas', async () => {
 
 test('properly adds sub-schemas for array schemas', async () => {
     const Author = z.object({ name: z.string() }).meta({ id: "Author3459835601" });
-    
+
     class BookDto extends createZodDto(z.array(Author)) { }
 
     @Controller()
@@ -1081,7 +1086,7 @@ test('allows using the same schema as a root DTO and a nested DTO', async () => 
     const Product = z.object({
         name: z.string(),
     }).meta({ id: 'Product' });
-    
+
     class ProductDto extends createZodDto(Product) { }
 
     class RequestBodyDto extends createZodDto(z.object({
@@ -1166,7 +1171,7 @@ test('recursive schemas', async () => {
     const Node = z.object({
         name: z.string(),
         get children() {
-          return z.array(Node)
+            return z.array(Node)
         }
     });
 
@@ -1208,7 +1213,7 @@ test('recursive named schemas', async () => {
     const Node = z.object({
         name: z.string(),
         get children() {
-          return z.array(Node)
+            return z.array(Node)
         }
     }).meta({ id: 'Node' });
 
@@ -1250,15 +1255,15 @@ test('recursive named schemas', async () => {
 test('mutually recursive schemas', async () => {
     const User = z.object({
         name: z.string(),
-        get posts(){
-          return z.array(BlogPost)
+        get posts() {
+            return z.array(BlogPost)
         }
     });
-       
+
     const BlogPost = z.object({
         title: z.string(),
-        get author(){
-          return User
+        get author() {
+            return User
         }
     });
 
@@ -1308,15 +1313,15 @@ test('mutually recursive schemas', async () => {
 test('mutually recursive named schemas', async () => {
     const User = z.object({
         name: z.string(),
-        get posts(){
-          return z.array(BlogPost)
+        get posts() {
+            return z.array(BlogPost)
         }
     }).meta({ id: 'User' });
-       
+
     const BlogPost = z.object({
         title: z.string(),
-        get author(){
-          return User
+        get author() {
+            return User
         }
     }).meta({ id: 'BlogPost' });
 
@@ -1434,7 +1439,7 @@ test('recursive unnamed sub-schemas', async () => {
                 cat: {
                     '$ref': '#/components/schemas/CatPersonDto__schema0'
                 }
-            }) 
+            })
         }),
         CatPersonDto__schema0: expect.objectContaining({
             type: 'object',
@@ -1450,7 +1455,7 @@ test('recursive unnamed sub-schemas', async () => {
                 dog: {
                     '$ref': '#/components/schemas/DogPersonDto__schema0'
                 }
-            }) 
+            })
         }),
         DogPersonDto__schema0: expect.objectContaining({
             type: 'object',
@@ -1535,7 +1540,7 @@ test('throws an error if trying to use recursive schemas in parameters', async (
     const QueryParams = z.object({
         name: z.string(),
         get nestedQueryParams() {
-          return z.array(QueryParams)
+            return z.array(QueryParams)
         }
     });
 
@@ -1586,8 +1591,8 @@ test('does not touch refs for schemas that are not from a zod dto', async () => 
     class MySchema {
         @ApiProperty({
             type: 'array',
-            items: { 
-                $ref: '#/$defs/MyThing' 
+            items: {
+                $ref: '#/$defs/MyThing'
             },
         })
         things!: unknown[];
@@ -1606,13 +1611,13 @@ test('does not touch refs for schemas that are not from a zod dto', async () => 
     @Controller()
     class MyController {
         constructor() { }
-        
+
         @Post()
         createThing(@Query() query: MyQueryParams, @Body() thing: MySchema) {
             return thing;
         }
     }
-    
+
     const doc = await getSwaggerDoc(MyController);
     expect(get(doc, 'components.schemas.MySchema.properties.things.items.$ref')).toEqual('#/$defs/MyThing');
     expect(get(doc, 'paths./.post.parameters[0].schema.items.$ref')).toEqual('#/$defs/MyFilter');
@@ -1622,28 +1627,28 @@ test('does not touch refs for schemas that are not from a zod dto', async () => 
 describe('issue#187', () => {
     test('correctly reuses schema when used directly as a DTO and when used as a sub-schema', async () => {
         class Thing extends createZodDto(
-          z.object({ name: z.string() }).meta({
-            id: 'Thing',
-          })
-        ) {}
-      
-        class Box extends createZodDto(z.object({ thing: Thing.schema })) {}
-      
+            z.object({ name: z.string() }).meta({
+                id: 'Thing',
+            })
+        ) { }
+
+        class Box extends createZodDto(z.object({ thing: Thing.schema })) { }
+
         @Controller()
         class ThingController {
-          @Get('boxed')
-          @ApiResponse({ type: Box })
-          async boxed(@Body() request: Box) {
-            throw new Error()
-          }
-      
-          @Get('thing')
-          @ApiResponse({ type: Thing })
-          async direct1Response() {
-            throw new Error()
-          }
+            @Get('boxed')
+            @ApiResponse({ type: Box })
+            async boxed(@Body() request: Box) {
+                throw new Error()
+            }
+
+            @Get('thing')
+            @ApiResponse({ type: Thing })
+            async direct1Response() {
+                throw new Error()
+            }
         }
-      
+
         const doc = await getSwaggerDoc(ThingController, { cleanUp: true })
         expect(doc.components?.schemas).toEqual({
             Box: {
@@ -1670,31 +1675,31 @@ describe('issue#187', () => {
         expect(get(doc, 'paths./thing.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Thing');
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     })
-    
+
     test('correctly reuses schema when used directly as an Output DTO and when used as a sub-schema', async () => {
         class Thing2 extends createZodDto(
-          z.object({ nameObj: z.object({ name: z.string() }) }).meta({
-            id: 'Thing2',
-          })
-        ) {}
-      
-        class Box extends createZodDto(z.object({ thing: Thing2.schema })) {}
-      
+            z.object({ nameObj: z.object({ name: z.string() }) }).meta({
+                id: 'Thing2',
+            })
+        ) { }
+
+        class Box extends createZodDto(z.object({ thing: Thing2.schema })) { }
+
         @Controller()
         class ThingController {
-          @Get('boxed')
-          @ApiResponse({ type: Box.Output })
-          async boxed(@Body() request: Box) {
-            throw new Error()
-          }
-      
-          @Get('thing2')
-          @ApiResponse({ type: Thing2.Output })
-          async direct1Response() {
-            throw new Error()
-          }
+            @Get('boxed')
+            @ApiResponse({ type: Box.Output })
+            async boxed(@Body() request: Box) {
+                throw new Error()
+            }
+
+            @Get('thing2')
+            @ApiResponse({ type: Thing2.Output })
+            async direct1Response() {
+                throw new Error()
+            }
         }
-      
+
         const doc = await getSwaggerDoc(ThingController, { cleanUp: true })
         expect(doc.components?.schemas).toEqual({
             Box: {
@@ -1751,36 +1756,36 @@ describe('issue#187', () => {
                 type: 'object'
             }
         });
-    
+
         expect(get(doc, 'paths./boxed.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Box_Output');
         expect(get(doc, 'paths./thing2.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Thing2_Output');
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     })
-    
+
     test('correctly reuses empty schema when used directly as a DTO and when used as a sub-schema', async () => {
         class EmptyObject extends createZodDto(
-          z.object({}).meta({
-            id: 'EmptyObject',
-          })
-        ) {}
-      
-        class BoxedEmptyObject extends createZodDto(z.object({ emptyObject: EmptyObject.schema })) {}
-      
+            z.object({}).meta({
+                id: 'EmptyObject',
+            })
+        ) { }
+
+        class BoxedEmptyObject extends createZodDto(z.object({ emptyObject: EmptyObject.schema })) { }
+
         @Controller()
         class EmptyObjectController {
-          @Get('boxed')
-          @ApiResponse({ type: BoxedEmptyObject })
-          async boxed() {
-            throw new Error()
-          }
-      
-          @Get('emptyObject')
-          @ApiResponse({ type: EmptyObject })
-          async emptyObject() {
-            throw new Error()
-          }
+            @Get('boxed')
+            @ApiResponse({ type: BoxedEmptyObject })
+            async boxed() {
+                throw new Error()
+            }
+
+            @Get('emptyObject')
+            @ApiResponse({ type: EmptyObject })
+            async emptyObject() {
+                throw new Error()
+            }
         }
-      
+
         const doc = await getSwaggerDoc(EmptyObjectController, { cleanUp: true })
         expect(doc.components?.schemas).toEqual({
             BoxedEmptyObject: {
@@ -1801,7 +1806,7 @@ describe('issue#187', () => {
         expect(get(doc, 'paths./boxed.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/BoxedEmptyObject');
         expect(get(doc, 'paths./emptyObject.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/EmptyObject');
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
-    
+
     })
 })
 
@@ -1810,28 +1815,28 @@ describe('issue#188', () => {
         const NullableFieldAndUnionFieldSchema = z.object({
             username: z.string().nullable(),
             union: z.union([
-              z.object({
-                userId: z.string(),
-              }),
-              z.object({
-                roundId: z.string(),
-              }),
+                z.object({
+                    userId: z.string(),
+                }),
+                z.object({
+                    roundId: z.string(),
+                }),
             ]),
-          });
-        
-          
-          class NullableFieldAndUnionFieldDto extends createZodDto(NullableFieldAndUnionFieldSchema) {}
+        });
 
-          @Controller()
-          class ThingController {
+
+        class NullableFieldAndUnionFieldDto extends createZodDto(NullableFieldAndUnionFieldSchema) { }
+
+        @Controller()
+        class ThingController {
             @Get('thing')
             async thing(@Body() body: NullableFieldAndUnionFieldDto) {
-              throw new Error()
+                throw new Error()
             }
-          }
+        }
 
-          const doc = await getSwaggerDoc(ThingController);
-          expect(doc.components?.schemas).toEqual({
+        const doc = await getSwaggerDoc(ThingController);
+        expect(doc.components?.schemas).toEqual({
             NullableFieldAndUnionFieldDto: {
                 properties: {
                     username: {
@@ -1864,7 +1869,7 @@ describe('issue#188', () => {
                 required: ['username', 'union'],
                 type: 'object'
             }
-          })
+        })
     })
 })
 
@@ -1872,7 +1877,7 @@ describe('issue#197 - returning primitives', () => {
     it('should validate when returning primitive', async () => {
         class ThingDto extends createZodDto(z.object({
             name: z.string(),
-        })) {}
+        })) { }
 
         @Controller('things')
         class ThingController {
@@ -1899,20 +1904,20 @@ describe('issue#196 - const support', () => {
         class QueryParamsDto extends createZodDto(z.object({
             literal: z.literal('hello'),
         })) { }
-    
+
         @Controller()
         class ThingController {
             constructor() { }
-    
+
             @Get()
             @ApiResponse({ type: ThingDto })
             getThing(@Query() query: QueryParamsDto) {
                 return {};
             }
         }
-    
+
         const app = await createApp(ThingController);
-    
+
         // If the OpenAPI version is set directly on the openapi document, then by
         // default cleanupOpenApiDoc should use 3.1
         const doc = cleanupOpenApiDoc(
@@ -1951,20 +1956,20 @@ describe('issue#196 - const support', () => {
         class QueryParamsDto extends createZodDto(z.object({
             literal: z.literal('hello'),
         })) { }
-    
+
         @Controller()
         class ThingController {
             constructor() { }
-    
+
             @Get()
             @ApiResponse({ type: ThingDto })
             getThing(@Query() query: QueryParamsDto) {
                 return {};
             }
         }
-    
+
         const app = await createApp(ThingController);
-    
+
         // If the OpenAPI version is set directly on the openapi document, then by
         // default cleanupOpenApiDoc should use 3.1
         const doc = cleanupOpenApiDoc(
@@ -1993,6 +1998,58 @@ describe('issue#196 - const support', () => {
     })
 })
 
+describe('issue#220', () => {
+    it('has correct references when there are multiple layers of reused schemas', async () => {
+        const AuthorSchema = z.object({
+            id: z.string(),
+            name: z.string(),
+        }).meta({ id: 'Author' });
+
+        const BookSchema = z.object({
+            title: z.string(),
+            contributor: AuthorSchema
+        }).meta({ id: 'Book' });
+
+        const LibrarySchema = z.object({
+            name: z.string(),
+            inventory: z.array(BookSchema),
+        }).meta({ id: 'Library' });
+
+        class Book extends createZodDto(BookSchema) { }
+        class Library extends createZodDto(LibrarySchema) { }
+
+        @Controller('catalog')
+        class CatalogController {
+            @Get('library')
+            @ZodResponse({ type: Library })
+            async getLibrary() {
+                return {} as any;
+            }
+
+            @Get('books/:id')
+            @ZodResponse({ type: Book })
+            async getBook() {
+                return {} as any;
+            }
+        }
+
+        const doc = await getSwaggerDoc(CatalogController);
+
+        expect(get(doc, 'paths./catalog/library.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Library_Output');
+        expect(get(doc, 'paths./catalog/books/{id}.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Book_Output');
+
+        expect(get(doc, 'components.schemas.Library_Output.properties.inventory.items.$ref')).toEqual('#/components/schemas/Book_Output');
+        expect(get(doc, 'components.schemas.Book_Output.properties.contributor.$ref')).toEqual('#/components/schemas/Author_Output');
+
+        expect(get(doc, 'components.schemas.Book_Output.id')).toEqual('Book_Output');
+        expect(get(doc, 'components.schemas.Library_Output.id')).toEqual('Library_Output');
+        expect(get(doc, 'components.schemas.Author_Output.id')).toEqual('Author_Output');
+
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+        
+    })
+})
+
 async function createApp(controllerClass: Type<unknown>) {
     @Module({
         imports: [],
@@ -2008,13 +2065,13 @@ async function createApp(controllerClass: Type<unknown>) {
     return app;
 }
 
-async function getSwaggerDoc(controllerClass: Type<unknown>, { 
-    cleanUp = true, 
-}: { 
-    cleanUp?: boolean, 
+async function getSwaggerDoc(controllerClass: Type<unknown>, {
+    cleanUp = true,
+}: {
+    cleanUp?: boolean,
 } = {}) {
     const app = await createApp(controllerClass);
-        
+
     const doc = SwaggerModule.createDocument(app, new DocumentBuilder().build());
     if (cleanUp) {
         return cleanupOpenApiDoc(doc);
