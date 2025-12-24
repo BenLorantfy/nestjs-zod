@@ -18,10 +18,6 @@ beforeEach(() => {
     z.globalRegistry.clear();
 })
 
-beforeEach(() => {
-    z.globalRegistry.clear()
-})
-
 describe('basic request body', () => {
     test.each([
         ctx({ version: 'v4', cleanUp: false }),
