@@ -9,7 +9,6 @@ import {
 } from '@nestjs/common'
 import { map, Observable } from 'rxjs'
 import { isZodDto, ZodDto } from './dto'
-import { validate } from './validate'
 import { createZodSerializationException } from './exception'
 import { UnknownSchema } from './types'
 import { assert } from './assert'
@@ -30,83 +29,99 @@ export function ZodSerializerDto(dto: ZodDto | UnknownSchema | [ZodDto] | [Unkno
   return SetMetadata(ZodSerializerDtoOptions, dto);
 }
 
-@Injectable()
-export class ZodSerializerInterceptor implements NestInterceptor {
-  constructor(@Inject(REFLECTOR) protected readonly reflector: any) {}
+interface ZodSerializerInterceptorOptions {
+  reportInput?: boolean
+}
 
-  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
-    const responseSchema = this.getContextResponseSchema(context)
+type ZodSerializerInterceptorClass = new (...args: unknown[]) => {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<unknown>
+}
 
-    return next.handle().pipe(
-      map((res: object | object[]) => {
-        if (!responseSchema) return res
-        if (res instanceof StreamableFile) return res
+export function createZodSerializerInterceptor({
+  reportInput,
+}: ZodSerializerInterceptorOptions = {}): ZodSerializerInterceptorClass {
+  @Injectable()
+  class ZodSerializerInterceptor implements NestInterceptor {
+    constructor(@Inject(REFLECTOR) protected readonly reflector: any) {}
 
-        if (Array.isArray(responseSchema)) {
-          const schemaOrDto = responseSchema[0]
-          const schema = 'schema' in schemaOrDto ? schemaOrDto.schema : schemaOrDto
-          assert('array' in schema && typeof schema.array === 'function', 'ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method')
-          
-          const arrSchema = schema.array()
+    intercept(context: ExecutionContext, next: CallHandler): Observable<unknown> {
+      const responseSchema = this.getContextResponseSchema(context)
 
-          if (isZodDto(schemaOrDto)) {
-            if (schemaOrDto.codec) {
-              assert(arrSchema.encode, 'Schema does not have an encode method');
+      return next.handle().pipe(
+        map((res: object | object[]) => {
+          if (!responseSchema) return res
+          if (res instanceof StreamableFile) return res
+
+          if (Array.isArray(responseSchema)) {
+            const schemaOrDto = responseSchema[0]
+            const schema = 'schema' in schemaOrDto ? schemaOrDto.schema : schemaOrDto
+            assert('array' in schema && typeof schema.array === 'function', 'ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method')
+            
+            const arrSchema = schema.array()
+
+            if (isZodDto(schemaOrDto)) {
+              if (schemaOrDto.codec) {
+                assert(arrSchema.encode, 'Schema does not have an encode method');
+
+                try {
+                  return arrSchema.encode(res, reportInput !== undefined ? { reportInput } : undefined)
+                } catch (error) {
+                  throw createZodSerializationException(error)
+                }
+              }
 
               try {
-                return arrSchema.encode(res)
+                return arrSchema.parse(res, reportInput !== undefined ? { reportInput } : undefined)
               } catch (error) {
                 throw createZodSerializationException(error)
               }
             }
 
             try {
-              return arrSchema.parse(res)
+              return arrSchema.parse(res, reportInput !== undefined ? { reportInput } : undefined)
             } catch (error) {
               throw createZodSerializationException(error)
             }
           }
 
-          try {
-            return arrSchema.parse(res)
-          } catch (error) {
-            throw createZodSerializationException(error)
-          }
-        }
+          if (isZodDto(responseSchema)) {
+            if (responseSchema.codec) {
+              assert(responseSchema.schema.encode, 'Schema does not have an encode method');
 
-        if (isZodDto(responseSchema)) {
-          if (responseSchema.codec) {
-            assert(responseSchema.schema.encode, 'Schema does not have an encode method');
+              try {
+                return responseSchema.schema.encode(res, reportInput !== undefined ? { reportInput } : undefined)
+              } catch (error) {
+                throw createZodSerializationException(error)
+              }
+            }
 
             try {
-              return responseSchema.schema.encode(res)
+              return responseSchema.schema.parse(res, reportInput !== undefined ? { reportInput } : undefined)
             } catch (error) {
               throw createZodSerializationException(error)
             }
           }
 
           try {
-            return responseSchema.schema.parse(res)
+            return responseSchema.parse(res, reportInput !== undefined ? { reportInput } : undefined)
           } catch (error) {
             throw createZodSerializationException(error)
           }
-        }
+        })
+      )
+    }
 
-        try {
-          return responseSchema.parse(res)
-        } catch (error) {
-          throw createZodSerializationException(error)
-        }
-      })
-    )
+    protected getContextResponseSchema(
+      context: ExecutionContext
+    ): ZodDto | UnknownSchema | [ZodDto] | [UnknownSchema] | undefined {
+      return this.reflector.getAllAndOverride(ZodSerializerDtoOptions, [
+        context.getHandler(),
+        context.getClass(),
+      ])
+    }
   }
 
-  protected getContextResponseSchema(
-    context: ExecutionContext
-  ): ZodDto | UnknownSchema | [ZodDto] | [UnknownSchema] | undefined {
-    return this.reflector.getAllAndOverride(ZodSerializerDtoOptions, [
-      context.getHandler(),
-      context.getClass(),
-    ])
-  }
+  return ZodSerializerInterceptor
 }
+
+export const ZodSerializerInterceptor = createZodSerializerInterceptor()
