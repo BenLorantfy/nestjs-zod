@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-import { ZodSerializerDto } from 'nestjs-zod';
-import { CreateStarshipDto, StarshipDto, StarshipListDto, Starship, StarshipList } from './starships.dto';
+import { ApiTags } from '@nestjs/swagger';
+import { ZodResponse } from 'nestjs-zod';
+import { CreateStarshipFormDto, StarshipDto, StarshipListDto, Starship } from './starships.dto';
 
 @ApiTags('Starships')
 @Controller('api/starships')
@@ -64,28 +64,16 @@ export class StarshipsController {
   ];
 
   @Get()
-  @ApiOperation({ summary: 'Get all starships' })
-  @ApiResponse({ 
-    status: 200, 
-    description: 'List of all starships',
-    type: StarshipListDto 
-  })
-  @ZodSerializerDto(StarshipListDto)
-  getStarships(): StarshipList {
+  @ZodResponse({ type: StarshipListDto, description: 'List of all starships' })
+  getStarships() {
     return {
       data: this.mockStarships,
     };
   }
 
   @Post()
-  @ApiOperation({ summary: 'Create a new starship' })
-  @ApiResponse({ 
-    status: 201, 
-    description: 'Starship created successfully',
-    type: StarshipDto 
-  })
-  @ZodSerializerDto(StarshipDto)
-  createStarship(@Body() createStarshipDto: CreateStarshipDto): Starship {
+  @ZodResponse({ status: 201, type: StarshipDto, description: 'Starship created successfully' })
+  createStarship(@Body() createStarshipDto: CreateStarshipFormDto) {
     const newStarship = {
       ...createStarshipDto,
       id: Math.floor(Math.random() * 1000) + 4

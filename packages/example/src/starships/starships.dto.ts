@@ -1,8 +1,8 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
 
-// Schemas
-export const CreateStarshipSchema = z.object({
+export class StarshipDto extends createZodDto(z.object({
+  id: z.number().int().positive().describe('Unique identifier for the starship'),
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
   model: z.string().describe('Starship model'),
   manufacturer: z.string().describe('Manufacturer of the starship'),
@@ -18,22 +18,14 @@ export const CreateStarshipSchema = z.object({
   starshipClass: z.string().describe('Class of the starship'),
   pilotIds: z.array(z.string()).describe('Array of pilot IDs'),
   filmIds: z.array(z.string()).describe('Array of film IDs'),
-}).meta({ id: 'CreateStarship' });
+}).meta({ id: 'Starship' })) {}
 
-export const StarshipSchema = CreateStarshipSchema.extend({
-  id: z.number().int().positive().describe('Unique identifier for the starship'),
-}).meta({ id: 'Starship' });
+export class CreateStarshipFormDto extends createZodDto(StarshipDto.schema.omit({ id: true }).meta({ id: 'CreateStarshipForm' })) {}
 
-export const StarshipListSchema = z.object({
-  data: z.array(StarshipSchema),
-}).meta({ id: 'StarshipList' });
+export class StarshipListDto extends createZodDto(z.object({
+  data: z.array(StarshipDto.schema),
+}).meta({ id: 'StarshipList' })) {}
 
-// DTO classes
-export class CreateStarshipDto extends createZodDto(CreateStarshipSchema) {}
-export class StarshipDto extends createZodDto(StarshipSchema) {}
-export class StarshipListDto extends createZodDto(StarshipListSchema) {}
-
-// Types
-export type Starship = z.infer<typeof StarshipSchema>;
-export type CreateStarship = z.infer<typeof CreateStarshipSchema>;
-export type StarshipList = z.infer<typeof StarshipListSchema>; 
+export type Starship = z.infer<typeof StarshipDto.schema>;
+export type CreateStarship = z.infer<typeof CreateStarshipFormDto.schema>;
+export type StarshipList = z.infer<typeof StarshipListDto.schema>; 
