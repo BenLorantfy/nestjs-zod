@@ -204,6 +204,7 @@ Check out the [example app](./packages/example/) for a full example of how to in
 - [Response Validation](#response-validation)  
   - [`ZodSerializerDto` (Set zod DTO to serialize responses with)](#zodserializerdto-set-zod-dto-to-serialize-responses-with)
   - [`ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)](#zodserializerinterceptor-get-nestjs-to-serialize-responses-with-zod)
+  - [`createZodSerializerInterceptor` (Creating custom serializer interceptor)](#createzodserializerinterceptor-creating-custom-serializer-interceptor)
   - [`ZodResponse` (Sync run-time, compile-time, and docs-time schemas)](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas)
   - [`ZodSerializationException`](#zodserializationexception)
 - [OpenAPI (Swagger) support](#openapi-swagger-support)
@@ -436,6 +437,36 @@ This should be done in the `AppModule` like so:
   providers: [
     ...,
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
+  ],
+})
+export class AppModule {}
+```
+
+#### `createZodSerializerInterceptor` (Creating custom serializer interceptor)
+```ts
+export function createZodSerializerInterceptor({ reportInput }: ZodSerializerInterceptorOptions = {}): ZodSerializerInterceptorClass
+```
+
+Creates a custom zod serializer interceptor
+
+##### Parameters
+- `params.reportInput` - When set to `true`, includes the input value in Zod error issues. This is useful for debugging serialization errors. Only supported in Zod v4.
+
+##### Example
+```ts
+import { createZodSerializerInterceptor } from 'nestjs-zod'
+import { APP_INTERCEPTOR } from '@nestjs/core'
+
+const CustomZodSerializerInterceptor = createZodSerializerInterceptor({
+  reportInput: true,
+})
+
+@Module({
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CustomZodSerializerInterceptor,
+    },
   ],
 })
 export class AppModule {}
