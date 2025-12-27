@@ -169,5 +169,68 @@ describe.each([
       }])
     });
   })
+
+  test('should not include input in error when reportInput is false or undefined', async () => {
+    const handler = createMock<CallHandler>({
+      handle: () => of({ username: 123 }),
+    })
+
+    const reflector = createMock<Reflector>({
+      getAllAndOverride: () => UserDto,
+    })
+
+    const interceptor = new ZodSerializerInterceptor(reflector)
+
+    const userObservable = interceptor.intercept(context, handler)
+    
+    try {
+      await lastValueFrom(userObservable)
+      fail('Should have thrown an error')
+    } catch (error: any) {
+      const zodError = error.getZodError()
+      // Check that the error has issues but input field should not be present
+      expect(zodError.issues).toBeDefined()
+      expect(zodError.issues.length).toBeGreaterThan(0)
+      expect(zodError.issues[0].input).toBeUndefined()
+    }
+  })
+});
+
+describe('v4 reportInput', () => {
+  const z = z4
+  const UserSchema = z.object({
+    username: z.string(),
+  })
+  
+  class UserDto extends createZodDto(UserSchema) {}
+  
+  const context = createMock<ExecutionContext>()
+
+  test('should include input in error when reportInput is true', async () => {
+    const handler = createMock<CallHandler>({
+      handle: () => of({ username: 123 }),
+    })
+
+    const reflector = createMock<Reflector>({
+      getAllAndOverride: () => UserDto,
+    })
+
+    const interceptor = new ZodSerializerInterceptor(reflector, true)
+
+    const userObservable = interceptor.intercept(context, handler)
+    
+    try {
+      await lastValueFrom(userObservable)
+      fail('Should have thrown an error')
+    } catch (error: any) {
+      const zodError = error.getZodError()
+      // Check that the error has issues and at least one has input field
+      expect(zodError.issues).toBeDefined()
+      expect(zodError.issues.length).toBeGreaterThan(0)
+      // In Zod v4, reportInput should add the input field
+      expect(zodError.issues[0].input).toBeDefined()
+      expect(zodError.issues[0].input).toBe(123)
+    }
+  })
 });
 

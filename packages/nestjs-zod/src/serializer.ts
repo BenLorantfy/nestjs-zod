@@ -4,6 +4,7 @@ import {
   Inject,
   Injectable,
   NestInterceptor,
+  Optional,
   SetMetadata,
   StreamableFile,
 } from '@nestjs/common'
@@ -32,7 +33,10 @@ export function ZodSerializerDto(dto: ZodDto | UnknownSchema | [ZodDto] | [Unkno
 
 @Injectable()
 export class ZodSerializerInterceptor implements NestInterceptor {
-  constructor(@Inject(REFLECTOR) protected readonly reflector: any) {}
+  constructor(
+    @Inject(REFLECTOR) protected readonly reflector: any,
+    @Optional() protected readonly reportInput?: boolean
+  ) {}
 
   intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const responseSchema = this.getContextResponseSchema(context)
@@ -54,21 +58,21 @@ export class ZodSerializerInterceptor implements NestInterceptor {
               assert(arrSchema.encode, 'Schema does not have an encode method');
 
               try {
-                return arrSchema.encode(res)
+                return (arrSchema as any).encode(res, { reportInput: this.reportInput })
               } catch (error) {
                 throw createZodSerializationException(error)
               }
             }
 
             try {
-              return arrSchema.parse(res)
+              return (arrSchema as any).parse(res, { reportInput: this.reportInput })
             } catch (error) {
               throw createZodSerializationException(error)
             }
           }
 
           try {
-            return arrSchema.parse(res)
+            return (arrSchema as any).parse(res, { reportInput: this.reportInput })
           } catch (error) {
             throw createZodSerializationException(error)
           }
@@ -79,21 +83,21 @@ export class ZodSerializerInterceptor implements NestInterceptor {
             assert(responseSchema.schema.encode, 'Schema does not have an encode method');
 
             try {
-              return responseSchema.schema.encode(res)
+              return (responseSchema.schema as any).encode(res, { reportInput: this.reportInput })
             } catch (error) {
               throw createZodSerializationException(error)
             }
           }
 
           try {
-            return responseSchema.schema.parse(res)
+            return (responseSchema.schema as any).parse(res, { reportInput: this.reportInput })
           } catch (error) {
             throw createZodSerializationException(error)
           }
         }
 
         try {
-          return responseSchema.parse(res)
+          return (responseSchema as any).parse(res, { reportInput: this.reportInput })
         } catch (error) {
           throw createZodSerializationException(error)
         }
