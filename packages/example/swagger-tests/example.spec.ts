@@ -5,9 +5,9 @@ test(`GET /api/people`, async ({ page }) => {
 
   await page.getByRole('button', { name: `GET /api/people` }).first().click()
   await expect(await page.getByText('Responses')).toBeVisible()
-  await page.getByRole('tab', { name: 'Schema', exact: true }).click()
+  await page.getByRole('tab', { name: 'Schema', exact: true }).last().click()
   
-  const tabPanel = await page.getByRole('tabpanel', { name: 'Schema', exact: true });
+  const tabPanel = await page.getByRole('tabpanel', { name: 'Schema', exact: true }).last();
 
   await expandAll(tabPanel);
   
