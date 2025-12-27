@@ -22,7 +22,7 @@ export interface ZodDto<
 export const ioSymbol = Symbol('io');
 
 export function createZodDto<
-  TSchema extends UnknownSchema|z3.ZodTypeAny|($ZodType & { parse: (input: unknown) => unknown }),
+  TSchema extends UnknownSchema,
   TCodec extends boolean = false,
 >(schema: TSchema, options?: { codec: TCodec }) {
   class AugmentedZodDto {
