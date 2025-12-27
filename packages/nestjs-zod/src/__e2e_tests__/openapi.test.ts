@@ -2087,6 +2087,49 @@ describe('issue#220', () => {
     })
 })
 
+describe('issue#208', () => {
+    it('should use deepObject style for query parameters that are objects by default', async () => {
+        class QueryParamsDto extends createZodDto(z.object({
+            filter: z.object({
+                name: z.string().optional(),
+                age: z.number().optional(),
+            }),
+        })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Get()
+            getBooks(@Query() query: QueryParamsDto) {
+                return [];
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+
+        expect(get(doc, 'paths./.get.parameters')).toEqual([
+            {
+                in: 'query',
+                name: 'filter',
+                required: true,
+                style: 'deepObject',
+                schema: {
+                    type: 'object',
+                    properties: {
+                        name: {
+                            type: 'string'
+                        },
+                        age: {
+                            type: 'number'
+                        }
+                    }
+                }
+            }
+        ]);
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+})
 async function createApp(controllerClass: Type<unknown>) {
     @Module({
         imports: [],

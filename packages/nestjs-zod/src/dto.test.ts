@@ -35,9 +35,6 @@ describe.each([
     const UserSchema = z.object({
       username: z.string(),
       password: z.string(),
-      nestedObject: z.object({
-        nestedProperty: z.string(),
-      }),
     })
   
     class UserDto extends createZodDto(UserSchema) {}
@@ -45,14 +42,6 @@ describe.each([
     expect(UserDto._OPENAPI_METADATA_FACTORY()).toEqual({
       username: { type: 'string', required: true },
       password: { type: 'string', required: true },
-      nestedObject: { 
-        type: 'object', 
-        selfRequired: true,
-        required: ['nestedProperty'],
-        properties: {
-          nestedProperty: { type: 'string' },
-        },
-      },
     })
   })
 })

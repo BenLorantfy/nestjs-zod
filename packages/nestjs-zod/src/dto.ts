@@ -2,7 +2,7 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY, PARENT_TITLE_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY, PARENT_TITLE_KEY, IS_OBJECT_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
@@ -131,6 +131,10 @@ function openApiMetadataFactory({
       // `cleanupOpenApiDoc`
       type: propertySchema.type || '', 
     };
+
+    if (propertySchema.type === 'object') {
+      newPropertySchema[IS_OBJECT_KEY] = true;
+    }
 
     if (hasConst) {
       newPropertySchema[HAS_CONST_KEY] = true;

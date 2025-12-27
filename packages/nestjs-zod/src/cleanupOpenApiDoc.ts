@@ -2,7 +2,7 @@ import type { OpenAPIObject } from '@nestjs/swagger';
 import deepmerge from 'deepmerge';
 import { JSONSchema } from 'zod/v4/core';
 import { fixAllRefs, convertToOpenApi3Point0 } from './utils';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PARENT_TITLE_KEY, UNWRAP_ROOT_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, IS_OBJECT_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PARENT_TITLE_KEY, UNWRAP_ROOT_KEY } from './const';
 import { isDeepStrictEqual } from 'node:util';
 import { assert } from './assert';
 
@@ -56,6 +56,10 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
         let newOpenapiSchema = deepmerge<typeof oldOpenapiSchema>({}, oldOpenapiSchema);
 
         for (let propertySchema of Object.values(newOpenapiSchema.properties || {})) {
+            if (IS_OBJECT_KEY in propertySchema) {
+                delete propertySchema[IS_OBJECT_KEY];
+            }
+
             if (HAS_CONST_KEY in propertySchema) {
                 hasConst = Boolean(propertySchema[HAS_CONST_KEY]);
                 delete propertySchema[HAS_CONST_KEY];
@@ -231,6 +235,14 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
 
                 let parameter = methodObject.parameters[i];
                 parameter = fixParameter(parameter, version);
+
+                if (IS_OBJECT_KEY in parameter) {
+                    if (parameter[IS_OBJECT_KEY] === true && 'schema' in parameter && parameter.in === 'query' && typeof parameter.style === 'undefined' && parameter.schema && 'type' in parameter.schema && parameter.schema.type === 'object') {
+                        parameter.style = 'deepObject';
+                    }
+                    
+                    delete parameter[IS_OBJECT_KEY];
+                }
 
                 // Add each $def as a schema
                 if (DEFS_KEY in parameter) {
