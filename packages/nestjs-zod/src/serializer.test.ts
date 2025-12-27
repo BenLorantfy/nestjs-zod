@@ -219,9 +219,10 @@ describe('v4 reportInput', () => {
 
     const userObservable = interceptor.intercept(context, handler)
     
+    await expect(lastValueFrom(userObservable)).rejects.toThrow()
+    
     try {
       await lastValueFrom(userObservable)
-      fail('Should have thrown an error')
     } catch (error: any) {
       const zodError = error.getZodError()
       // Check that the error has issues and at least one has input field
