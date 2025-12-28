@@ -3,23 +3,17 @@
   "description": "All NestJS + Zod utilities you need",
   "version": "0.0.0-set-by-ci",
   "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./dist/index.js",
-    "./z": {
-      "import": "./dist/z.mjs",
-      "default": "./dist/z.js"
-    },
-    "./dto": {
-      "import": "./dist/dto.mjs",
-      "default": "./dist/dto.js"
+    ".": {
+      "import": "./dist/index.mjs",
+      "default": "./dist/index.js"
     }
   },
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "files": [
     "dist",
-    "logo.svg",
-    "dto.d.ts"
+    "logo.svg"
   ],
   "sideEffects": false,
   "license": "MIT",

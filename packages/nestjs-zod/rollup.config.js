@@ -5,7 +5,6 @@ import bundleSize from 'rollup-plugin-bundle-size'
 
 const src = (file) => `src/${file}`
 const dist = (file) => `dist/${file}`
-const root = (file) => `${file}`
 
 const bundle = (input, config) =>
   defineConfig({
@@ -23,6 +22,10 @@ const config = defineConfig([
     plugins: [esbuild()],
     output: [
       {
+        file: dist('index.mjs'),
+        format: 'es',
+      },
+      {
         file: dist('index.js'),
         format: 'cjs',
       },
@@ -33,32 +36,6 @@ const config = defineConfig([
     output: [
       {
         file: dist('index.d.ts'),
-        format: 'es',
-      },
-    ],
-  }),
-  bundle(src('dto.ts'), {
-    plugins: [esbuild()],
-    output: [
-      {
-        file: dist('dto.mjs'),
-        format: 'es',
-      },
-      {
-        file: dist('dto.js'),
-        format: 'cjs',
-      },
-    ],
-  }),
-  bundle(src('dto.ts'), {
-    plugins: [dts()],
-    output: [
-      {
-        file: root('dto.d.ts'),
-        format: 'es',
-      },
-      {
-        file: dist('dto.d.ts'),
         format: 'es',
       },
     ],
