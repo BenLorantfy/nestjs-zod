@@ -1,7 +1,7 @@
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE, BaseExceptionFilter } from "@nestjs/core";
 import { ZodValidationPipe } from "./pipe";
 import { ZodSerializerInterceptor } from "./serializer";
-import { ArgumentsHost, Catch, HttpException, NestInterceptor, Type } from "@nestjs/common";
+import { ArgumentsHost, Catch, HttpException, NestInterceptor, PipeTransform, Type } from "@nestjs/common";
 import { Module } from "@nestjs/common";
 import { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
@@ -16,9 +16,11 @@ export async function setupApp(
   {
     includeIssuesInSerializationErrorResponses,
     interceptor,
+    pipe,
   }: {
     includeIssuesInSerializationErrorResponses?: boolean;
     interceptor?: new (...args: unknown[]) => NestInterceptor;
+    pipe?: Type<PipeTransform>;
   } = {}
 ) {
   @Catch(HttpException)
@@ -52,7 +54,7 @@ export async function setupApp(
         providers: [
           {
             provide: APP_PIPE,
-            useClass: ZodValidationPipe,
+            useClass: pipe || ZodValidationPipe,
           },
           {
             provide: APP_INTERCEPTOR,

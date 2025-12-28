@@ -201,6 +201,7 @@ Check out the [example app](./packages/example/) for a full example of how to in
   - [`ZodValidationPipe` (Get nestjs to validate using zod)](#zodvalidationpipe-get-nestjs-to-validate-using-zod)
   - [`createZodValidationPipe` (Creating custom validation pipe)](#createzodvalidationpipe-creating-custom-validation-pipe)
   - [`ZodValidationException`](#zodvalidationexception)
+  - [`ZodSchemaDeclarationException`](#zodschemaDeclarationexception)
 - [Response Validation](#response-validation)  
   - [`ZodSerializerDto` (Set zod DTO to serialize responses with)](#zodserializerdto-set-zod-dto-to-serialize-responses-with)
   - [`ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)](#zodserializerinterceptor-get-nestjs-to-serialize-responses-with-zod)
@@ -301,7 +302,7 @@ class AuthController {
 ```
 #### `createZodValidationPipe` (Creating custom validation pipe)
 ```ts
-export function createZodValidationPipe({ createValidationException }: ZodValidationPipeOptions = {}): ZodValidationPipeClass
+export function createZodValidationPipe({ createValidationException, strictSchemaDeclaration }: ZodValidationPipeOptions = {}): ZodValidationPipeClass
 ```
 
 Creates a custom zod validation pipe
@@ -316,8 +317,10 @@ const MyZodValidationPipe = createZodValidationPipe({
     new BadRequestException('Ooops'),
 })
 ```
+
 ##### Parameters
 - `params.createValidationException` - A callback that will be called with the zod error when a parsing error occurs.  Should return a new instance of `Error`
+- `params.strictSchemaDeclaration` - If `true`, throws a [`ZodSchemaDeclarationException`](#zodschemaDeclarationexception) when the pipe encounters a parameter that is not typed with a nestjs-zod DTO. It's recommended to set this to `true` to ensure all request data is properly validated
 
 #### `ZodValidationException`
 
@@ -349,6 +352,33 @@ Here is an example exception filter:
 export class ZodValidationExceptionFilter implements ExceptionFilter {
   catch(exception: ZodValidationException) {
     exception.getZodError() // -> ZodError
+  }
+}
+```
+
+#### `ZodSchemaDeclarationException`
+
+If `strictSchemaDeclaration` is set to `true` in [`createZodValidationPipe`](#createzodvalidationpipe-creating-custom-validation-pipe) and a request parameter is not typed with a nestjs-zod DTO (e.g. using a primitive type like `string` or a class-validator DTO), then `nestjs-zod` will throw a `ZodSchemaDeclarationException`, which will result in the following HTTP response:
+
+```json
+{
+  "statusCode": 500,
+  "message": "Internal Server Error"
+}
+```
+
+This is useful for catching cases during development where request data might not be properly validated. You can handle this exception in an [exception filter](https://docs.nestjs.com/exception-filters) if you want to customize the response:
+
+```ts
+@Catch(ZodSchemaDeclarationException)
+export class ZodSchemaDeclarationExceptionFilter implements ExceptionFilter {
+  catch(exception: ZodSchemaDeclarationException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+    response.status(500).json({
+      statusCode: 500,
+      message: 'Missing nestjs-zod schema declaration',
+    });
   }
 }
 ```
