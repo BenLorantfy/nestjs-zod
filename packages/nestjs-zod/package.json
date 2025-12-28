@@ -7,14 +7,6 @@
     ".": {
       "import": "./dist/index.mjs",
       "default": "./dist/index.js"
-    },
-    "./z": {
-      "import": "./dist/z.mjs",
-      "default": "./dist/z.js"
-    },
-    "./dto": {
-      "import": "./dist/dto.mjs",
-      "default": "./dist/dto.js"
     }
   },
   "module": "./dist/index.mjs",
