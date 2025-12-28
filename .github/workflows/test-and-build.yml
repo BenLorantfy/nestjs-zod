@@ -37,12 +37,14 @@ jobs:
         run: cd packages/example && pnpm build
       - name: Test example app
         run: cd packages/example && pnpm test
+      - name: Build example-esm app
+        run: cd packages/example-esm && pnpm build
       - name: Cache Playwright Browsers
         id: playwright-cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('packages/example-dual-zods/package.json') }}-${{ hashFiles('packages/example/package.json') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('packages/example-dual-zods/package.json') }}-${{ hashFiles('packages/example/package.json') }}-${{ hashFiles('packages/example-esm/package.json') }}
           restore-keys: |
             playwright-${{ runner.os }}-
       - name: Install Playwright Browsers
@@ -56,6 +58,10 @@ jobs:
         run: |
           cd packages/example && pnpm run start &
           cd packages/example && pnpm run test:swagger
+      - name: Test example-esm app swagger
+        run: |
+          cd packages/example-esm && pnpm run start &
+          cd packages/example-esm && pnpm run test:swagger
       # - name: Get current date
       #   if: github.head_ref == 'v5'
       #   id: date
