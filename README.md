@@ -377,7 +377,7 @@ export class ZodSchemaDeclarationExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse();
     response.status(500).json({
       statusCode: 500,
-      message: 'Missing zod schema declaration',
+      message: 'Missing nestjs-zod schema declaration',
     });
   }
 }
