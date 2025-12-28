@@ -2130,6 +2130,160 @@ describe('issue#208', () => {
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     });
 })
+
+describe('issue#154 - sets required field correctly for query parameters', () => {
+    it('required and optional primitive query params', async () => {
+        class QueryParamsDto extends createZodDto(z.object({
+            requiredFilter: z.string(),
+            optionalFilter: z.string().optional(),
+        })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Get()
+            getBooks(@Query() query: QueryParamsDto) {
+                return [];
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+
+        expect(get(doc, 'paths./.get.parameters')).toEqual([
+            {
+                in: 'query',
+                name: 'requiredFilter',
+                required: true,
+                schema: {
+                    type: 'string'
+                }
+            },
+            {
+                in: 'query',
+                name: 'optionalFilter',
+                required: false,
+                schema: {
+                    type: 'string'
+                }
+            }
+        ]);
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+
+    it('required and optional object query params', async () => {
+        class QueryParamsDto extends createZodDto(z.object({
+            requiredFilter: z.object({
+                name: z.string(),
+            }),
+            optionalFilter: z.object({
+                age: z.number(),
+            }).optional(),
+        })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Get()
+            getBooks(@Query() query: QueryParamsDto) {
+                return [];
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+
+        expect(get(doc, 'paths./.get.parameters')).toEqual([
+            {
+                in: 'query',
+                name: 'requiredFilter',
+                required: true,
+                style: 'deepObject',
+                schema: {
+                    type: 'object',
+                    properties: {
+                        name: {
+                            type: 'string'
+                        }
+                    },
+                    required: ['name']
+                }
+            },
+            {
+                in: 'query',
+                name: 'optionalFilter',
+                required: false,
+                style: 'deepObject',
+                schema: {
+                    type: 'object',
+                    properties: {
+                        age: {
+                            type: 'number'
+                        }
+                    },
+                    required: ['age']
+                }
+            }
+        ]);
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+
+    it('required and optional object query params with optional properties', async () => {
+        class QueryParamsDto extends createZodDto(z.object({
+            requiredFilter: z.object({
+                name: z.string().optional(),
+            }),
+            optionalFilter: z.object({
+                age: z.number().optional(),
+            }).optional(),
+        })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Get()
+            getBooks(@Query() query: QueryParamsDto) {
+                return [];
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+
+        expect(get(doc, 'paths./.get.parameters')).toEqual([
+            {
+                in: 'query',
+                name: 'requiredFilter',
+                required: true,
+                style: 'deepObject',
+                schema: {
+                    type: 'object',
+                    properties: {
+                        name: {
+                            type: 'string'
+                        }
+                    }
+                }
+            },
+            {
+                in: 'query',
+                name: 'optionalFilter',
+                required: false,
+                style: 'deepObject',
+                schema: {
+                    type: 'object',
+                    properties: {
+                        age: {
+                            type: 'number'
+                        }
+                    }
+                }
+            }
+        ]);
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+})
+
 async function createApp(controllerClass: Type<unknown>) {
     @Module({
         imports: [],

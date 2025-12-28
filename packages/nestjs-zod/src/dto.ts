@@ -2,7 +2,7 @@ import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY, PARENT_TITLE_KEY, IS_OBJECT_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY, PARENT_TITLE_KEY, SELF_REQUIRED_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 
@@ -132,10 +132,6 @@ function openApiMetadataFactory({
       type: propertySchema.type || '', 
     };
 
-    if (propertySchema.type === 'object') {
-      newPropertySchema[IS_OBJECT_KEY] = true;
-    }
-
     if (hasConst) {
       newPropertySchema[HAS_CONST_KEY] = true;
     }
@@ -165,6 +161,12 @@ function openApiMetadataFactory({
     const required = Boolean('required' in jsonSchema && jsonSchema.required?.includes(propertyKey));
     if (newPropertySchema.type === 'object') {
       newPropertySchema.selfRequired = required;
+      // This is needed for parameters that are objects.  In those cases, nestjs
+      // has some buggy behavior regarding `required`.  nestjs makes `required`
+      // always `true` (never false), OR an array of fields that are required
+      // Also, `selfRequired` is not present in the OpenAPI document for some
+      // reason, so we need our own field here...  ¯\_(ツ)_/¯
+      newPropertySchema[SELF_REQUIRED_KEY] = required;
     } else {
       newPropertySchema.required = required;
     }

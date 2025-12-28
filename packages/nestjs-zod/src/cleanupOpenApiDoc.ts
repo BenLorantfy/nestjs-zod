@@ -2,7 +2,7 @@ import type { OpenAPIObject } from '@nestjs/swagger';
 import deepmerge from 'deepmerge';
 import { JSONSchema } from 'zod/v4/core';
 import { fixAllRefs, convertToOpenApi3Point0 } from './utils';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, IS_OBJECT_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PARENT_TITLE_KEY, UNWRAP_ROOT_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PARENT_TITLE_KEY, SELF_REQUIRED_KEY, UNWRAP_ROOT_KEY } from './const';
 import { isDeepStrictEqual } from 'node:util';
 import { assert } from './assert';
 
@@ -56,8 +56,8 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
         let newOpenapiSchema = deepmerge<typeof oldOpenapiSchema>({}, oldOpenapiSchema);
 
         for (let propertySchema of Object.values(newOpenapiSchema.properties || {})) {
-            if (IS_OBJECT_KEY in propertySchema) {
-                delete propertySchema[IS_OBJECT_KEY];
+            if (SELF_REQUIRED_KEY in propertySchema) {
+                delete propertySchema[SELF_REQUIRED_KEY];
             }
 
             if (HAS_CONST_KEY in propertySchema) {
@@ -236,12 +236,23 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                 let parameter = methodObject.parameters[i];
                 parameter = fixParameter(parameter, version);
 
-                if (IS_OBJECT_KEY in parameter) {
-                    if (parameter[IS_OBJECT_KEY] === true && 'schema' in parameter && parameter.in === 'query' && typeof parameter.style === 'undefined' && parameter.schema && 'type' in parameter.schema && parameter.schema.type === 'object') {
+                if (SELF_REQUIRED_KEY in parameter) {
+                    // Setting `deepObject` style for query params improves the
+                    // "Try it" experience in SwaggerUI, such that objects are
+                    // sent using square brackets when the request is sent
+                    if ('schema' in parameter && parameter.in === 'query' && typeof parameter.style === 'undefined' && parameter.schema && 'type' in parameter.schema && parameter.schema.type === 'object') {
                         parameter.style = 'deepObject';
                     }
+
+                    if ('schema' in parameter) {
+                        // Add `required` back to the schema since nestjs seems to remove it?
+                        if (Array.isArray(parameter.required) && parameter.schema && 'type' in parameter.schema && parameter.schema.type === 'object' && typeof parameter.schema.required === "undefined") {
+                            parameter.schema.required = parameter.required;
+                        }
+                        parameter.required = Boolean(parameter[SELF_REQUIRED_KEY]);
+                    }
                     
-                    delete parameter[IS_OBJECT_KEY];
+                    delete parameter[SELF_REQUIRED_KEY];
                 }
 
                 // Add each $def as a schema
