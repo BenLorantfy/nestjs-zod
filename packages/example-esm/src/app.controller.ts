@@ -5,17 +5,17 @@ import z from 'zod';
 
 class BookDto extends createZodDto(z.object({
   title: z.string().describe('The title of the book'),
-}).meta({ id: 'Book', title: 'Book' })) {}
+}).meta({ id: 'Book' })) {}
+
+class BookListDto extends createZodDto(z.array(BookDto.schema)) {}
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
-  @Get('/book')
-  @ZodResponse({ type: BookDto })
+  @Get('/books')
+  @ZodResponse({ type: BookListDto })
   getBooks() {
-    return {
-      title: 'The Martian'
-    }
+    return [];
   }
 }
