@@ -1,4 +1,5 @@
 import { createZodDto } from './dto'
+import { PARENT_TITLE_KEY } from './const'
 import * as z4 from 'zod/v4'
 import * as z3 from 'zod/v3';
 import * as zodMini from 'zod/v4-mini';
@@ -34,9 +35,6 @@ describe.each([
     const UserSchema = z.object({
       username: z.string(),
       password: z.string(),
-      nestedObject: z.object({
-        nestedProperty: z.string(),
-      }),
     })
   
     class UserDto extends createZodDto(UserSchema) {}
@@ -44,14 +42,6 @@ describe.each([
     expect(UserDto._OPENAPI_METADATA_FACTORY()).toEqual({
       username: { type: 'string', required: true },
       password: { type: 'string', required: true },
-      nestedObject: { 
-        type: 'object', 
-        selfRequired: true,
-        required: ['nestedProperty'],
-        properties: {
-          nestedProperty: { type: 'string' },
-        },
-      },
     })
   })
 })
@@ -70,6 +60,20 @@ describe('zod/v4', () => {
       username: expect.objectContaining({ type: 'string', required: true }),
       password: expect.objectContaining({ type: 'string', required: true }),
       myField: expect.objectContaining({ type: 'string', required: true, default: 'myField' })
+    })
+  })
+
+  it('add title metadata', () => {
+    const UserSchema = z4.object({
+      username: z4.string(),
+    }).meta({
+      title: 'User'
+    })
+
+    class UserDto extends createZodDto(UserSchema) {}
+
+    expect(UserDto.Output._OPENAPI_METADATA_FACTORY()).toEqual({
+      username: expect.objectContaining({ type: 'string', required: true, [PARENT_TITLE_KEY]: 'User' }),
     })
   })
 })

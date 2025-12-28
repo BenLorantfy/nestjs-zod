@@ -11,3 +11,4 @@ This is an example nestjs app that shows how to integrate with nestjs-zod
 - Examples defining DTOs: [people.dto.ts](./src/people/people.dto.ts) and [starships.dto.ts](./src/starships/starships.dto.ts)
 - Examples showing how to use DTOs: [people.controller.ts](./src/people/people.controller.ts) and [starships.controller.ts](./src/starships/starships.controller.ts)
   - Example showing how to use zod to validate query params can be found in the `getPeople` method
+- Example showing how to use `codecs`: [people.dto.ts](./src/people/people.dto.ts)

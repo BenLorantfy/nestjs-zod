@@ -1,5 +1,6 @@
 export interface UnknownSchema {
-    parse(input: unknown): unknown;
+    parse(input: unknown, options?: { reportInput?: boolean, [x: string | number | symbol]: unknown; }): unknown;
+    encode?(input: unknown, options?: { reportInput?: boolean, [x: string | number | symbol]: unknown; }): unknown;
     array?: () => UnknownSchema;
 }
 

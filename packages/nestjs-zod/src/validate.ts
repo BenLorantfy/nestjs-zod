@@ -8,7 +8,7 @@ import { UnknownSchema } from './types'
  */
 export function validate<TSchema extends UnknownSchema>(
   value: unknown,
-  schemaOrDto: TSchema | ZodDto<TSchema>,
+  schemaOrDto: TSchema | ZodDto<TSchema, boolean>,
   createValidationException: ZodExceptionCreator = createZodValidationException
 ): ReturnType<TSchema['parse']> {
   const schema = isZodDto(schemaOrDto) ? schemaOrDto.schema : schemaOrDto

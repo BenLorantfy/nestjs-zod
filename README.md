@@ -40,6 +40,9 @@
 <p>
 ✨ Automatically generate OpenAPI documentation using zod
 </p>
+<p>
+✨ Supports zod codecs
+</p>
 
 
 ## Getting Started
@@ -198,14 +201,18 @@ Check out the [example app](./packages/example/) for a full example of how to in
   - [`ZodValidationPipe` (Get nestjs to validate using zod)](#zodvalidationpipe-get-nestjs-to-validate-using-zod)
   - [`createZodValidationPipe` (Creating custom validation pipe)](#createzodvalidationpipe-creating-custom-validation-pipe)
   - [`ZodValidationException`](#zodvalidationexception)
+  - [`ZodSchemaDeclarationException`](#zodschemaDeclarationexception)
 - [Response Validation](#response-validation)  
   - [`ZodSerializerDto` (Set zod DTO to serialize responses with)](#zodserializerdto-set-zod-dto-to-serialize-responses-with)
   - [`ZodSerializerInterceptor` (Get nestjs to serialize responses with zod)](#zodserializerinterceptor-get-nestjs-to-serialize-responses-with-zod)
+  - [`createZodSerializerInterceptor` (Creating custom serializer interceptor)](#createzodserializerinterceptor-creating-custom-serializer-interceptor)
   - [`ZodResponse` (Sync run-time, compile-time, and docs-time schemas)](#zodresponse-sync-run-time-compile-time-and-docs-time-schemas)
   - [`ZodSerializationException`](#zodserializationexception)
 - [OpenAPI (Swagger) support](#openapi-swagger-support)
   - [`cleanupOpenApiDoc` (Ensure proper OpenAPI output)](#cleanupopenapidoc-ensure-proper-openapi-output)
-  - [Writing more Swagger-compatible schemas](#writing-more-swagger-compatible-schemas)
+  - [Output schemas](#output-schemas)
+  - [Codecs](#codecs)
+  - [Reusable schemas](#reusable-schemas)
   - [`zodV3ToOpenAPI` (⚠️ DEPRECATED)](#zodv3toopenapi-deprecated)
 - [`validate` (⚠️ DEPRECATED)](#validate-deprecated)
 - [`ZodGuard` (⚠️ DEPRECATED)](#zodguard-deprecated)
@@ -217,7 +224,7 @@ Check out the [example app](./packages/example/) for a full example of how to in
 ### Request Validation
 #### `createZodDto` (Create a DTO from a Zod schema)
 ```ts
-function createZodDto<TSchema extends UnknownSchema>(schema: TSchema): ZodDto<TSchema>;
+function createZodDto<TSchema extends UnknownSchema, TCodec extends boolean = false>(schema: TSchema, options?: { codec: TCodec }): ZodDto<TSchema, TCodec>;
 ```
 Creates a nestjs DTO from a zod schema.  These zod DTOs can be used in place of `class-validator` / `class-transformer` DTOs. Zod DTOs are responsible for three things:
 
@@ -230,8 +237,10 @@ Creates a nestjs DTO from a zod schema.  These zod DTOs can be used in place of 
 
 ##### Parameters
 - `schema` - A zod schema.  You can "bring your own zod", including zod v3 schemas, v4 schemas, zod mini schemas, etc.  The only requirement is that the schema has a method called `parse`
+- `options`
+  - `options.codec` - If set to `true`, then when serializing responses `nestjs-zod` will use `encode` instead of `parse`.  See more information about codecs in the [zod documentation](https://zod.dev/codecs)
 
-##### Example
+##### Examples
 ###### Creating a zod DTO
 ```ts
 import { createZodDto } from 'nestjs-zod'
@@ -247,20 +256,6 @@ class CredentialsDto extends createZodDto(CredentialsSchema) {}
 ```
 ###### Using a zod DTO
 ```ts
-@Controller('auth')
-class AuthController {
-  // with global ZodValidationPipe (recommended)
-  async signIn(@Body() credentials: CredentialsDto) {}
-  async signIn(@Param() signInParams: SignInParamsDto) {}
-  async signIn(@Query() signInQuery: SignInQueryDto) {}
-
-  // with route-level ZodValidationPipe
-  @UsePipes(ZodValidationPipe)
-  async signIn(@Body() credentials: CredentialsDto) {}
-}
-
-// with controller-level ZodValidationPipe
-@UsePipes(ZodValidationPipe)
 @Controller('auth')
 class AuthController {
   async signIn(@Body() credentials: CredentialsDto) {}
@@ -307,7 +302,7 @@ class AuthController {
 ```
 #### `createZodValidationPipe` (Creating custom validation pipe)
 ```ts
-export function createZodValidationPipe({ createValidationException }: ZodValidationPipeOptions = {}): ZodValidationPipeClass
+export function createZodValidationPipe({ createValidationException, strictSchemaDeclaration }: ZodValidationPipeOptions = {}): ZodValidationPipeClass
 ```
 
 Creates a custom zod validation pipe
@@ -322,8 +317,10 @@ const MyZodValidationPipe = createZodValidationPipe({
     new BadRequestException('Ooops'),
 })
 ```
+
 ##### Parameters
 - `params.createValidationException` - A callback that will be called with the zod error when a parsing error occurs.  Should return a new instance of `Error`
+- `params.strictSchemaDeclaration` - If `true`, throws a [`ZodSchemaDeclarationException`](#zodschemaDeclarationexception) when the pipe encounters a parameter that is not typed with a nestjs-zod DTO. It's recommended to set this to `true` to ensure all request data is properly validated
 
 #### `ZodValidationException`
 
@@ -359,11 +356,38 @@ export class ZodValidationExceptionFilter implements ExceptionFilter {
 }
 ```
 
+#### `ZodSchemaDeclarationException`
+
+If `strictSchemaDeclaration` is set to `true` in [`createZodValidationPipe`](#createzodvalidationpipe-creating-custom-validation-pipe) and a request parameter is not typed with a nestjs-zod DTO (e.g. using a primitive type like `string` or a class-validator DTO), then `nestjs-zod` will throw a `ZodSchemaDeclarationException`, which will result in the following HTTP response:
+
+```json
+{
+  "statusCode": 500,
+  "message": "Internal Server Error"
+}
+```
+
+This is useful for catching cases during development where request data might not be properly validated. You can handle this exception in an [exception filter](https://docs.nestjs.com/exception-filters) if you want to customize the response:
+
+```ts
+@Catch(ZodSchemaDeclarationException)
+export class ZodSchemaDeclarationExceptionFilter implements ExceptionFilter {
+  catch(exception: ZodSchemaDeclarationException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const response = ctx.getResponse();
+    response.status(500).json({
+      statusCode: 500,
+      message: 'Missing nestjs-zod schema declaration',
+    });
+  }
+}
+```
+
 ### Response Validation
 
 #### `ZodSerializerDto` (Set zod DTO to serialize responses with)
 ```ts
-function ZodSerializerDto(dto: ZodDto<UnknownSchema> | UnknownSchema | [ZodDto<UnknownSchema>] | [UnknownSchema])
+function ZodSerializerDto(dto: ZodDto | UnknownSchema | [ZodDto] | [UnknownSchema])
 ```
 Parses / serializes the return value of a controller method using the provided zod schema.  This is especially useful to prevent accidental data leaks.
 
@@ -443,6 +467,36 @@ This should be done in the `AppModule` like so:
   providers: [
     ...,
     { provide: APP_INTERCEPTOR, useClass: ZodSerializerInterceptor },
+  ],
+})
+export class AppModule {}
+```
+
+#### `createZodSerializerInterceptor` (Creating custom serializer interceptor)
+```ts
+export function createZodSerializerInterceptor({ reportInput }: ZodSerializerInterceptorOptions = {}): ZodSerializerInterceptorClass
+```
+
+Creates a custom zod serializer interceptor
+
+##### Parameters
+- `params.reportInput` - When set to `true`, includes the input value in Zod error issues. This is useful for debugging serialization errors. Only supported in Zod v4.
+
+##### Example
+```ts
+import { createZodSerializerInterceptor } from 'nestjs-zod'
+import { APP_INTERCEPTOR } from '@nestjs/core'
+
+const CustomZodSerializerInterceptor = createZodSerializerInterceptor({
+  reportInput: true,
+})
+
+@Module({
+  providers: [
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: CustomZodSerializerInterceptor,
+    },
   ],
 })
 export class AppModule {}
@@ -590,6 +644,45 @@ However, it's recommended to use [`@ZodResponse`](#zodresponse-sync-run-time-com
   type: MyDto // <-- No need to do `.Output` here
 })
 ```
+#### Codecs
+Zod 4.1 introduced a new feature called "codecs".  There is more information about codecs in the [zod documentation](https://zod.dev/codecs)
+
+`nestjs-zod` supports `codecs`.  If the `codec: true` option is used when creating the zod DTO, then `parse` will be used for request bodies, and `encode` will be used when serializing response bodies.
+
+`codecs` can enable, in some cases, using _one_ zod schema, instead of two, for both the request and response
+
+```ts
+const stringToDate = z.codec(
+  z.iso.datetime(),
+  z.date(),
+  {
+    decode: (isoString) => new Date(isoString),
+    encode: (date) => date.toISOString(),
+  }
+);
+
+class BookDto extends createZodDto(z.object({
+  title: z.string(),
+  dateWritten: stringToDate
+}), {
+  codec: true
+}) { }
+
+@Controller('books')
+class BookController {
+  constructor() { }
+  
+  @Post()
+  @ZodResponse({ 
+    type: BookDto
+  })
+  createBook(@Body() book: BookDto) {
+    return book;
+  }
+}
+```
+See the example app [here](/packages/example/src/people/people.dto.ts) for a full example.
+
 #### Reusable schemas
 You can also externalize and reuse schemas across multiple DTOs.  If you add `.meta({ id: "MySchema" })` to any zod schema, then that schema will be added directly to `components.schemas` in the OpenAPI documentation.  For example, this code:
 ```ts
@@ -629,6 +722,12 @@ Will result in this OpenAPI document:
   // ...
 }
 ```
+
+##### Schema names
+Note that schemas are named / displayed in SwaggerUI according to the following logic:
+1. For input schemas, (e.g. schemas used in request bodies), SwaggerUI will display the `id` property in `.meta({ id: 'MySchema' })`
+2. For output schemas, (e.g. schemas used in `@ZodResponse()`), `nestjs-zod` suffixes the `id` set by `.meta({ id: 'MySchema' })` with `_Output`, so SwaggerUI displays, for example, `MySchema_Output`.  This is important to avoid collision with input schemas.
+3. However, if `title` is set by `.meta({ title: ... })`, then SwaggerUI will display `title`.  Note that unlike `id`s, there is no duplicate checking for titles, so it's the consumer's responsibility to avoid confusion when using `title`.
 
 #### `zodV3ToOpenAPI` _**(DEPRECATED)**_
 
@@ -921,4 +1020,6 @@ Will result in this OpenAPI document:
 
 ## Credits
 
-This library was originally created by [risen228](https://github.com/risen228) and now maintained by [BenLorantfy](https://github.com/BenLorantfy/)
+This library was originally created by [risen228](https://github.com/risen228) and now maintained by [BenLorantfy](https://github.com/BenLorantfy/) (that's me!)
+
+I'm for hire!  Check out my resume [here](https://www.benlorantfy.com/resume).  You can email me at ben@lorantfy.com if you want to chat.

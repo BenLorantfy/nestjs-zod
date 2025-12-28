@@ -216,10 +216,10 @@ test('throws error if trying to use array syntax with zod mini', async () => {
             constructor() { }
     
             @Get()
-            // @ts-expect-error - Should be a typescript error here because zod mini schemas don't have an `array` method
             @ZodResponse({ 
                 status: 200, 
                 description: 'Get books', 
+                // @ts-expect-error - Should be a typescript error here because zod mini schemas don't have an `array` method
                 type: [BookDto] 
             })
             getBooks() {
@@ -229,45 +229,90 @@ test('throws error if trying to use array syntax with zod mini', async () => {
     }).toThrow('[nestjs-zod] ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method');
 })
 
-test('throws error if trying to use DTO.Output', () => {
-    class BookDto extends createZodDto(z.object({
-        id: z.string(),
-    })) { }
-
-
-    expect(() => {
-        @Controller('books')
-        class BookController {
-            constructor() { }
-    
-            @Get()
-            // @ts-expect-error - Should have a typescript here when trying to use DTO.Output
-            @ZodResponse({ 
-                status: 200, 
-                description: 'Get books', 
-                type: [BookDto.Output] 
-            })
-            getBooks() {
-                return [];
-            }
+test('supports codecs', async () => {
+    const stringToDate = z.codec(
+        z.iso.datetime(),
+        z.date(),
+        {
+          decode: (isoString) => new Date(isoString),
+          encode: (date) => date.toISOString(),
         }
-    }).toThrow('[nestjs-zod] ZodResponse automatically uses the output version of the DTO, there is no need to use DTO.Output');
+    );
 
-    expect(() => {
+    class BookDto extends createZodDto(z.object({
+        title: z.string(),
+        dateWritten: stringToDate
+    }), {
+        codec: true
+    }) { }
+
+    @Controller('books')
+    class BookController {
+        constructor() { }
+        
+        @Post()
+        @ZodResponse({ 
+            type: BookDto
+        })
+        createBook(@Body() book: BookDto) {
+            return book;
+        }
+    }
+
+    const { app, openApiDoc } = await setupApp(BookController)
+
+    expect(get(openApiDoc, 'paths./books.post.responses.default.content.application/json.schema')).toEqual({
+        $ref: `#/components/schemas/BookDto`
+    });
+
+    expect(get(openApiDoc, `components.schemas`)).toEqual({
+        BookDto: {
+            type: 'object',
+            properties: {
+                title: { type: 'string' },
+                dateWritten: { type: 'string', format: 'date-time', pattern: expect.any(String) }
+            },
+            required: ['title', 'dateWritten']
+        }
+    });
+
+    await request(app.getHttpServer())
+        .post('/books')
+        .send({
+            title: 'The Great Gatsby',
+            dateWritten: '2025-10-10T01:40:32.591Z'
+        })
+        .expect(201)
+        .expect((res) => {
+            expect(res.body).toEqual({
+                title: 'The Great Gatsby',
+                dateWritten: '2025-10-10T01:40:32.591Z'
+            })
+        });
+})
+
+test('throws error if trying to use .Output version of the DTO with ZodResponse', async () => {
+    let err;
+    try {
+        class BookDto extends createZodDto(z.object({
+            id: z.string(),
+        })) { }
+    
         @Controller('books')
         class BookController {
             constructor() { }
     
-            @Get()
+            @Post()
             @ZodResponse({ 
-                status: 200, 
-                description: 'Get books', 
-                // @ts-expect-error - Should have a typescript here when trying to use DTO.Output
                 type: BookDto.Output
             })
-            getBooks() {
-                return [];
+            createBook(@Body() book: BookDto) {
+                return book;
             }
         }
-    }).toThrow('[nestjs-zod] ZodResponse automatically uses the output version of the DTO, there is no need to use DTO.Output');
+    } catch (error) {
+        err = error;
+    }
+
+    expect(err).toEqual(new Error('[nestjs-zod] There is no need to use Dto.Output with ZodResponse'));
 })

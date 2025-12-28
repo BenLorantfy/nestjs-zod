@@ -1,7 +1,7 @@
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE, BaseExceptionFilter } from "@nestjs/core";
 import { ZodValidationPipe } from "./pipe";
 import { ZodSerializerInterceptor } from "./serializer";
-import { ArgumentsHost, Catch, HttpException, Type } from "@nestjs/common";
+import { ArgumentsHost, Catch, HttpException, NestInterceptor, PipeTransform, Type } from "@nestjs/common";
 import { Module } from "@nestjs/common";
 import { TestingModule } from "@nestjs/testing";
 import { Test } from "@nestjs/testing";
@@ -11,7 +11,18 @@ import { Response } from "express";
 import { ZodSerializationException } from "./exception";
 import { ZodError } from "zod/v4";
 
-export async function setupApp(controllerClass: Type<unknown>, { includeIssuesInSerializationErrorResponses }: { includeIssuesInSerializationErrorResponses?: boolean } = {}) {
+export async function setupApp(
+  controllerClass: Type<unknown>,
+  {
+    includeIssuesInSerializationErrorResponses,
+    interceptor,
+    pipe,
+  }: {
+    includeIssuesInSerializationErrorResponses?: boolean;
+    interceptor?: new (...args: unknown[]) => NestInterceptor;
+    pipe?: Type<PipeTransform>;
+  } = {}
+) {
   @Catch(HttpException)
   class HttpExceptionFilter extends BaseExceptionFilter {
       catch(exception: HttpException, host: ArgumentsHost) {
@@ -43,11 +54,11 @@ export async function setupApp(controllerClass: Type<unknown>, { includeIssuesIn
         providers: [
           {
             provide: APP_PIPE,
-            useClass: ZodValidationPipe,
+            useClass: pipe || ZodValidationPipe,
           },
           {
             provide: APP_INTERCEPTOR,
-            useClass: ZodSerializerInterceptor,
+            useClass: interceptor || ZodSerializerInterceptor,
           },
           ...(includeIssuesInSerializationErrorResponses ? [{
             provide: APP_FILTER,

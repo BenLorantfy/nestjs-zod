@@ -1,8 +1,10 @@
 import { createZodDto } from 'nestjs-zod';
 import { z } from 'zod';
+import { stringToDate } from '../codecs';
 
-// Schemas
-export const CreatePersonSchema = z.object({
+export class PersonDto extends createZodDto(z.object({
+  id: z.number().int().positive().describe('Unique identifier for the person'),
+  created: stringToDate,
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
   height: z.string().describe('Height in centimeters'),
   mass: z.string().describe('Mass in kilograms'),
@@ -16,28 +18,29 @@ export const CreatePersonSchema = z.object({
   speciesIds: z.array(z.string()).describe('Array of species IDs'),
   vehicleIds: z.array(z.string()).describe('Array of vehicle IDs'),
   starshipIds: z.array(z.string()).describe('Array of starship IDs'),
-}).meta({ id: 'CreatePerson' });
+}).meta({ id: 'Person' }), { codec: true }) {}
 
-export const PersonSchema = CreatePersonSchema.extend({
-  id: z.number().int().positive().describe('Unique identifier for the person'),
-}).meta({ id: 'Person' });
+export class CreatePersonFormDto extends createZodDto(
+  PersonDto.schema.omit({ id: true, created: true }).meta({ id: 'CreatePersonFormDto' })
+, {
+  codec: true
+}) {}
 
-export const PersonListSchema = z.object({
-  data: z.array(PersonSchema),
-}).meta({ id: 'PersonList' });
+export class PersonListDto extends createZodDto(z.object({
+  data: z.array(PersonDto.schema),
+}).meta({ id: 'PersonList' }), { codec: true }) {} 
 
-export const PersonFilterSchema = z.object({
-  name: z.string().optional().describe('Filter by name'),
-})
+export class GetPersonResponse extends createZodDto(z.object({ data: PersonDto.schema }), { codec: true }) {}
 
-// DTO classes
-export class CreatePersonDto extends createZodDto(CreatePersonSchema) {}
-export class PersonDto extends createZodDto(PersonSchema) {}
-export class PersonListDto extends createZodDto(PersonListSchema) {} 
-export class PersonFilterDto extends createZodDto(PersonFilterSchema) {}
+export class PersonFilterDto extends createZodDto(z.object({
+  filter: z.object({
+    name: z.string().optional().describe('Filter by name'),
+  }).optional(),
+}), { codec: true }) {}
 
-// Types
-export type Person = z.infer<typeof PersonSchema>;
-export type CreatePerson = z.infer<typeof CreatePersonSchema>;
-export type PersonList = z.infer<typeof PersonListSchema>;
-export type PersonFilter = z.infer<typeof PersonFilterSchema>;
+export class GetPersonParams extends createZodDto(z.object({ id: z.string().transform(val => parseInt(val)) })) {}
+
+export type Person = z.infer<typeof PersonDto.schema>;
+export type CreatePersonForm = z.infer<typeof CreatePersonFormDto.schema>;
+export type PersonList = z.infer<typeof PersonListDto.schema>;
+export type PersonFilter = z.infer<typeof PersonFilterDto.schema>;
