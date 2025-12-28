@@ -2130,6 +2130,11 @@ describe('issue#208', () => {
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     });
 })
+
+describe('issue#154', () => {
+    // TODO: write tests
+})
+
 async function createApp(controllerClass: Type<unknown>) {
     @Module({
         imports: [],

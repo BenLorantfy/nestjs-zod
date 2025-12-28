@@ -8,4 +8,4 @@ export const PARENT_HAS_REFS_KEY = `${PREFIX}-parent-has-refs`;
 export const UNWRAP_ROOT_KEY = `${PREFIX}-unwrap-root`;
 export const HAS_NULL_KEY = `${PREFIX}-has-null`;
 export const HAS_CONST_KEY = `${PREFIX}-has-const`;
-export const IS_OBJECT_KEY = `${PREFIX}-is-object`;
+export const SELF_REQUIRED_KEY = `${PREFIX}-self-required`;
