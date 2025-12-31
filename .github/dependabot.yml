@@ -10,3 +10,10 @@ updates:
       - dependency-type: development
     schedule:
       interval: "weekly"
+  - package-ecosystem: "npm"
+    directories:
+      - "packages/example*"
+    allow:
+      - dependency-type: production
+    schedule:
+      interval: "weekly"
