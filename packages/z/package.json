@@ -47,7 +47,7 @@
     "@types/node": "^22.7.5",
     "esbuild": "^0.14.24",
     "eslint": "^8.42.0",
-    "eslint-kit": "^5.7.0",
+    "eslint-kit": "^11.39.0",
     "jest": "^29.5.0",
     "reflect-metadata": "^0.2.0",
     "rollup": "^2.69.0",
