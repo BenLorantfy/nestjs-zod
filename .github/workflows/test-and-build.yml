@@ -68,6 +68,7 @@ jobs:
     if: github.event.pull_request.user.login == 'dependabot[bot]'
     permissions:
       pull-requests: write
+      issues: write
     steps:
       - name: Enable auto-merge for Dependabot PRs
         run: gh pr merge --squash "$PR_URL"
