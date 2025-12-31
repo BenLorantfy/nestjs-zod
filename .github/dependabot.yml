@@ -4,18 +4,8 @@
 version: 2
 updates:
   - package-ecosystem: "npm"
-    directories:
-      - "packages/cli"
-      - "packages/z"
-      - "packages/nestjs-zod"
+    directory: "/"
     allow:
       - dependency-type: development
-    schedule:
-      interval: "weekly"
-  - package-ecosystem: "npm"
-    directories:
-      - "packages/example"
-      - "packages/example-esm"
-      - "packages/example-dual-zods"
     schedule:
       interval: "weekly"
