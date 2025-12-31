@@ -6,6 +6,7 @@ updates:
   - package-ecosystem: "npm"
     directories:
       - "**/*"
-    dependency-type: development
+    allow:
+      dependency-type: development
     schedule:
       interval: "weekly"
