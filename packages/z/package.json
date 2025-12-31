@@ -46,7 +46,7 @@
     "@types/merge-deep": "^3.0.0",
     "@types/node": "^22.7.5",
     "esbuild": "^0.14.24",
-    "eslint": "^8.42.0",
+    "eslint": "^9.39.2",
     "eslint-kit": "^11.39.0",
     "jest": "^29.5.0",
     "reflect-metadata": "^0.2.0",
