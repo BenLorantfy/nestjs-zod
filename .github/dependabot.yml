@@ -7,6 +7,6 @@ updates:
     directories:
       - "**/*"
     allow:
-      dependency-type: development
+      - dependency-type: development
     schedule:
       interval: "weekly"
