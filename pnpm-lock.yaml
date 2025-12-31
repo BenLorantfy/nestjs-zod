@@ -353,8 +353,8 @@ importers:
         specifier: ^29.5.2
         version: 29.5.14
       '@types/lodash':
-        specifier: ^4.17.19
-        version: 4.17.19
+        specifier: ^4.17.21
+        version: 4.17.21
       '@types/merge-deep':
         specifier: ^3.0.0
         version: 3.0.3
@@ -1888,8 +1888,8 @@ packages:
   '@types/json5@0.0.29':
     resolution: {integrity: sha512-dRLjCWHYg4oaA77cxO64oO+7JwCwnIzkZPdrrC71jQmQtlhM556pwKo5bUzqvZndkVbeFLIIi+9TC40JNF5hNQ==}
 
-  '@types/lodash@4.17.19':
-    resolution: {integrity: sha512-NYqRyg/hIQrYPT9lbOeYc3kIRabJDn/k4qQHIXUpx88CBDww2fD15Sg5kbXlW86zm2XEW4g0QxkTI3/Kfkc7xQ==}
+  '@types/lodash@4.17.21':
+    resolution: {integrity: sha512-FOvQ0YPD5NOfPgMzJihoT+Za5pdkDJWcbpuj1DjaKZIr/gxodQjY/uWEFlTNqW2ugXHUiL8lRQgw63dzKHZdeQ==}
 
   '@types/merge-deep@3.0.3':
     resolution: {integrity: sha512-ppHIZk71nYeJ6VoZBpgsKwIdseG6Y7DOtiUL0lWbTo+WCG5G+g2qZaCMGXNj6FgQaO7qMUKwffbQp5/9R9s2Ug==}
@@ -7635,7 +7635,7 @@ snapshots:
 
   '@types/json5@0.0.29': {}
 
-  '@types/lodash@4.17.19': {}
+  '@types/lodash@4.17.21': {}
 
   '@types/merge-deep@3.0.3': {}
 
