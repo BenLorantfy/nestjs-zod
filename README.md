@@ -44,7 +44,8 @@
 ✨ Supports zod codecs
 </p>
 
-## Featured Sponsor: apisandbox.dev
+
+<h3 align="center">Sponsored by: apisandbox.dev</h3>
 
 <a href="https://apisandbox.dev/">
   <img alt="apisandbox.dev.  It's google docs for api design.  real-time collaboration.  shareable design links.  and more!.  Try It!" src="./img/sponsor-p1.png" />
