@@ -46,11 +46,11 @@
 
 ## Featured Sponsor: apisandbox.dev
 
-<a href="apisandbox.dev">
-  <img src="./img/sponsor-p1.png" />
+<a href="https://apisandbox.dev/">
+  <img alt="apisandbox.dev.  It's google docs for api design.  real-time collaboration.  shareable design links.  and more!.  Try It!" src="./img/sponsor-p1.png" />
 </a>
 <a href="https://github.com/sponsors/BenLorantfy">
-  <img src="./img/sponsor-p2.png" />
+  <img alt="Psst! Sponsor nestjs-zod on GitHub Sponsors and get a free apisandbox.dev subscription!" src="./img/sponsor-p2.png" />
 </a>
 
 
