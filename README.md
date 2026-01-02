@@ -44,6 +44,15 @@
 ✨ Supports zod codecs
 </p>
 
+## Featured Sponsor: apisandbox.dev
+
+<a href="apisandbox.dev">
+  <img src="./img/sponsor-p1.png" />
+</a>
+<a href="https://github.com/sponsors/BenLorantfy">
+  <img src="./img/sponsor-p2.png" />
+</a>
+
 
 ## Getting Started
 
