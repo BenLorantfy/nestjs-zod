@@ -19,7 +19,8 @@
   "types": "./dist/index.d.cts",
   "files": [
     "dist",
-    "logo.svg"
+    "logo.svg",
+    "img"
   ],
   "sideEffects": false,
   "license": "MIT",

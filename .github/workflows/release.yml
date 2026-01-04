@@ -72,7 +72,6 @@ jobs:
 
       - name: Copy README from root of project to nestjs-zod
         run: |
-          cp logo.svg packages/nestjs-zod
           cp README.md packages/nestjs-zod
           sed -i 's/\/packages\/example/\.\.\/example/g' packages/nestjs-zod/README.md
 
