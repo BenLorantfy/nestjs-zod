@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="logo.svg" width="560px" align="center" alt="NestJS + Zod logo" style="max-width: 100%;" />
+  <img src="logo.svg" width="500px" align="center" alt="NestJS + Zod logo" style="max-width: 100%;" />
   <h1 align="center">nestjs-zod</h1>
   <p align="center">
     ✨ A seamless validation solution for your NestJS application ✨
@@ -43,6 +43,16 @@
 <p>
 ✨ Supports zod codecs
 </p>
+
+
+<h3 align="center">Sponsored by: <a href="https://apisandbox.dev/">apisandbox.dev</a></h3>
+
+<a href="https://apisandbox.dev/">
+  <img alt="apisandbox.dev.  It's google docs for api design.  real-time collaboration.  shareable design links.  and more!.  Try It!" src="./img/sponsor-p1.png" />
+</a>
+<a href="https://github.com/sponsors/BenLorantfy">
+  <img alt="Psst! Sponsor nestjs-zod on GitHub Sponsors and get a free apisandbox.dev subscription!" src="./img/sponsor-p2.png" />
+</a>
 
 
 ## Getting Started
