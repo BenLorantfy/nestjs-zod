@@ -67,7 +67,7 @@
     "lodash": "^4.17.21",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
-    "supertest": "^7.1.4",
+    "supertest": "^7.2.2",
     "ts-jest": "^29.1.0",
     "tsdown": "^0.18.4",
     "typescript": "5.7.2",
