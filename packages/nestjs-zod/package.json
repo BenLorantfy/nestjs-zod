@@ -70,7 +70,7 @@
     "supertest": "^7.2.2",
     "ts-jest": "^29.1.0",
     "tsdown": "^0.18.4",
-    "typescript": "5.7.2",
+    "typescript": "5.9.3",
     "zod": "^4.1.12"
   },
   "peerDependencies": {
