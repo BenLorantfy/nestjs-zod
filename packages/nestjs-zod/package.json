@@ -13,6 +13,16 @@
         "types": "./dist/index.d.cts",
         "default": "./dist/index.cjs"
       }
+    },
+    "./dto": {
+      "import": {
+        "types": "./dist/dto.d.mts",
+        "default": "./dist/dto.mjs"
+      },
+      "require": {
+        "types": "./dist/dto.d.cts",
+        "default": "./dist/dto.cjs"
+      }
     }
   },
   "module": "./dist/index.mjs",

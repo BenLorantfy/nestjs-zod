@@ -5,6 +5,7 @@ import { assert } from './assert';
 import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY, PARENT_TITLE_KEY, SELF_REQUIRED_KEY } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
+import { ioSymbol } from './symbols';
 
 export interface ZodDto<
   TSchema extends UnknownSchema = UnknownSchema,
@@ -18,8 +19,6 @@ export interface ZodDto<
   Output: ZodDto<UnknownSchema, TCodec>
   _OPENAPI_METADATA_FACTORY(): unknown
 }
-
-export const ioSymbol = Symbol('io');
 
 export function createZodDto<
   TSchema extends UnknownSchema,
