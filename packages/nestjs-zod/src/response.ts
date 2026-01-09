@@ -1,9 +1,10 @@
 import { applyDecorators, HttpCode } from '@nestjs/common';
 import { ZodSerializerDto } from './serializer';
-import { ioSymbol, ZodDto } from './dto';
+import { ZodDto } from './dto';
 import { assert } from './assert';
 import { input, output } from 'zod/v4/core';
 import { RequiredBy, UnknownSchema } from './types';
+import { ioSymbol } from './symbols';
 
 let ApiResponse: typeof import('@nestjs/swagger').ApiResponse | undefined
 try {
