@@ -32,7 +32,7 @@
     "@eslint/js": "^9.39.2",
     "@nestjs/cli": "^11.0.14",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^11.1.11",
+    "@nestjs/testing": "^11.1.12",
     "@playwright/test": "^1.57.0",
     "@swc/cli": "^0.7.10",
     "@swc/core": "^1.15.8",
