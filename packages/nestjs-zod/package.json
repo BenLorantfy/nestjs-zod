@@ -60,7 +60,7 @@
     "@nestjs/common": "^11.1.5",
     "@nestjs/core": "^11.1.5",
     "@nestjs/swagger": "^11.2.0",
-    "@nestjs/testing": "^11.1.11",
+    "@nestjs/testing": "^11.1.12",
     "@types/express": "^5.0.3",
     "@types/jest": "^29.5.2",
     "@types/lodash": "^4.17.23",
