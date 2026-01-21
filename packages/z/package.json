@@ -38,7 +38,7 @@
     "lint:fix": "eslint --ext .ts,.tsx src --fix"
   },
   "devDependencies": {
-    "@golevelup/ts-jest": "^0.3.3",
+    "@golevelup/ts-jest": "^1.2.0",
     "@nestjs/common": "^11.0.6",
     "@nestjs/core": "^11.0.6",
     "@nestjs/swagger": "^11.0.3",
