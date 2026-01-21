@@ -41,7 +41,7 @@
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.1.8",
-    "eslint-plugin-prettier": "^5.2.2",
+    "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.0.0",
     "prettier": "^3.7.4",
     "source-map-support": "^0.5.21",
