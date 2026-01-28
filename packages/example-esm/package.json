@@ -37,7 +37,7 @@
     "@swc/cli": "^0.7.10",
     "@swc/core": "^1.15.10",
     "@types/express": "^5.0.6",
-    "@types/node": "^25.0.9",
+    "@types/node": "^25.1.0",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.1.8",
