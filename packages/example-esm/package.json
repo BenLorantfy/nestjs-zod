@@ -39,7 +39,7 @@
     "@types/express": "^5.0.6",
     "@types/node": "^25.1.0",
     "@types/supertest": "^6.0.2",
-    "eslint": "^9.18.0",
+    "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.2.0",
