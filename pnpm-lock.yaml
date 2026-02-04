@@ -382,8 +382,8 @@ importers:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@25.1.0)(ts-node@10.9.2(@swc/core@1.15.10)(@types/node@25.1.0)(typescript@5.9.3))
       lodash:
-        specifier: ^4.17.21
-        version: 4.17.21
+        specifier: ^4.17.23
+        version: 4.17.23
       reflect-metadata:
         specifier: ^0.2.0
         version: 0.2.2
@@ -14343,7 +14343,7 @@ snapshots:
       eslint-visitor-keys: 3.4.3
       espree: 9.6.1
       esquery: 1.7.0
-      lodash: 4.17.21
+      lodash: 4.17.23
       semver: 7.7.3
     transitivePeerDependencies:
       - supports-color
