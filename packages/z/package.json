@@ -44,7 +44,7 @@
     "@nestjs/swagger": "^11.0.3",
     "@types/jest": "^29.5.2",
     "@types/merge-deep": "^3.0.0",
-    "@types/node": "^25.1.0",
+    "@types/node": "^25.2.3",
     "esbuild": "^0.27.2",
     "eslint": "^9.39.2",
     "eslint-kit": "^11.39.0",
