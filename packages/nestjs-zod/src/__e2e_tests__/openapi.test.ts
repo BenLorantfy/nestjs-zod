@@ -860,6 +860,32 @@ test('properly adds sub-schemas for array schemas', async () => {
     expect(get(doc, 'components.schemas.BookDto_Output.items.$ref')).toEqual('#/components/schemas/Author3459835601_Output');
 })
 
+describe('issue#304 - id and title for array schemas', () => {
+    test('array schema with .meta({ id }) uses id for OpenAPI schema name', async () => {
+        const BookSchema = z.object({ title: z.string() }).meta({ id: 'Book', title: 'Book' });
+        const BookListSchema = z.array(BookSchema).meta({ id: 'BookList', title: 'BookList' });
+    
+        class BookListDto extends createZodDto(BookListSchema) { }
+    
+        @Controller()
+        class BookController {
+            @Post()
+            @ApiOkResponse({ type: BookListDto.Output })
+            getBooks() {
+                return [];
+            }
+        }
+    
+        const doc = await getSwaggerDoc(BookController);
+    
+        expect(Object.keys(doc.components?.schemas || {})).toContain('BookList_Output');
+        expect(Object.keys(doc.components?.schemas || {})).not.toContain('BookListDto_Output');
+        expect(get(doc, 'paths./.post.responses.200.content.application/json.schema.$ref')).toEqual('#/components/schemas/BookList_Output');
+        expect(get(doc, 'components.schemas.BookList_Output.id')).toEqual('BookList_Output');
+        expect(get(doc, 'components.schemas.BookList_Output.title')).toEqual('BookList');
+    })
+})
+
 test('query param union', async () => {
     class QueryParamsDto extends createZodDto(z.object({
         filter: z.union([
