@@ -95,8 +95,10 @@ function openApiMetadataFactory({
     required?: string[];
     properties?: Record<string, Record<string, unknown>>;
   } = !isObjectTypeWithProperties(generatedJsonSchema) ? {
-    type: 'object' as const, 
-    properties: { 
+    type: 'object' as const,
+    id: generatedJsonSchema.id,
+    title: generatedJsonSchema.title,
+    properties: {
       root: {
         ...generatedJsonSchema,
         [UNWRAP_ROOT_KEY]: true
