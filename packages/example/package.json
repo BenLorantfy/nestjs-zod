@@ -42,7 +42,7 @@
     "@types/jest": "^29.5.14",
     "@types/node": "^25.2.3",
     "@types/supertest": "^6.0.2",
-    "eslint": "^9.39.2",
+    "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.5",
     "globals": "^17.3.0",
