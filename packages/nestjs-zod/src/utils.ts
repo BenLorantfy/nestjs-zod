@@ -42,7 +42,7 @@ export function fixAllRefs({ schema, defRenames, rootSchemaName }: { schema: JSO
  */
 export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
   return walkJsonSchema(schema, (s) => {
-    if (Object.keys(s).length === 1 && s.anyOf) {
+    if (s.anyOf) {
       const nullSchema = s.anyOf.findIndex(subSchema => subSchema.type === 'null');
       if (nullSchema === -1) {
         return s;
@@ -50,15 +50,19 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
 
       s.anyOf.splice(nullSchema, 1);
 
-      if (s.anyOf.length === 1) {
+      const { anyOf, ...rest } = s;
+
+      if (anyOf.length === 1) {
         return {
-          ...s.anyOf[0],
+          ...anyOf[0],
+          ...rest,
           nullable: true,
         }
       }
 
       return {
-        anyOf: s.anyOf.map(subSchema => ({
+        ...rest,
+        anyOf: anyOf.map(subSchema => ({
           ...subSchema,
           nullable: true,
         })),

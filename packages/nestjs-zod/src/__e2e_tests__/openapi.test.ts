@@ -361,7 +361,7 @@ test('nested complex nullable fields', async () => {
 test('nullable fields in referenced schema', async () => {
     const Author = z.object({
         name: z.string().nullable(),
-    }).meta({ id: 'Author127346182374' })
+    }).meta({ id: 'Author' })
 
     class BookDto extends createZodDto(z.object({
         author: Author
@@ -378,17 +378,47 @@ test('nullable fields in referenced schema', async () => {
     }
 
     const doc = await getSwaggerDoc(BookController);
-    expect(get(doc, 'components.schemas.Author127346182374.properties.name')).toEqual({
+    expect(get(doc, 'components.schemas.Author.properties.name')).toEqual({
         type: 'string',
         nullable: true,
     });
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
 })
 
+describe('issue#313', () => {
+    test('nullable fields with metadata', async () => {
+        const Author = z.object({
+            name: z.string().nullable().meta({ example: 'John' }),
+        }).meta({ id: 'Author' })
+    
+        class BookDto extends createZodDto(z.object({
+            author: Author
+        })) { }
+    
+        @Controller()
+        class BookController {
+            constructor() { }
+    
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+    
+        const doc = await getSwaggerDoc(BookController);
+        expect(get(doc, 'components.schemas.Author.properties.name')).toEqual({
+            type: 'string',
+            nullable: true,
+            example: 'John',
+        });
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+})
+
 test('nullable fields in openapi 3.1', async () => {
     const Author = z.object({
         name: z.string().nullable(),
-    }).meta({ id: 'Author9081234598473598' })
+    }).meta({ id: 'Author' })
 
     class BookDto extends createZodDto(z.object({
         title: z.string().nullable(),
@@ -424,7 +454,7 @@ test('nullable fields in openapi 3.1', async () => {
             }
         ]
     });
-    expect(get(doc, 'components.schemas.Author9081234598473598.properties.name')).toEqual({
+    expect(get(doc, 'components.schemas.Author.properties.name')).toEqual({
         anyOf: [
             {
                 type: 'string',
@@ -454,7 +484,7 @@ test('nullable fields in openapi 3.1', async () => {
             }
         ]
     });
-    expect(get(doc2, 'components.schemas.Author9081234598473598.properties.name')).toEqual({
+    expect(get(doc2, 'components.schemas.Author.properties.name')).toEqual({
         anyOf: [
             {
                 type: 'string',
@@ -828,6 +858,32 @@ test('properly adds sub-schemas for array schemas', async () => {
     const doc = await getSwaggerDoc(BookController);
     expect(Object.keys(doc.components?.schemas || {})).toEqual(['Author3459835601_Output', 'BookDto_Output']);
     expect(get(doc, 'components.schemas.BookDto_Output.items.$ref')).toEqual('#/components/schemas/Author3459835601_Output');
+})
+
+describe('issue#304 - id and title for array schemas', () => {
+    test('array schema with .meta({ id }) uses id for OpenAPI schema name', async () => {
+        const BookSchema = z.object({ title: z.string() }).meta({ id: 'Book', title: 'Book' });
+        const BookListSchema = z.array(BookSchema).meta({ id: 'BookList', title: 'BookList' });
+    
+        class BookListDto extends createZodDto(BookListSchema) { }
+    
+        @Controller()
+        class BookController {
+            @Post()
+            @ApiOkResponse({ type: BookListDto.Output })
+            getBooks() {
+                return [];
+            }
+        }
+    
+        const doc = await getSwaggerDoc(BookController);
+    
+        expect(Object.keys(doc.components?.schemas || {})).toContain('BookList_Output');
+        expect(Object.keys(doc.components?.schemas || {})).not.toContain('BookListDto_Output');
+        expect(get(doc, 'paths./.post.responses.200.content.application/json.schema.$ref')).toEqual('#/components/schemas/BookList_Output');
+        expect(get(doc, 'components.schemas.BookList_Output.id')).toEqual('BookList_Output');
+        expect(get(doc, 'components.schemas.BookList_Output.title')).toEqual('BookList');
+    })
 })
 
 test('query param union', async () => {
