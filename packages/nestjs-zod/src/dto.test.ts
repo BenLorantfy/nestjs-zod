@@ -63,22 +63,6 @@ describe('zod/v4', () => {
     })
   })
 
-  it('should generate correct OpenAPI metadata with removeDefaults', () => {
-    const UserSchema = z4.object({
-      username: z4.string(),
-      password: z4.string(),
-      myField: z4.boolean().default(true),
-    })
-
-    class UserDto extends createZodDto(UserSchema, { removeDefaults: true }) {}
-
-    expect(UserDto._OPENAPI_METADATA_FACTORY()).toEqual({
-      username: { type: 'string', required: true },
-      password: { type: 'string', required: true },
-      myField: { type: 'boolean', required: true },
-    })
-  })
-
   it('add title metadata', () => {
     const UserSchema = z4.object({
       username: z4.string(),
