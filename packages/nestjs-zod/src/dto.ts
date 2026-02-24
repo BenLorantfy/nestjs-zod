@@ -1,9 +1,10 @@
 import { UnknownSchema } from './types'
 import type * as z3 from 'zod/v3';
 import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
+import { ZodTypeAny } from "zod/v4";
 import { assert } from './assert';
 import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY, PARENT_TITLE_KEY, SELF_REQUIRED_KEY } from './const';
-import { walkJsonSchema } from './utils';
+import { deepRemoveDefaults, walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 import { ioSymbol } from './symbols';
 
@@ -23,11 +24,16 @@ export interface ZodDto<
 export function createZodDto<
   TSchema extends UnknownSchema,
   TCodec extends boolean = false,
->(schema: TSchema, options?: { codec: TCodec }) {
+>(inputSchema: TSchema, options?: { codec?: TCodec, removeDefaults?: boolean }) {
+  const schema = options?.removeDefaults
+    ? deepRemoveDefaults(inputSchema as unknown as ZodTypeAny)
+    : inputSchema;
+
   class AugmentedZodDto {
     public static readonly isZodDto = true
     public static readonly schema = schema
     public static readonly codec = options?.codec || false
+    public static readonly removeDefaults = options?.removeDefaults
     public static readonly [ioSymbol] = "input"
 
     public static create(input: unknown) {
