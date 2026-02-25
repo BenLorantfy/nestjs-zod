@@ -92,4 +92,22 @@ describe('fixAllRefs', () => {
 
         expect(() => fixAllRefs({ schema })).toThrow('[fixAllRefs] rootSchemaName is required when fixing a ref to #');
     })
+
+    it('should fix $ref inside propertyNames (e.g. from z.record(keySchema, valueSchema))', () => {
+        const schema = {
+            type: 'object',
+            additionalProperties: { type: 'object' },
+            propertyNames: {
+                $ref: '#/$defs/QueueName',
+            },
+        } as const;
+
+        expect(fixAllRefs({ schema })).toEqual({
+            type: 'object',
+            additionalProperties: { type: 'object' },
+            propertyNames: {
+                $ref: '#/components/schemas/QueueName',
+            },
+        });
+    });
 })
