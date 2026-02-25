@@ -2412,6 +2412,32 @@ describe('issue#154 - sets required field correctly for query parameters', () =>
     });
 })
 
+describe('issue#350', () => {
+    it('fixes $ref inside propertyNames for z.record(keySchema, valueSchema)', async () => {
+        const QueueName = z.string().meta({ id: 'QueueName' });
+
+        class QueueMapDto extends createZodDto(z.object({
+            queues: z.record(QueueName, z.object({
+                enabled: z.boolean(),
+            })),
+        })) { }
+
+        @Controller()
+        class QueueController {
+            @Post('queues')
+            createQueues(@Body() body: QueueMapDto) {
+                return body;
+            }
+        }
+
+        const doc = await getSwaggerDoc(QueueController);
+
+        expect(get(doc, 'paths./queues.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/QueueMapDto');
+        expect(get(doc, 'components.schemas.QueueMapDto.properties.queues.propertyNames.$ref')).toEqual('#/components/schemas/QueueName');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+})
+
 async function createApp(controllerClass: Type<unknown>) {
     @Module({
         imports: [],
