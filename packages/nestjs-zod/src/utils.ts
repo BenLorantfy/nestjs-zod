@@ -124,6 +124,13 @@ export function walkJsonSchema(schema: JSONSchema.BaseSchema, callback: (schema:
     schema.additionalProperties = walkJsonSchema(schema.additionalProperties, callback);
   }
 
+  if (typeof schema.propertyNames === 'object' && schema.propertyNames !== null) {
+    (schema as Record<string, unknown>).propertyNames = walkJsonSchema(
+      schema.propertyNames as JSONSchema.BaseSchema,
+      callback,
+    );
+  }
+
 //   // Handle not
 //   if (schema.not) {
 //     schema.not = walkJsonSchema(schema.not, callback);
