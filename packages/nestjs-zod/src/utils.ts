@@ -69,7 +69,7 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
       }
     }
 
-    if (s.const) {
+    if (s.const !== undefined) {
       s.enum = [s.const];
       delete s.const;
     }

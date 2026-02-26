@@ -1,4 +1,4 @@
-import { fixAllRefs, walkJsonSchema } from "./utils";
+import { convertToOpenApi3Point0, fixAllRefs, walkJsonSchema } from "./utils";
 
 describe('walkJsonSchema', () => {
     it('should walk the schema and call the callback for each node', () => {
@@ -91,5 +91,33 @@ describe('fixAllRefs', () => {
         } as const
 
         expect(() => fixAllRefs({ schema })).toThrow('[fixAllRefs] rootSchemaName is required when fixing a ref to #');
+    })
+})
+
+describe('convertToOpenApi3Point0', () => {
+    it('should convert const to enum for falsy values like 0', () => {
+        const schema = {
+            type: 'object',
+            properties: {
+                status: { type: 'number', const: 0 },
+                name: { type: 'string', const: '' },
+                flag: { type: 'boolean', const: false },
+            },
+        } as const
+
+        const result = convertToOpenApi3Point0(schema)
+        expect(result.properties!.status).toEqual({ type: 'number', enum: [0] })
+        expect(result.properties!.name).toEqual({ type: 'string', enum: [''] })
+        expect(result.properties!.flag).toEqual({ type: 'boolean', enum: [false] })
+    })
+
+    it('should convert const to enum for truthy values', () => {
+        const schema = {
+            type: 'number',
+            const: 42,
+        } as const
+
+        const result = convertToOpenApi3Point0(schema)
+        expect(result).toEqual({ type: 'number', enum: [42] })
     })
 })
