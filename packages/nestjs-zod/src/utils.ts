@@ -53,8 +53,13 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
       const { anyOf, ...rest } = s;
 
       if (anyOf.length === 1) {
+        const sole = anyOf[0];
+        // OpenAPI 3.0: $ref cannot have sibling properties (e.g. nullable); keep anyOf form
+        if (sole.$ref && Object.keys(sole).length === 1) {
+          return { anyOf: [sole, { type: 'null' }], ...rest };
+        }
         return {
-          ...anyOf[0],
+          ...sole,
           ...rest,
           nullable: true,
         }
