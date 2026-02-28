@@ -1,4 +1,5 @@
-import { fixAllRefs, walkJsonSchema } from "./utils";
+import type { JSONSchema } from "zod/v4/core";
+import { convertToOpenApi3Point0, fixAllRefs, walkJsonSchema } from "./utils";
 
 describe('walkJsonSchema', () => {
     it('should walk the schema and call the callback for each node', () => {
@@ -92,4 +93,24 @@ describe('fixAllRefs', () => {
 
         expect(() => fixAllRefs({ schema })).toThrow('[fixAllRefs] rootSchemaName is required when fixing a ref to #');
     })
+})
+
+describe('convertToOpenApi3Point0', () => {
+    it('collapses nullable primitives to nullable and anyOf nullable $ref nullable', () => {
+        const schema: JSONSchema.BaseSchema = {
+            type: 'object',
+            properties: {
+                ref: { anyOf: [{ $ref: '#/components/schemas/Bar' }, { type: 'null' }] },
+                str: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+            },
+        };
+
+        expect(convertToOpenApi3Point0(schema)).toEqual({
+            type: 'object',
+            properties: {
+                ref: { anyOf: [{ $ref: '#/components/schemas/Bar' }, { type: 'null' }] },
+                str: { type: 'string', nullable: true },
+            },
+        });
+    });
 })
