@@ -53,8 +53,12 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
       const { anyOf, ...rest } = s;
 
       if (anyOf.length === 1) {
+        const sole = anyOf[0];
+        if (sole.$ref && Object.keys(sole).length === 1) {
+          return { allOf: [sole], nullable: true, ...rest };
+        }
         return {
-          ...anyOf[0],
+          ...sole,
           ...rest,
           nullable: true,
         }
@@ -62,10 +66,8 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
 
       return {
         ...rest,
-        anyOf: anyOf.map(subSchema => ({
-          ...subSchema,
-          nullable: true,
-        })),
+        anyOf,
+        nullable: true,
       }
     }
 

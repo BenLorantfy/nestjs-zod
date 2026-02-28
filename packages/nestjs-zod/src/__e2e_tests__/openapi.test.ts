@@ -325,37 +325,65 @@ describe('basic nullable fields', () => {
     });
 })
 
-test('nested complex nullable fields', async () => {
-    class BookDto extends createZodDto(z.object({
-        author: z.object({
-            name: z.union([z.string(), z.number(), z.null()]),
-        })
-    })) { }
+describe('issue#349', () => {
+    test('keeps nullable referenced schema valid in OpenAPI 3.0 using allOf', async () => {
+        const Author = z.object({
+            name: z.string(),
+        }).meta({ id: 'Author' });
 
-    @Controller()
-    class BookController {
-        constructor() { }
+        class BookDto extends createZodDto(z.object({
+            author: Author.nullable(),
+        })) { }
 
-        @Post()
-        createBook(@Body() book: BookDto) {
-            return book;
-        }
-    }
+        @Controller()
+        class BookController {
+            constructor() { }
 
-    const doc = await getSwaggerDoc(BookController);
-    expect(get(doc, 'components.schemas.BookDto.properties.author.properties.name')).toEqual({
-        anyOf: [
-            {
-                type: 'string',
-                nullable: true,
-            },
-            {
-                type: 'number',
-                nullable: true,
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
             }
-        ]
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        expect(get(doc, 'components.schemas.BookDto.properties.author')).toEqual({
+            allOf: [{ $ref: '#/components/schemas/Author' }],
+            nullable: true,
+        });
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
     });
-    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+
+    test('marks parent anyOf schema nullable for multi-variant unions', async () => {
+        class BookDto extends createZodDto(z.object({
+            author: z.object({
+                name: z.union([z.string(), z.number(), z.null()]),
+            })
+        })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        expect(get(doc, 'components.schemas.BookDto.properties.author.properties.name')).toEqual({
+            anyOf: [
+                {
+                    type: 'string',
+                },
+                {
+                    type: 'number',
+                }
+            ],
+            nullable: true,
+        });
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
 });
 
 test('nullable fields in referenced schema', async () => {
