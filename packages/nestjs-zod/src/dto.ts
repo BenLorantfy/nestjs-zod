@@ -20,10 +20,13 @@ export interface ZodDto<
   _OPENAPI_METADATA_FACTORY(): unknown
 }
 
+type UnrepresentableMode = 'throw' | 'any';
+type UnrepresentableByIo = Partial<Record<'input' | 'output', UnrepresentableMode>>;
+
 export function createZodDto<
   TSchema extends UnknownSchema,
   TCodec extends boolean = false,
->(schema: TSchema, options?: { codec: TCodec }) {
+>(schema: TSchema, options?: { codec?: TCodec; unrepresentable?: UnrepresentableByIo }) {
   class AugmentedZodDto {
     public static readonly isZodDto = true
     public static readonly schema = schema
@@ -47,7 +50,7 @@ export function createZodDto<
         }
 
         public static _OPENAPI_METADATA_FACTORY() {
-          return openApiMetadataFactory({ schema: this.schema, io: "output" });
+          return openApiMetadataFactory({ schema: this.schema, io: "output", unrepresentable: options?.unrepresentable });
         }
       }
 
@@ -57,7 +60,7 @@ export function createZodDto<
     }
 
     public static _OPENAPI_METADATA_FACTORY() {
-      return openApiMetadataFactory({ schema: this.schema, io: "input" });
+      return openApiMetadataFactory({ schema: this.schema, io: "input", unrepresentable: options?.unrepresentable });
     }
   }
 
@@ -67,9 +70,11 @@ export function createZodDto<
 function openApiMetadataFactory({ 
   schema, 
   io,
+  unrepresentable,
 }: { 
   schema: UnknownSchema | z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }), 
   io: 'input' | 'output',
+  unrepresentable?: UnrepresentableByIo,
 }) {
   if (!('_zod' in schema) && '_def' in schema && io === 'output') {
     throw new Error('[nestjs-zod] Output schemas are not supported for zod@v3');
@@ -79,7 +84,7 @@ function openApiMetadataFactory({
     return {};
   }
 
-  const { $defs, $schema, ...generatedJsonSchema } = generateJsonSchema(schema, io);
+  const { $defs, $schema, ...generatedJsonSchema } = generateJsonSchema(schema, io, unrepresentable);
 
   /**
    * nestjs expects us to return a record of properties
@@ -204,9 +209,14 @@ function openApiMetadataFactory({
   return properties;
 }
 
-function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }), io: 'input' | 'output') {
+function generateJsonSchema(
+  schema: z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }),
+  io: 'input' | 'output',
+  unrepresentableByIo?: UnrepresentableByIo,
+) {
   const generatedJsonSchema = '_zod' in schema ? toJSONSchema(schema, {
     io,
+    unrepresentable: unrepresentableByIo?.[io] ?? (io === 'output' ? 'any' : 'throw'),
     override: ({ jsonSchema }) => {
         if (io === 'output' && 'id' in jsonSchema) {
             jsonSchema.id = `${jsonSchema.id}_Output`;
