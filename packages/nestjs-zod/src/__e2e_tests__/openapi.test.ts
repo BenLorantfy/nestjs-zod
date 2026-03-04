@@ -2341,7 +2341,7 @@ describe('issue#154 - sets required field correctly for query parameters', () =>
 })
 
 describe('issue#345 - transform schemas in OpenAPI generation', () => {
-    it('generates docs for output DTO with transform', async () => {
+    it('generates docs for output DTO with transform by default', async () => {
         class UserDto extends createZodDto(z.object({
             id: z.string().transform((value) => parseInt(value)),
         })) { }
@@ -2357,7 +2357,84 @@ describe('issue#345 - transform schemas in OpenAPI generation', () => {
             }
         }
 
-        await expect(getSwaggerDoc(UserController)).resolves.toBeDefined();
+        const doc = await getSwaggerDoc(UserController);
+        expect(get(doc, 'components.schemas.UserDto_Output.properties.id')).toEqual({});
+    });
+
+    it('keeps input generation strict by default', async () => {
+        class UserDto extends createZodDto(z.object({
+            createdAt: z.date(),
+        })) { }
+
+        @Controller()
+        class UserController {
+            constructor() { }
+
+            @Post()
+            createUser(@Body() user: UserDto) {
+                return user;
+            }
+        }
+
+        await expect(getSwaggerDoc(UserController)).rejects.toThrow();
+    });
+
+    it('allows overriding output behavior to throw', async () => {
+        class UserDto extends createZodDto(
+            z.object({
+                id: z.string().transform((value) => parseInt(value)),
+            }),
+            {
+                unrepresentable: {
+                    output: 'throw',
+                }
+            }
+        ) { }
+
+        @Controller()
+        class UserController {
+            constructor() { }
+
+            @Post()
+            createUser(@Body() user: UserDto) {
+                return user;
+            }
+
+            @Get()
+            @ApiOkResponse({ type: UserDto.Output })
+            getUser() {
+                return { id: 123 };
+            }
+        }
+
+        await expect(getSwaggerDoc(UserController)).rejects.toThrow();
+    });
+
+    it('allows overriding input behavior to any', async () => {
+        class UserDto extends createZodDto(
+            z.object({
+                createdAt: z.date(),
+            }),
+            {
+                unrepresentable: {
+                    input: 'any',
+                }
+            }
+        ) { }
+
+        @Controller()
+        class UserController {
+            constructor() { }
+
+            @Post()
+            @ApiOkResponse({ type: UserDto })
+            createUser(@Body() user: UserDto) {
+                return user;
+            }
+        }
+
+        const doc = await getSwaggerDoc(UserController);
+        expect(get(doc, 'components.schemas.UserDto.properties.createdAt')).toEqual({});
     });
 })
 
