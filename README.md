@@ -234,7 +234,16 @@ Check out the [example app](./packages/example/) for a full example of how to in
 ### Request Validation
 #### `createZodDto` (Create a DTO from a Zod schema)
 ```ts
-function createZodDto<TSchema extends UnknownSchema, TCodec extends boolean = false>(schema: TSchema, options?: { codec: TCodec }): ZodDto<TSchema, TCodec>;
+function createZodDto<TSchema extends UnknownSchema, TCodec extends boolean = false>(
+  schema: TSchema,
+  options?: {
+    codec?: TCodec;
+    unrepresentable?: {
+      input?: 'throw' | 'any';
+      output?: 'throw' | 'any';
+    }
+  }
+): ZodDto<TSchema, TCodec>;
 ```
 Creates a nestjs DTO from a zod schema.  These zod DTOs can be used in place of `class-validator` / `class-transformer` DTOs. Zod DTOs are responsible for three things:
 
@@ -249,6 +258,11 @@ Creates a nestjs DTO from a zod schema.  These zod DTOs can be used in place of 
 - `schema` - A zod schema.  You can "bring your own zod", including zod v3 schemas, v4 schemas, zod mini schemas, etc.  The only requirement is that the schema has a method called `parse`
 - `options`
   - `options.codec` - If set to `true`, then when serializing responses `nestjs-zod` will use `encode` instead of `parse`.  See more information about codecs in the [zod documentation](https://zod.dev/codecs)
+  - `options.unrepresentable` - Optional OpenAPI generation behavior for [unrepresentable](https://zod.dev/json-schema#unrepresentable) zod types when using zod v4.
+    - `options.unrepresentable.input` - Controls the `"input"` OpenAPI schema behavior. Default is `'throw'`.
+    - `options.unrepresentable.output` - Controls the `"output"` OpenAPI schema behavior. Default is `'any'`.
+    - `'throw'` follows zod's strict behavior and throws during docs generation.
+    - `'any'` degrades unrepresentable fields to permissive schema objects (`{}`) to keep docs generation resilient.
 
 ##### Examples
 ###### Creating a zod DTO
@@ -654,6 +668,24 @@ However, it's recommended to use [`@ZodResponse`](#zodresponse-sync-run-time-com
   type: MyDto // <-- No need to do `.Output` here
 })
 ```
+
+By default, `nestjs-zod` uses:
+- `input`: `unrepresentable: 'throw'`
+- `output`: `unrepresentable: 'any'`
+
+This means unrepresentable output fields (such as some transform pipelines) may appear as `{}` in OpenAPI instead of crashing docs generation. This behavior only affects documentation generation, not runtime parsing/serialization.
+
+If you want stricter behavior (or different behavior per IO mode), you can override it in `createZodDto`:
+
+```ts
+class MyDto extends createZodDto(MySchema, {
+  unrepresentable: {
+    input: 'throw',
+    output: 'throw',
+  },
+}) {}
+```
+
 #### Codecs
 Zod 4.1 introduced a new feature called "codecs".  There is more information about codecs in the [zod documentation](https://zod.dev/codecs)
 
