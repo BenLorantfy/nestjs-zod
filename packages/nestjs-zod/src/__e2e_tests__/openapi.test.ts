@@ -2340,6 +2340,27 @@ describe('issue#154 - sets required field correctly for query parameters', () =>
     });
 })
 
+describe('issue#345 - transform schemas in OpenAPI generation', () => {
+    it('generates docs for output DTO with transform', async () => {
+        class UserDto extends createZodDto(z.object({
+            id: z.string().transform((value) => parseInt(value)),
+        })) { }
+
+        @Controller()
+        class UserController {
+            constructor() { }
+
+            @Get()
+            @ApiOkResponse({ type: UserDto.Output })
+            getUser() {
+                return { id: 123 };
+            }
+        }
+
+        await expect(getSwaggerDoc(UserController)).resolves.toBeDefined();
+    });
+})
+
 async function createApp(controllerClass: Type<unknown>) {
     @Module({
         imports: [],
