@@ -29,7 +29,7 @@
     "@nestjs/cli": "^11.0.16",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.12",
-    "@playwright/test": "^1.57.0",
+    "@playwright/test": "^1.58.2",
     "@types/express": "^5.0.6",
     "@types/jest": "^29.5.2",
     "@types/node": "^25.2.3",
