@@ -34,7 +34,7 @@ export function createZodDto<
       return this.schema.parse(input)
     }
 
-    static _output: unknown | undefined;
+    private static _output: unknown | undefined;
 
     static get Output() {
       return this._output ??= this.CreateOutput();
@@ -52,8 +52,9 @@ export function createZodDto<
           return this.schema.parse(input)
         }
 
+        private static _openApiMetadata: Record<string, unknown> | undefined;
         public static _OPENAPI_METADATA_FACTORY() {
-          return openApiMetadataFactory({ schema: this.schema, io: "output" });
+          return this._openApiMetadata ??= openApiMetadataFactory({ schema: this.schema, io: "output" });
         }
       }
 
@@ -62,8 +63,9 @@ export function createZodDto<
       return AugmentedZodDto;
     }
 
+    private static _openApiMetadata: Record<string, unknown> | undefined;
     public static _OPENAPI_METADATA_FACTORY() {
-      return openApiMetadataFactory({ schema: this.schema, io: "input" });
+      return this._openApiMetadata ??= openApiMetadataFactory({ schema: this.schema, io: "input" });
     }
   }
 
