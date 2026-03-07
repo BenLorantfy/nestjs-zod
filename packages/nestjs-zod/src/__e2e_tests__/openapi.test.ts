@@ -13,6 +13,7 @@ import request from 'supertest';
 import { setupApp } from '../testUtils';
 import { ZodSerializerDto } from '../serializer';
 import { ZodResponse } from '../response';
+import { convertToOpenApi3Point0 } from "../utils";
 
 beforeEach(() => {
     z.globalRegistry.clear();
@@ -2140,6 +2141,34 @@ describe('issue#220', () => {
 
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
         
+    })
+})
+
+describe('issue#342', () => {
+    it('should convert const to enum for falsy values like 0', () => {
+        const schema = {
+            type: 'object',
+            properties: {
+                status: { type: 'number', const: 0 },
+                name: { type: 'string', const: '' },
+                flag: { type: 'boolean', const: false },
+            },
+        } as const
+
+        const result = convertToOpenApi3Point0(schema)
+        expect(result.properties!.status).toEqual({ type: 'number', enum: [0] })
+        expect(result.properties!.name).toEqual({ type: 'string', enum: [''] })
+        expect(result.properties!.flag).toEqual({ type: 'boolean', enum: [false] })
+    })
+
+    it('should convert const to enum for truthy values', () => {
+        const schema = {
+            type: 'number',
+            const: 42,
+        } as const
+
+        const result = convertToOpenApi3Point0(schema)
+        expect(result).toEqual({ type: 'number', enum: [42] })
     })
 })
 
