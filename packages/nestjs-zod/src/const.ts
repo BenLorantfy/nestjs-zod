@@ -9,3 +9,4 @@ export const UNWRAP_ROOT_KEY = `${PREFIX}-unwrap-root`;
 export const HAS_NULL_KEY = `${PREFIX}-has-null`;
 export const HAS_CONST_KEY = `${PREFIX}-has-const`;
 export const SELF_REQUIRED_KEY = `${PREFIX}-self-required`;
+export const PARENT_METADATA_KEY = `${PREFIX}-parent-metadata`;

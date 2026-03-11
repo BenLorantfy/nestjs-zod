@@ -2412,6 +2412,32 @@ describe('issue#154 - sets required field correctly for query parameters', () =>
     });
 })
 
+describe('issue#347', () => {
+    test('metadata on root schema are preserved', async () => {
+        const Schema = z.object({
+            name: z.string(),
+        }).meta({ description: "Schema description", example: {name: "cool name"} })
+
+        class Dto extends createZodDto(Schema) { }
+
+        @Controller()
+        class ApiController {
+            constructor() { }
+
+            @Post()
+            createBook(@Body() _: Dto) {
+                throw new Error()
+            }
+        }
+
+        const doc = await getSwaggerDoc(ApiController);
+        expect(get(doc, 'components.schemas.Dto.example')).toEqual({ name: 'cool name' });
+        expect(get(doc, 'components.schemas.Dto.description')).toEqual('Schema description');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+
+});
+
 async function createApp(controllerClass: Type<unknown>) {
     @Module({
         imports: [],
