@@ -2171,6 +2171,50 @@ describe('issue#220', () => {
     })
 })
 
+describe('issue#342', () => {
+    it('should convert const to enum for falsy values like 0', async () => {
+
+        const LiteralZeroFieldSchema = z.object({
+            price: z.string().nullable(),
+            paymentFrequency: z.union([
+              z.literal(0),
+              z.literal(3),
+              z.literal(12),
+              z.literal(36),
+            ]),
+            emptyString: z.literal(''),
+            falseBoolean: z.literal(false),
+        });
+
+
+        class NullableFieldAndUnionFieldDto extends createZodDto(LiteralZeroFieldSchema) { }
+
+        @Controller()
+        class ThingController {
+            @Post('thing')
+            async thing(@Body() body: NullableFieldAndUnionFieldDto) {
+                return body;
+            }
+        }
+
+        const doc = await getSwaggerDoc(ThingController);
+
+        // Check that the DTO schema is referenced in the request body
+        expect(get(doc, 'paths./thing.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/NullableFieldAndUnionFieldDto');
+
+        // Check the schema is generated correctly with enum values for literals including falsy values
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.price.type')).toEqual('string');
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.price.nullable')).toEqual(true);
+
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.paymentFrequency.anyOf.0.type')).toEqual('number');
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.paymentFrequency.anyOf.0.enum')).toEqual([0]);
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.emptyString.enum')).toEqual(['']);
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.falseBoolean.enum')).toEqual([false]);
+
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+})
+
 describe('issue#208', () => {
     it('should use deepObject style for query parameters that are objects by default', async () => {
         class QueryParamsDto extends createZodDto(z.object({
