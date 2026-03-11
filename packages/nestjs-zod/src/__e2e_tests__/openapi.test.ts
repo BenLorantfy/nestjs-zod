@@ -13,7 +13,6 @@ import request from 'supertest';
 import { setupApp } from '../testUtils';
 import { ZodSerializerDto } from '../serializer';
 import { ZodResponse } from '../response';
-import { convertToOpenApi3Point0 } from "../utils";
 
 beforeEach(() => {
     z.globalRegistry.clear();
@@ -2145,30 +2144,46 @@ describe('issue#220', () => {
 })
 
 describe('issue#342', () => {
-    it('should convert const to enum for falsy values like 0', () => {
-        const schema = {
-            type: 'object',
-            properties: {
-                status: { type: 'number', const: 0 },
-                name: { type: 'string', const: '' },
-                flag: { type: 'boolean', const: false },
-            },
-        } as const
+    it('should convert const to enum for falsy values like 0', async () => {
 
-        const result = convertToOpenApi3Point0(schema)
-        expect(result.properties!.status).toEqual({ type: 'number', enum: [0] })
-        expect(result.properties!.name).toEqual({ type: 'string', enum: [''] })
-        expect(result.properties!.flag).toEqual({ type: 'boolean', enum: [false] })
-    })
+        const LiteralZeroFieldSchema = z.object({
+            price: z.string().nullable(),
+            paymentFrequency: z.union([
+              z.literal(0),
+              z.literal(3),
+              z.literal(12),
+              z.literal(36),
+            ]),
+            emptyString: z.literal(''),
+            falseBoolean: z.literal(false),
+        });
 
-    it('should convert const to enum for truthy values', () => {
-        const schema = {
-            type: 'number',
-            const: 42,
-        } as const
 
-        const result = convertToOpenApi3Point0(schema)
-        expect(result).toEqual({ type: 'number', enum: [42] })
+        class NullableFieldAndUnionFieldDto extends createZodDto(LiteralZeroFieldSchema) { }
+
+        @Controller()
+        class ThingController {
+            @Post('thing')
+            async thing(@Body() body: NullableFieldAndUnionFieldDto) {
+                return body;
+            }
+        }
+
+        const doc = await getSwaggerDoc(ThingController);
+
+        // Check that the DTO schema is referenced in the request body
+        expect(get(doc, 'paths./thing.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/NullableFieldAndUnionFieldDto');
+
+        // Check the schema is generated correctly with enum values for literals including falsy values
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.price.type')).toEqual('string');
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.price.nullable')).toEqual(true);
+
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.paymentFrequency.anyOf.0.type')).toEqual('number');
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.paymentFrequency.anyOf.0.enum')).toEqual([0]);
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.emptyString.enum')).toEqual(['']);
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.falseBoolean.enum')).toEqual([false]);
+
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
     })
 })
 
