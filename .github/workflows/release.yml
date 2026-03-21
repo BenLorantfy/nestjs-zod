@@ -24,10 +24,10 @@ jobs:
         uses: pnpm/action-setup@v4
         with:
           version: 9
-      - name: Use Node.js 20
-        uses: actions/setup-node@v4
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: 'pnpm'
       - run: pnpm install
       - name: Build z
