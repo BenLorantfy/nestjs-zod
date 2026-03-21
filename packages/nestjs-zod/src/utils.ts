@@ -53,8 +53,12 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
       const { anyOf, ...rest } = s;
 
       if (anyOf.length === 1) {
+        const sole = anyOf[0];
+        if (sole.$ref && Object.keys(sole).length === 1) {
+          return { allOf: [sole], nullable: true, ...rest };
+        }
         return {
-          ...anyOf[0],
+          ...sole,
           ...rest,
           nullable: true,
         }
@@ -62,14 +66,12 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
 
       return {
         ...rest,
-        anyOf: anyOf.map(subSchema => ({
-          ...subSchema,
-          nullable: true,
-        })),
+        anyOf,
+        nullable: true,
       }
     }
 
-    if (s.const) {
+    if (typeof s.const !== "undefined") {
       s.enum = [s.const];
       delete s.const;
     }
@@ -122,6 +124,13 @@ export function walkJsonSchema(schema: JSONSchema.BaseSchema, callback: (schema:
 
   if (typeof schema.additionalProperties === 'object') {
     schema.additionalProperties = walkJsonSchema(schema.additionalProperties, callback);
+  }
+
+  if (typeof schema.propertyNames === 'object' && schema.propertyNames !== null) {
+    (schema as Record<string, unknown>).propertyNames = walkJsonSchema(
+      schema.propertyNames as JSONSchema.BaseSchema,
+      callback,
+    );
   }
 
 //   // Handle not

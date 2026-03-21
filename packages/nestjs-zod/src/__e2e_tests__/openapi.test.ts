@@ -325,37 +325,65 @@ describe('basic nullable fields', () => {
     });
 })
 
-test('nested complex nullable fields', async () => {
-    class BookDto extends createZodDto(z.object({
-        author: z.object({
-            name: z.union([z.string(), z.number(), z.null()]),
-        })
-    })) { }
+describe('issue#349', () => {
+    test('keeps nullable referenced schema valid in OpenAPI 3.0 using allOf', async () => {
+        const Author = z.object({
+            name: z.string(),
+        }).meta({ id: 'Author' });
 
-    @Controller()
-    class BookController {
-        constructor() { }
+        class BookDto extends createZodDto(z.object({
+            author: Author.nullable(),
+        })) { }
 
-        @Post()
-        createBook(@Body() book: BookDto) {
-            return book;
-        }
-    }
+        @Controller()
+        class BookController {
+            constructor() { }
 
-    const doc = await getSwaggerDoc(BookController);
-    expect(get(doc, 'components.schemas.BookDto.properties.author.properties.name')).toEqual({
-        anyOf: [
-            {
-                type: 'string',
-                nullable: true,
-            },
-            {
-                type: 'number',
-                nullable: true,
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
             }
-        ]
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        expect(get(doc, 'components.schemas.BookDto.properties.author')).toEqual({
+            allOf: [{ $ref: '#/components/schemas/Author' }],
+            nullable: true,
+        });
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
     });
-    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+
+    test('marks parent anyOf schema nullable for multi-variant unions', async () => {
+        class BookDto extends createZodDto(z.object({
+            author: z.object({
+                name: z.union([z.string(), z.number(), z.null()]),
+            })
+        })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        expect(get(doc, 'components.schemas.BookDto.properties.author.properties.name')).toEqual({
+            anyOf: [
+                {
+                    type: 'string',
+                },
+                {
+                    type: 'number',
+                }
+            ],
+            nullable: true,
+        });
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
 });
 
 test('nullable fields in referenced schema', async () => {
@@ -2143,6 +2171,50 @@ describe('issue#220', () => {
     })
 })
 
+describe('issue#342', () => {
+    it('should convert const to enum for falsy values like 0', async () => {
+
+        const LiteralZeroFieldSchema = z.object({
+            price: z.string().nullable(),
+            paymentFrequency: z.union([
+              z.literal(0),
+              z.literal(3),
+              z.literal(12),
+              z.literal(36),
+            ]),
+            emptyString: z.literal(''),
+            falseBoolean: z.literal(false),
+        });
+
+
+        class NullableFieldAndUnionFieldDto extends createZodDto(LiteralZeroFieldSchema) { }
+
+        @Controller()
+        class ThingController {
+            @Post('thing')
+            async thing(@Body() body: NullableFieldAndUnionFieldDto) {
+                return body;
+            }
+        }
+
+        const doc = await getSwaggerDoc(ThingController);
+
+        // Check that the DTO schema is referenced in the request body
+        expect(get(doc, 'paths./thing.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/NullableFieldAndUnionFieldDto');
+
+        // Check the schema is generated correctly with enum values for literals including falsy values
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.price.type')).toEqual('string');
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.price.nullable')).toEqual(true);
+
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.paymentFrequency.anyOf.0.type')).toEqual('number');
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.paymentFrequency.anyOf.0.enum')).toEqual([0]);
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.emptyString.enum')).toEqual(['']);
+        expect(get(doc, 'components.schemas.NullableFieldAndUnionFieldDto.properties.falseBoolean.enum')).toEqual([false]);
+
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+})
+
 describe('issue#208', () => {
     it('should use deepObject style for query parameters that are objects by default', async () => {
         class QueryParamsDto extends createZodDto(z.object({
@@ -2363,8 +2435,33 @@ describe('issue#347', () => {
         expect(get(doc, 'components.schemas.Dto.description')).toEqual('Schema description');
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     })
-
 });
+
+describe('issue#350', () => {
+    it('fixes $ref inside propertyNames for z.record(keySchema, valueSchema)', async () => {
+        const QueueName = z.string().meta({ id: 'QueueName' });
+
+        class QueueMapDto extends createZodDto(z.object({
+            queues: z.record(QueueName, z.object({
+                enabled: z.boolean(),
+            })),
+        })) { }
+
+        @Controller()
+        class QueueController {
+            @Post('queues')
+            createQueues(@Body() body: QueueMapDto) {
+                return body;
+            }
+        }
+
+        const doc = await getSwaggerDoc(QueueController);
+
+        expect(get(doc, 'paths./queues.post.requestBody.content.application/json.schema.$ref')).toEqual('#/components/schemas/QueueMapDto');
+        expect(get(doc, 'components.schemas.QueueMapDto.properties.queues.propertyNames.$ref')).toEqual('#/components/schemas/QueueName');
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+})
 
 async function createApp(controllerClass: Type<unknown>) {
     @Module({
