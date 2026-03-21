@@ -27,7 +27,7 @@ jobs:
       - name: Use Node.js 20
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'pnpm'
       - run: pnpm install
       - name: Build z
@@ -78,11 +78,6 @@ jobs:
         run: |
           cp README.md packages/nestjs-zod
           sed -i 's/\/packages\/example/\.\.\/example/g' packages/nestjs-zod/README.md
-
-      - name: Create NPM config
-        run: cd packages/nestjs-zod && npm config set //registry.npmjs.org/:_authToken $NPM_TOKEN
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Publish to NPM
         run: cd packages/nestjs-zod && npm publish
