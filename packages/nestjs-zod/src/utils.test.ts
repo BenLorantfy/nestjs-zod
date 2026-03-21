@@ -36,7 +36,64 @@ describe('walkJsonSchema', () => {
                 type: 'number',
             })
         ]);
-    });   
+    });
+
+    it('should walk propertyNames when present', () => {
+        const visited: unknown[] = [];
+
+        walkJsonSchema(
+            {
+                type: 'object',
+                properties: {
+                    foo: { type: 'number' },
+                },
+                propertyNames: {
+                    type: 'string',
+                    pattern: '^[a-z]+$',
+                },
+            },
+            (s) => {
+                visited.push(s);
+                return s;
+            },
+        );
+
+        expect(visited).toEqual([
+            expect.objectContaining({ type: 'object' }),
+            expect.objectContaining({ type: 'number' }),
+            expect.objectContaining({
+                type: 'string',
+                pattern: '^[a-z]+$',
+            }),
+        ]);
+    });
+
+    it('should recurse into propertyNames sub-schemas (e.g. oneOf)', () => {
+        const visited: unknown[] = [];
+
+        walkJsonSchema(
+            {
+                type: 'object',
+                propertyNames: {
+                    oneOf: [
+                        { type: 'string', pattern: '^a' },
+                        { type: 'string', pattern: '^b' },
+                    ],
+                },
+            },
+            (s) => {
+                visited.push(s);
+                return s;
+            },
+        );
+
+        expect(visited).toEqual([
+            expect.objectContaining({ type: 'object' }),
+            expect.objectContaining({ oneOf: expect.any(Array) }),
+            expect.objectContaining({ type: 'string', pattern: '^a' }),
+            expect.objectContaining({ type: 'string', pattern: '^b' }),
+        ]);
+    });
 })
 
 describe('fixAllRefs', () => {
