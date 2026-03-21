@@ -2,7 +2,7 @@ import type { OpenAPIObject } from '@nestjs/swagger';
 import deepmerge from 'deepmerge';
 import { JSONSchema } from 'zod/v4/core';
 import { fixAllRefs, convertToOpenApi3Point0 } from './utils';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PARENT_METADATA_KEY, PARENT_TITLE_KEY, SELF_REQUIRED_KEY, UNWRAP_ROOT_KEY } from './const';
+import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, PARENT_METADATA_KEY, SELF_REQUIRED_KEY, UNWRAP_ROOT_KEY } from './const';
 import { isDeepStrictEqual } from 'node:util';
 import { assert } from './assert';
 
@@ -88,11 +88,6 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                 Object.assign(newOpenapiSchema, { id: propertySchema[PARENT_ID_KEY] });
                 newSchemaName = propertySchema[PARENT_ID_KEY];
                 delete propertySchema[PARENT_ID_KEY];
-            }
-
-            if (PARENT_TITLE_KEY in propertySchema && typeof propertySchema[PARENT_TITLE_KEY] === 'string') {
-                newOpenapiSchema.title = propertySchema[PARENT_TITLE_KEY];
-                delete propertySchema[PARENT_TITLE_KEY];
             }
 
             if (PARENT_METADATA_KEY in propertySchema && typeof propertySchema[PARENT_METADATA_KEY] === 'object') {
