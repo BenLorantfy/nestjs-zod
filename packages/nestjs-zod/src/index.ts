@@ -8,3 +8,4 @@ export { createZodSerializerInterceptor, ZodSerializerDto, ZodSerializerIntercep
 export { validate } from './validate'
 export { cleanupOpenApiDoc } from './cleanupOpenApiDoc';
 export { ZodResponse } from './response';
+export { parseFormData, ZodMultipartInterceptor } from './multipart'
