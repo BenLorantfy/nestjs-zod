@@ -1,4 +1,5 @@
 import { createZodDto } from 'nestjs-zod';
+import { zMulterFile } from 'nestjs-zod';
 import { z } from 'zod';
 import { zFormJson, zFormArray } from '../form-helpers';
 
@@ -33,6 +34,11 @@ const CreateMissionSchema = z
     objectives: zFormArray(z.array(z.string().min(1)).min(1)).describe(
       'Mission objectives',
     ),
+    briefing: zMulterFile()
+      .mimeType('application/pdf')
+      .maxSize('1Go')
+      .optional()
+      .describe('Optional mission briefing document'),
   })
   .meta({ id: 'CreateMissionDto' });
 

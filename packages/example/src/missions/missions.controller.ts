@@ -1,4 +1,11 @@
-import { Body, Controller, Get, Post, UseInterceptors } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Logger,
+  Post,
+  UseInterceptors,
+} from '@nestjs/common';
 import { ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { ZodMultipartInterceptor } from 'nestjs-zod';
 import { CreateMissionDto } from './missions.dto';
@@ -6,6 +13,8 @@ import { CreateMissionDto } from './missions.dto';
 @ApiTags('Missions')
 @Controller('api/missions')
 export class MissionsController {
+  private readonly logger = new Logger(MissionsController.name);
+
   private missions: (CreateMissionDto & { id: number })[] = [
     {
       id: 1,
@@ -43,12 +52,22 @@ curl -X POST http://localhost:3001/api/missions \\
   -F "crew[0][role]=pilot" \\
   -F "crew[0][callsign]=Falcon" \\
   -F "objectives[0]=Evacuate Echo Base" \\
-  -F "objectives[1]=Hold off the Imperial assault"
+  -F "objectives[1]=Hold off the Imperial assault" \\
+  -F "briefing=@/path/to/file.pdf"
 \`\`\``,
   })
   @UseInterceptors(ZodMultipartInterceptor)
   create(@Body() createMissionDto: CreateMissionDto) {
-    const mission = { ...createMissionDto, id: this.missions.length + 1 };
+    if (createMissionDto.briefing) {
+      const { originalname, mimetype, size } = createMissionDto.briefing;
+      this.logger.log(
+        `Briefing received: ${originalname} (${mimetype}, ${size} bytes)`,
+      );
+    }
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { briefing: _, ...missionData } = createMissionDto;
+    const mission = { ...missionData, id: this.missions.length + 1 };
     this.missions.push(mission);
     return mission;
   }
