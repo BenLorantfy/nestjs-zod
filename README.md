@@ -43,6 +43,9 @@
 <p>
 ✨ Supports zod codecs
 </p>
+<p>
+✨ Handle <code>multipart/form-data</code> and file uploads with full Zod validation
+</p>
 
 
 <h3 align="center">Sponsored by: <a href="https://apisandbox.dev/">apisandbox.dev</a></h3>
@@ -224,6 +227,11 @@ Check out the [example app](./packages/example/) for a full example of how to in
   - [Codecs](#codecs)
   - [Reusable schemas](#reusable-schemas)
   - [`zodV3ToOpenAPI` (⚠️ DEPRECATED)](#zodv3toopenapi-deprecated)
+- [Multipart / File Uploads](#multipart--file-uploads)
+  - [`ZodMultipartInterceptor`](#zodmultipartinterceptor)
+  - [`zMulterFile` (File field schema)](#zmulterfile-file-field-schema)
+  - [`parseFormData` (Bracket-notation parsing)](#parseformdata-bracket-notation-parsing)
+  - [Swagger compatibility: `zFormJson` and `zFormArray`](#swagger-compatibility-zformjson-and-zformarray)
 - [`validate` (⚠️ DEPRECATED)](#validate-deprecated)
 - [`ZodGuard` (⚠️ DEPRECATED)](#zodguard-deprecated)
   - [`createZodGuard` (Creating custom guard)](#createzodguard-creating-custom-guard)
@@ -804,6 +812,214 @@ Note that schemas are named / displayed in SwaggerUI according to the following 
   }
   ```
 </details>
+
+### Multipart / File Uploads
+
+> [!NOTE]
+> This feature requires `multer` to be installed as a peer dependency (`npm install multer` / `npm install --save-dev @types/multer`).
+> See the full working example in [`packages/example/src/missions/`](/packages/example/src/missions/).
+
+`nestjs-zod` provides first-class support for `multipart/form-data` requests, including file uploads.
+You can validate uploaded files and nested form fields with the same Zod schemas you already use for JSON bodies.
+
+---
+
+#### `ZodMultipartInterceptor`
+
+```ts
+import { ZodMultipartInterceptor } from 'nestjs-zod'
+```
+
+An interceptor that:
+1. Runs `multer` to parse incoming `multipart/form-data` requests (only when the body has not already been parsed).
+2. Merges uploaded files into the body under their `fieldname`.
+3. Calls [`parseFormData`](#parseformdata-bracket-notation-parsing) to convert bracket-notation flat keys into a nested object structure, and auto-parses JSON strings.
+
+Apply it per-route with `@UseInterceptors`:
+
+```ts
+import { Body, Controller, Post, UseInterceptors } from '@nestjs/common'
+import { ApiConsumes } from '@nestjs/swagger'
+import { ZodMultipartInterceptor } from 'nestjs-zod'
+import { CreateMissionDto } from './missions.dto'
+
+@Controller('missions')
+export class MissionsController {
+  @Post()
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @UseInterceptors(ZodMultipartInterceptor)
+  create(@Body() dto: CreateMissionDto) {
+    return dto
+  }
+}
+```
+
+> Adding `@ApiConsumes('multipart/form-data', 'application/json')` tells Swagger UI to render the form as a multipart upload form while still accepting regular JSON bodies.
+
+---
+
+#### `zMulterFile` (File field schema)
+
+```ts
+import { zMulterFile } from 'nestjs-zod'
+```
+
+A Zod schema factory for a single uploaded file (a Multer `Express.Multer.File` object).
+It validates that the value is a real Multer file object and exposes chainable constraint methods:
+
+| Method | Description |
+|--------|-------------|
+| `.mimeType(type \| type[])` | Restrict accepted MIME types |
+| `.maxSize(size)` | Maximum file size — accepts a number (bytes) or a human-readable string (`'10Mo'`, `'5MB'`, `'1Go'`) |
+| `.minSize(size)` | Minimum file size (same format as `maxSize`) |
+
+```ts
+import { z } from 'zod'
+import { zMulterFile } from 'nestjs-zod'
+import { createZodDto } from 'nestjs-zod'
+
+const UploadSchema = z.object({
+  title: z.string().min(1),
+  // Optional PDF, max 1 GB
+  document: zMulterFile().mimeType('application/pdf').maxSize('1Go').optional(),
+  // Required PNG image, max 10 MB
+  thumbnail: zMulterFile().mimeType(['image/png', 'image/jpeg']).maxSize('10Mo'),
+})
+
+export class UploadDto extends createZodDto(UploadSchema) {}
+```
+
+The `MulterFile` interface and `ZodMulterFileSchema` type are also exported for advanced use:
+
+```ts
+import type { MulterFile, ZodMulterFileSchema } from 'nestjs-zod'
+```
+
+**Supported size units:** `b`, `o`, `ko`/`kb`, `mo`/`mb`, `go`/`gb`, `to`/`tb` (case-insensitive).
+
+---
+
+#### `parseFormData` (Bracket-notation parsing)
+
+```ts
+import { parseFormData } from 'nestjs-zod'
+```
+
+Converts a flat `multipart/form-data` body that uses **bracket notation** for nested fields into a proper nested object.
+String values that look like a JSON object (`{ … }`) or array (`[ … ]`) are automatically parsed.
+
+`ZodMultipartInterceptor` calls this automatically, but you can also call it manually if needed.
+
+```ts
+parseFormData({
+  'name': 'Alice',
+  'address[city]': 'Paris',
+  'persons[0][name]': 'Bob',
+  'persons[0][age]': '30',
+  'tags[]': 'a',
+})
+// => {
+//   name: 'Alice',
+//   address: { city: 'Paris' },
+//   persons: [{ name: 'Bob', age: '30' }],
+//   tags: ['a'],
+// }
+```
+
+This lets you send deeply-nested payloads via `curl` or Swagger UI:
+
+```bash
+curl -X POST http://localhost:3000/missions \
+  -F "missionName=Operation Hoth" \
+  -F "priority=high" \
+  -F "coordinates[x]=123" \
+  -F "coordinates[y]=456" \
+  -F "crew[0][name]=Han Solo" \
+  -F "crew[0][role]=pilot" \
+  -F "crew[0][picture]=@/path/to/picture.png" \
+  -F "briefing=@/path/to/file.pdf"
+```
+
+---
+
+#### Swagger compatibility: `zFormJson` and `zFormArray`
+
+Swagger UI has a quirk with `multipart/form-data`: it sends complex fields (nested objects, arrays of objects) as **raw JSON strings** rather than using bracket notation.  The `ZodMultipartInterceptor` handles bracket notation automatically, but it cannot guess that a plain string like `'{"x":1,"y":2}'` should be parsed as an object.
+
+The example app ships two small `z.preprocess` helpers in [`packages/example/src/form-helpers.ts`](/packages/example/src/form-helpers.ts) that solve this.  They are not part of the main `nestjs-zod` package — copy them into your project as needed.
+
+<details>
+  <summary>Show <code>zFormJson</code> and <code>zFormArray</code> helpers</summary>
+
+#### `zFormJson(schema)`
+
+Wraps any Zod schema with a `z.preprocess` step that JSON-parses the value when it is a string that looks like an object (`{…}`) or array (`[…]`).
+
+Use this for **single nested objects** that Swagger UI sends as a JSON string.
+
+```ts
+import { z } from 'zod'
+import { zFormJson } from './form-helpers' // copy from example app
+
+const CoordinatesSchema = z.object({
+  x: z.coerce.number(),
+  y: z.coerce.number(),
+})
+
+const Schema = z.object({
+  // Accepts the real object { x: 1, y: 2 } AND the JSON string '{"x":1,"y":2}'
+  coordinates: zFormJson(CoordinatesSchema),
+})
+```
+
+Implementation (trivial to inline):
+
+```ts
+export function zFormJson<T extends z.ZodTypeAny>(schema: T) {
+  return z.preprocess((val: unknown) => {
+    if (typeof val !== 'string') return val
+    const t = val.trim()
+    if (
+      (t.startsWith('{') && t.endsWith('}')) ||
+      (t.startsWith('[') && t.endsWith(']'))
+    ) {
+      try { return JSON.parse(t) } catch { /* not valid JSON */ }
+    }
+    return val
+  }, schema)
+}
+```
+
+---
+
+#### `zFormArray(arraySchema)`
+
+Wraps a `z.array(…)` schema with a `z.preprocess` step that normalises all the different shapes a multipart array field can arrive in:
+
+| Input | Result |
+|-------|--------|
+| `['a', 'b']` (already an array) | `['a', 'b']` — each item is JSON-parsed if it looks like JSON |
+| `'["a","b"]'` (JSON array string) | `['a', 'b']` |
+| `'hello'` (single string) | `['hello']` |
+| `undefined` / `null` / `''` | `[]` |
+
+Use this for **arrays of scalars or objects** when Swagger UI may send a JSON array string instead of repeated bracket-notation fields.
+
+```ts
+import { z } from 'zod'
+import { zFormArray } from './form-helpers' // copy from example app
+
+const Schema = z.object({
+  // Accepts '["a","b"]', ['a','b'], or a single 'a'
+  tags: zFormArray(z.array(z.string())),
+  // Accepts '[{"name":"Bob"}]' or bracket-notation parsed array of objects
+  crew: zFormArray(z.array(z.object({ name: z.string(), role: z.string() }))),
+})
+```
+
+</details>
+
+---
 
 ### `validate` _**(DEPRECATED)**_
 
