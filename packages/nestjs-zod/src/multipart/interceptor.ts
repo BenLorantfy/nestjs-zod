@@ -41,24 +41,15 @@ export class ZodMultipartInterceptor implements NestInterceptor {
     }
 
     if (req.body != null && typeof req.body === 'object') {
-      const parsed = parseFormData(req.body as Record<string, string | string[]>)
-
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const files: any[] = req.files ?? []
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const flatBody = req.body as Record<string, any>
       for (const file of files) {
-        const key = file.fieldname as string
-        const existing = parsed[key]
-        if (existing === undefined) {
-          parsed[key] = file
-        } else if (Array.isArray(existing)) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          ;(existing as any[]).push(file)
-        } else {
-          parsed[key] = [existing, file]
-        }
+        flatBody[file.fieldname as string] = file
       }
 
-      req.body = parsed
+      req.body = parseFormData(flatBody)
     }
 
     return next.handle()

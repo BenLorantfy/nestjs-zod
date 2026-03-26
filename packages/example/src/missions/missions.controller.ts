@@ -51,6 +51,7 @@ curl -X POST http://localhost:3001/api/missions \\
   -F "crew[0][name]=Han Solo" \\
   -F "crew[0][role]=pilot" \\
   -F "crew[0][callsign]=Falcon" \\
+  -F "crew[0][picture]=@/path/to/picture.png" \\
   -F "objectives[0]=Evacuate Echo Base" \\
   -F "objectives[1]=Hold off the Imperial assault" \\
   -F "briefing=@/path/to/file.pdf"
@@ -65,9 +66,17 @@ curl -X POST http://localhost:3001/api/missions \\
       );
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { briefing: _, ...missionData } = createMissionDto;
-    const mission = { ...missionData, id: this.missions.length + 1 };
+    if (createMissionDto.crew) {
+      for (const crew of createMissionDto.crew) {
+        if (!crew.picture) continue;
+        const { originalname, mimetype, size } = crew.picture;
+        this.logger.log(
+          `Crew picture received: ${originalname} (${mimetype}, ${size} bytes)}`,
+        );
+      }
+    }
+
+    const mission = { ...createMissionDto, id: this.missions.length + 1 };
     this.missions.push(mission);
     return mission;
   }

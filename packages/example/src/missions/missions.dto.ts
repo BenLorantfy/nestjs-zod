@@ -9,6 +9,7 @@ const CrewMemberSchema = z.object({
     .enum(['pilot', 'gunner', 'engineer', 'commander'])
     .describe('Role aboard the ship'),
   callsign: z.string().optional().describe('Optional callsign'),
+  picture: zMulterFile().mimeType('image/png').maxSize('10Mo').optional(),
 });
 
 const CoordinatesSchema = z.object({
