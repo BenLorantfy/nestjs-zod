@@ -1,7 +1,12 @@
 import { Controller, Get, Post, Body } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
-import { CreateStarshipFormDto, StarshipDto, StarshipListDto, Starship } from './starships.dto';
+import {
+  CreateStarshipFormDto,
+  StarshipDto,
+  StarshipListDto,
+  Starship,
+} from './starships.dto';
 
 @ApiTags('Starships')
 @Controller('api/starships')
@@ -72,15 +77,19 @@ export class StarshipsController {
   }
 
   @Post()
-  @ZodResponse({ status: 201, type: StarshipDto, description: 'Starship created successfully' })
+  @ZodResponse({
+    status: 201,
+    type: StarshipDto,
+    description: 'Starship created successfully',
+  })
   createStarship(@Body() createStarshipDto: CreateStarshipFormDto) {
     const newStarship = {
       ...createStarshipDto,
-      id: Math.floor(Math.random() * 1000) + 4
+      id: Math.floor(Math.random() * 1000) + 4,
     };
 
     this.mockStarships.push(newStarship);
 
     return newStarship;
   }
-} 
+}

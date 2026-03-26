@@ -1,13 +1,14 @@
 import { Module } from '@nestjs/common';
 import { PeopleController } from './people/people.controller';
 import { StarshipsController } from './starships/starships.controller';
+import { MissionsController } from './missions/missions.controller';
 import { HttpExceptionFilter } from './http-exception.filter';
 import { APP_FILTER, APP_INTERCEPTOR, APP_PIPE } from '@nestjs/core';
 import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
 
 @Module({
   imports: [],
-  controllers: [PeopleController, StarshipsController],
+  controllers: [PeopleController, StarshipsController, MissionsController],
   providers: [
     {
       provide: APP_PIPE,
@@ -21,6 +22,6 @@ import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
-  ]
+  ],
 })
 export class AppModule {}

@@ -1,7 +1,23 @@
-import { Controller, Get, Post, Body, Query, Param, NotFoundException } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  NotFoundException,
+  Param,
+  Post,
+  Query,
+} from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
-import { CreatePersonFormDto, PersonDto, PersonListDto, PersonFilterDto, Person, GetPersonParams, GetPersonResponse } from './people.dto';
+import {
+  CreatePersonFormDto,
+  GetPersonParams,
+  GetPersonResponse,
+  Person,
+  PersonDto,
+  PersonFilterDto,
+  PersonListDto,
+} from './people.dto';
 
 @ApiTags('People')
 @Controller('api/people')
@@ -22,7 +38,7 @@ export class PeopleController {
       speciesIds: [],
       vehicleIds: ['14', '30'],
       starshipIds: ['12', '22'],
-      created: new Date('2025-12-11T17:04:50.197Z')
+      created: new Date('2025-12-11T17:04:50.197Z'),
     },
     {
       id: 2,
@@ -39,7 +55,7 @@ export class PeopleController {
       speciesIds: ['2'],
       vehicleIds: [],
       starshipIds: [],
-      created: new Date('2025-12-12T17:04:50.197Z')
+      created: new Date('2025-12-12T17:04:50.197Z'),
     },
     {
       id: 3,
@@ -56,7 +72,7 @@ export class PeopleController {
       speciesIds: ['2'],
       vehicleIds: [],
       starshipIds: [],
-      created: new Date('2025-12-13T17:04:50.197Z')
+      created: new Date('2025-12-13T17:04:50.197Z'),
     },
   ];
 
@@ -64,14 +80,16 @@ export class PeopleController {
   @ZodResponse({ type: PersonListDto, description: 'List of all people' })
   getPeople(@Query() query: PersonFilterDto) {
     return {
-      data: this.mockPeople.filter(person => query.filter?.name ? person.name.includes(query.filter.name) : true),
+      data: this.mockPeople.filter((person) =>
+        query.filter?.name ? person.name.includes(query.filter.name) : true,
+      ),
     };
   }
 
   @Get(':id')
   @ZodResponse({ type: GetPersonResponse, description: 'List of all people' })
   getPerson(@Param() { id }: GetPersonParams) {
-    const person = this.mockPeople.find(person => person.id === id);
+    const person = this.mockPeople.find((person) => person.id === id);
     if (!person) {
       throw new NotFoundException('Person not found');
     }
@@ -86,11 +104,11 @@ export class PeopleController {
     const newPerson = {
       ...createPersonDto,
       id: Math.floor(Math.random() * 1000) + 4,
-      created: new Date()
+      created: new Date(),
     };
 
     this.mockPeople.push(newPerson);
 
     return newPerson;
   }
-} 
+}
