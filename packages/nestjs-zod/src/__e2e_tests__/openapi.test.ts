@@ -914,6 +914,60 @@ describe('issue#304 - id and title for array schemas', () => {
     })
 })
 
+/**
+ * @see https://github.com/BenLorantfy/nestjs-zod/issues/359
+ * — `id` is used internally for registration but must not appear in emitted OpenAPI (invalid in OAS 3.0);
+ * — `meta.title` should drive reusable `components.schemas` entries like `meta.id` does.
+ */
+describe('issue#359 - meta.id must not leak into OpenAPI; meta.title should register named schemas', () => {
+    test('components.schemas objects must not include a top-level JSON Schema `id` field', async () => {
+        const Author = z.object({ name: z.string() }).meta({ id: 'Issue359NamedAuthor' });
+
+        class BookDto extends createZodDto(z.object({
+            title: z.string(),
+            author: Author,
+        })) { }
+
+        @Controller()
+        class BookController {
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        const authorComponent = doc.components?.schemas?.Issue359NamedAuthor as Record<string, unknown> | undefined;
+
+        expect(authorComponent).toBeDefined();
+        expect(authorComponent).not.toHaveProperty('id');
+    });
+
+    test('nested schema with only .meta({ title }) should appear under components.schemas and be referenced', async () => {
+        const Author = z.object({ name: z.string() }).meta({ title: 'Issue359Author' });
+
+        class BookDto extends createZodDto(z.object({
+            title: z.string(),
+            author: Author,
+        })) { }
+
+        @Controller()
+        class BookController {
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+
+        expect(Object.keys(doc.components?.schemas || {})).toContain('Issue359Author');
+        expect(get(doc, 'components.schemas.BookDto.properties.author.$ref')).toEqual(
+            '#/components/schemas/Issue359Author',
+        );
+    });
+})
+
 test('query param union', async () => {
     class QueryParamsDto extends createZodDto(z.object({
         filter: z.union([
