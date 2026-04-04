@@ -45,7 +45,7 @@ importers:
         specifier: ^7.8.1
         version: 7.8.2
       zod:
-        specifier: ^4.3.6
+        specifier: ^4.1.12
         version: 4.3.6
     devDependencies:
       '@eslint/eslintrc':
@@ -403,7 +403,7 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
       zod:
-        specifier: ^4.3.6
+        specifier: ^4.1.12
         version: 4.3.6
 
   packages/z:
