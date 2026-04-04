@@ -53,7 +53,8 @@
     "test": "TZ=UTC jest",
     "lint": "eslint",
     "lint:fix": "eslint  --fix",
-    "format": "prettier --write \"src/**/*.ts\""
+    "format:write": "prettier --write \"src/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\""
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

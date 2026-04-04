@@ -33,9 +33,7 @@
   "scripts": {
     "dev": "vite",
     "build": "rollup -c",
-    "test": "TZ=UTC jest",
-    "lint": "eslint --ext .ts,.tsx src",
-    "lint:fix": "eslint --ext .ts,.tsx src --fix"
+    "test": "TZ=UTC jest"
   },
   "devDependencies": {
     "@golevelup/ts-jest": "^1.2.1",
@@ -46,7 +44,6 @@
     "@types/merge-deep": "^3.0.0",
     "@types/node": "^25.2.3",
     "esbuild": "^0.27.2",
-    "eslint": "^10.0.0",
     "jest": "^29.5.0",
     "reflect-metadata": "^0.2.0",
     "rollup": "^2.69.0",
