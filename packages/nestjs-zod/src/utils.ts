@@ -42,6 +42,12 @@ export function fixAllRefs({ schema, defRenames, rootSchemaName }: { schema: JSO
  */
 export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
   return walkJsonSchema(schema, (s) => {
+    // `id` is not valid in OpenAPI 3.0.  Some generators, like
+    // `openapi-generator` fail if they come across unrecognized fields
+    if ('id' in s) {
+      delete s.id;
+    }
+
     if (s.anyOf) {
       const nullSchema = s.anyOf.findIndex(subSchema => subSchema.type === 'null');
       if (nullSchema === -1) {
