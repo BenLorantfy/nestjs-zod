@@ -1,6 +1,6 @@
-import { isZodDto, ZodDto } from './dto'
-import { createZodValidationException, ZodExceptionCreator } from './exception'
-import { UnknownSchema } from './types'
+import { isZodDto, ZodDto } from './dto';
+import { createZodValidationException, ZodExceptionCreator } from './exception';
+import { UnknownSchema } from './types';
 
 /**
  * @deprecated `validate` will be removed in a future version.  It is
@@ -9,13 +9,13 @@ import { UnknownSchema } from './types'
 export function validate<TSchema extends UnknownSchema>(
   value: unknown,
   schemaOrDto: TSchema | ZodDto<TSchema, boolean>,
-  createValidationException: ZodExceptionCreator = createZodValidationException
+  createValidationException: ZodExceptionCreator = createZodValidationException,
 ): ReturnType<TSchema['parse']> {
-  const schema = isZodDto(schemaOrDto) ? schemaOrDto.schema : schemaOrDto
+  const schema = isZodDto(schemaOrDto) ? schemaOrDto.schema : schemaOrDto;
 
   try {
-    return schema.parse(value) as ReturnType<TSchema['parse']>
+    return schema.parse(value) as ReturnType<TSchema['parse']>;
   } catch (error) {
-    throw createValidationException(error)
+    throw createValidationException(error);
   }
 }

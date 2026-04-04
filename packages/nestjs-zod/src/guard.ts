@@ -3,22 +3,22 @@ import {
   ExecutionContext,
   Injectable,
   UseGuards,
-} from '@nestjs/common'
-import { ZodDto } from './dto'
-import { ZodExceptionCreator } from './exception'
-import { validate } from './validate'
-import { UnknownSchema } from './types'
+} from '@nestjs/common';
+import { ZodDto } from './dto';
+import { ZodExceptionCreator } from './exception';
+import { validate } from './validate';
+import { UnknownSchema } from './types';
 
-export type Source = 'body' | 'query' | 'params'
+export type Source = 'body' | 'query' | 'params';
 
 interface ZodBodyGuardOptions {
-  createValidationException?: ZodExceptionCreator
+  createValidationException?: ZodExceptionCreator;
 }
 
 type ZodGuardClass = new (
   source: Source,
-  schemaOrDto: UnknownSchema | ZodDto
-) => CanActivate
+  schemaOrDto: UnknownSchema | ZodDto,
+) => CanActivate;
 
 /**
  * @deprecated `createZodGuard` will be removed in a future version, since
@@ -31,30 +31,32 @@ export function createZodGuard({
   class ZodGuard {
     constructor(
       private source: Source,
-      private schemaOrDto: UnknownSchema | ZodDto
+      private schemaOrDto: UnknownSchema | ZodDto,
     ) {}
 
     canActivate(context: ExecutionContext) {
-      const data = context.switchToHttp().getRequest()[this.source]
+      const data = context.switchToHttp().getRequest()[this.source];
 
-      validate(data, this.schemaOrDto, createValidationException)
+      validate(data, this.schemaOrDto, createValidationException);
 
-      return true
+      return true;
     }
   }
 
-  return ZodGuard
+  return ZodGuard;
 }
 
 /**
  * @deprecated `ZodGuard` will be removed in a future version, since guards
  * are not intended for validation purposes.
  */
-export const ZodGuard = createZodGuard()
+export const ZodGuard = createZodGuard();
 
 /**
  * @deprecated `UseZodGuard` will be removed in a future version, since guards
  * are not intended for validation purposes.
  */
-export const UseZodGuard = (source: Source, schemaOrDto: UnknownSchema | ZodDto) =>
-  UseGuards(new ZodGuard(source, schemaOrDto))
+export const UseZodGuard = (
+  source: Source,
+  schemaOrDto: UnknownSchema | ZodDto,
+) => UseGuards(new ZodGuard(source, schemaOrDto));

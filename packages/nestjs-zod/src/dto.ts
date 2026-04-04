@@ -1,23 +1,34 @@
-import { UnknownSchema } from './types'
+import { UnknownSchema } from './types';
 import type * as z3 from 'zod/v3';
-import { toJSONSchema, $ZodType, JSONSchema } from "zod/v4/core";
+import { toJSONSchema, $ZodType, JSONSchema } from 'zod/v4/core';
 import { assert } from './assert';
-import { DEFS_KEY, EMPTY_TYPE_KEY, HAS_CONST_KEY, HAS_NULL_KEY, PARENT_ADDITIONAL_PROPERTIES_KEY, PARENT_HAS_REFS_KEY, PARENT_ID_KEY, UNWRAP_ROOT_KEY, SELF_REQUIRED_KEY, PARENT_METADATA_KEY } from './const';
+import {
+  DEFS_KEY,
+  EMPTY_TYPE_KEY,
+  HAS_CONST_KEY,
+  HAS_NULL_KEY,
+  PARENT_ADDITIONAL_PROPERTIES_KEY,
+  PARENT_HAS_REFS_KEY,
+  PARENT_ID_KEY,
+  UNWRAP_ROOT_KEY,
+  SELF_REQUIRED_KEY,
+  PARENT_METADATA_KEY,
+} from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 import { ioSymbol } from './symbols';
 
 export interface ZodDto<
   TSchema extends UnknownSchema = UnknownSchema,
-  TCodec extends boolean = boolean
+  TCodec extends boolean = boolean,
 > {
-  new (): ReturnType<TSchema['parse']>
-  isZodDto: true
-  schema: TSchema
-  codec: TCodec
-  create(input: unknown): ReturnType<TSchema['parse']>
-  Output: ZodDto<UnknownSchema, TCodec>
-  _OPENAPI_METADATA_FACTORY(): unknown
+  new (): ReturnType<TSchema['parse']>;
+  isZodDto: true;
+  schema: TSchema;
+  codec: TCodec;
+  create(input: unknown): ReturnType<TSchema['parse']>;
+  Output: ZodDto<UnknownSchema, TCodec>;
+  _OPENAPI_METADATA_FACTORY(): unknown;
 }
 
 export function createZodDto<
@@ -25,51 +36,59 @@ export function createZodDto<
   TCodec extends boolean = false,
 >(schema: TSchema, options?: { codec: TCodec }) {
   class AugmentedZodDto {
-    public static readonly isZodDto = true
-    public static readonly schema = schema
-    public static readonly codec = options?.codec || false
-    public static readonly [ioSymbol] = "input"
+    public static readonly isZodDto = true;
+    public static readonly schema = schema;
+    public static readonly codec = options?.codec || false;
+    public static readonly [ioSymbol] = 'input';
 
     public static create(input: unknown) {
-      return this.schema.parse(input)
+      return this.schema.parse(input);
     }
 
     static get Output() {
-      assert('_zod' in schema, 'Output DTOs can only be created from zod v4 schemas')
-      
+      assert(
+        '_zod' in schema,
+        'Output DTOs can only be created from zod v4 schemas',
+      );
+
       class AugmentedZodDto {
-        public static readonly isZodDto = true
-        public static readonly schema = schema
-        public static readonly [ioSymbol] = "output"
-    
+        public static readonly isZodDto = true;
+        public static readonly schema = schema;
+        public static readonly [ioSymbol] = 'output';
+
         public static create(input: unknown) {
-          return this.schema.parse(input)
+          return this.schema.parse(input);
         }
 
         public static _OPENAPI_METADATA_FACTORY() {
-          return openApiMetadataFactory({ schema: this.schema, io: "output" });
+          return openApiMetadataFactory({ schema: this.schema, io: 'output' });
         }
       }
 
-      Object.defineProperty(AugmentedZodDto, 'name', { value: `${this.name}_Output` });
+      Object.defineProperty(AugmentedZodDto, 'name', {
+        value: `${this.name}_Output`,
+      });
 
       return AugmentedZodDto;
     }
 
     public static _OPENAPI_METADATA_FACTORY() {
-      return openApiMetadataFactory({ schema: this.schema, io: "input" });
+      return openApiMetadataFactory({ schema: this.schema, io: 'input' });
     }
   }
 
-  return AugmentedZodDto as unknown as ZodDto<TSchema, TCodec>
+  return AugmentedZodDto as unknown as ZodDto<TSchema, TCodec>;
 }
 
-function openApiMetadataFactory({ 
-  schema, 
+function openApiMetadataFactory({
+  schema,
   io,
-}: { 
-  schema: UnknownSchema | z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }), 
-  io: 'input' | 'output',
+}: {
+  schema:
+    | UnknownSchema
+    | z3.ZodTypeAny
+    | ($ZodType & { parse: (input: unknown) => unknown });
+  io: 'input' | 'output';
 }) {
   if (!('_zod' in schema) && '_def' in schema && io === 'output') {
     throw new Error('[nestjs-zod] Output schemas are not supported for zod@v3');
@@ -79,7 +98,11 @@ function openApiMetadataFactory({
     return {};
   }
 
-  const { $defs, $schema, ...generatedJsonSchema } = generateJsonSchema(schema, io);
+  const {
+    $defs,
+    $schema: _$schema,
+    ...generatedJsonSchema
+  } = generateJsonSchema(schema, io);
 
   /**
    * nestjs expects us to return a record of properties
@@ -91,36 +114,40 @@ function openApiMetadataFactory({
    * `cleanupOpenApiDoc` function, we unwrap the root object.
    */
   const jsonSchema: JSONSchema.JSONSchema & {
-    type: "object";
+    type: 'object';
     required?: string[];
     properties?: Record<string, Record<string, unknown>>;
-  } = !isObjectTypeWithProperties(generatedJsonSchema) ? {
-    type: 'object' as const,
-    id: generatedJsonSchema.id,
-    title: generatedJsonSchema.title,
-    properties: {
-      root: {
-        ...generatedJsonSchema,
-        [UNWRAP_ROOT_KEY]: true
+  } = !isObjectTypeWithProperties(generatedJsonSchema)
+    ? {
+        type: 'object' as const,
+        id: generatedJsonSchema.id,
+        title: generatedJsonSchema.title,
+        properties: {
+          root: {
+            ...generatedJsonSchema,
+            [UNWRAP_ROOT_KEY]: true,
+          },
+        },
+        $defs,
       }
-    },
-    $defs,
-  } : {
-    ...generatedJsonSchema,
-    $defs,
-  };
-  
+    : {
+        ...generatedJsonSchema,
+        $defs,
+      };
+
   const { hasRefs, hasNull, hasConst } = getSchemaMetadata(jsonSchema);
 
-  let properties: Record<string, unknown> = {};
-  for (let [propertyKey, propertySchema] of Object.entries(jsonSchema.properties || {})) {
+  const properties: Record<string, unknown> = {};
+  for (const [propertyKey, propertySchema] of Object.entries(
+    jsonSchema.properties || {},
+  )) {
     const newPropertySchema: Record<string, unknown> = {
       // TODO: figure out why this fails at compile time
       ...(propertySchema as Record<string, unknown>),
 
       // Note: nestjs throws the following error message if `type` is
-      // missing on the schema: 
-      // 
+      // missing on the schema:
+      //
       // > A circular dependency has been detected...
       //
       // This error message is not accurate.  There is no circular
@@ -130,7 +157,7 @@ function openApiMetadataFactory({
       // An empty string is not a valid value for `type` as per jsonSchema
       // standards, but we clean this up and remove this field in
       // `cleanupOpenApiDoc`
-      type: propertySchema.type || '', 
+      type: propertySchema.type || '',
     };
 
     if (hasConst) {
@@ -159,7 +186,9 @@ function openApiMetadataFactory({
     // As an apparent (and undocumented) workaround, nestjs expects you to
     // return `selfRequired: true` (for objects) or `required: true` (for
     // non-objects) if the field is required
-    const required = Boolean('required' in jsonSchema && jsonSchema.required?.includes(propertyKey));
+    const required = Boolean(
+      'required' in jsonSchema && jsonSchema.required?.includes(propertyKey),
+    );
     if (newPropertySchema.type === 'object') {
       newPropertySchema.selfRequired = required;
       // This is needed for parameters that are objects.  In those cases, nestjs
@@ -188,7 +217,8 @@ function openApiMetadataFactory({
     }
 
     if (typeof jsonSchema.additionalProperties === 'boolean') {
-      newPropertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY] = jsonSchema.additionalProperties;
+      newPropertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY] =
+        jsonSchema.additionalProperties;
     }
 
     // nestjs expects us to return a record of properties, instead of a
@@ -196,12 +226,12 @@ function openApiMetadataFactory({
     // from .meta() is lost. So here, we add them to each property, under a
     // custom field name
     const reservedKeys = new Set([
-      "type",
-      "properties",
-      "required",
-      "additionalProperties",
-      "$defs",
-      "id"
+      'type',
+      'properties',
+      'required',
+      'additionalProperties',
+      '$defs',
+      'id',
     ]);
     const parentMetadata: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(jsonSchema)) {
@@ -219,20 +249,29 @@ function openApiMetadataFactory({
   return properties;
 }
 
-function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown; }), io: 'input' | 'output') {
-  const generatedJsonSchema = '_zod' in schema ? toJSONSchema(schema, {
-    io,
-    override: ({ jsonSchema }) => {
-        if (io === 'output' && 'id' in jsonSchema) {
-            jsonSchema.id = `${jsonSchema.id}_Output`;
-        }
-    } 
-  }) : zodV3ToOpenAPI(schema)
+function generateJsonSchema(
+  schema: z3.ZodTypeAny | ($ZodType & { parse: (input: unknown) => unknown }),
+  io: 'input' | 'output',
+) {
+  const generatedJsonSchema =
+    '_zod' in schema
+      ? toJSONSchema(schema, {
+          io,
+          override: ({ jsonSchema }) => {
+            if (io === 'output' && 'id' in jsonSchema) {
+              jsonSchema.id = `${jsonSchema.id}_Output`;
+            }
+          },
+        })
+      : zodV3ToOpenAPI(schema);
 
-  const $defs = ('$defs' in generatedJsonSchema && generatedJsonSchema.$defs) ? generatedJsonSchema.$defs : undefined;
+  const $defs =
+    '$defs' in generatedJsonSchema && generatedJsonSchema.$defs
+      ? generatedJsonSchema.$defs
+      : undefined;
 
   // Ensure the $ref is pointing to the correct schema
-  // @ts-expect-error
+  // @ts-expect-error FIXME
   const newSchema = fixRefsToPointById(generatedJsonSchema, $defs);
 
   // Ensure the key in the $defs object is the same as the id of the schema
@@ -293,18 +332,24 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
  * }
  * ```
  */
-function fixRefsToPointById(rootSchema: JSONSchema.JSONSchema, $defs:  Record<string, JSONSchema.JSONSchema> | undefined) {
-  return walkJsonSchema(rootSchema, (schema) => {
-    if (schema.$ref && schema.$ref.startsWith('#/$defs/')) {
-      const defKey = schema.$ref.replace('#/$defs/', '');
-      const defId = $defs?.[defKey].id;
-      if (defId) {
-        schema.$ref = `#/$defs/${defId}`;
+function fixRefsToPointById(
+  rootSchema: JSONSchema.JSONSchema,
+  $defs: Record<string, JSONSchema.JSONSchema> | undefined,
+) {
+  return walkJsonSchema(
+    rootSchema,
+    (schema) => {
+      if (schema.$ref && schema.$ref.startsWith('#/$defs/')) {
+        const defKey = schema.$ref.replace('#/$defs/', '');
+        const defId = $defs?.[defKey].id;
+        if (defId) {
+          schema.$ref = `#/$defs/${defId}`;
+        }
       }
-
-    }
-    return schema;
-  }, { clone: true});
+      return schema;
+    },
+    { clone: true },
+  );
 }
 
 function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
@@ -328,13 +373,30 @@ function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
     hasRefs,
     hasNull,
     hasConst,
-  }
+  };
 }
 
-export function isZodDto(metatype: unknown): metatype is ZodDto<UnknownSchema, boolean> {
-  return Boolean(metatype && (typeof metatype === 'object' || typeof metatype === 'function') && 'isZodDto' in metatype && metatype.isZodDto);
+export function isZodDto(
+  metatype: unknown,
+): metatype is ZodDto<UnknownSchema, boolean> {
+  return Boolean(
+    metatype &&
+    (typeof metatype === 'object' || typeof metatype === 'function') &&
+    'isZodDto' in metatype &&
+    metatype.isZodDto,
+  );
 }
 
-function isObjectTypeWithProperties(jsonSchema: JSONSchema.BaseSchema): jsonSchema is JSONSchema.BaseSchema & { type: 'object', required?: string[]; properties?: Record<string, Record<string, unknown>> } {
-  return jsonSchema.type === 'object' && !!jsonSchema.properties && Object.keys(jsonSchema.properties).length > 0;
+function isObjectTypeWithProperties(
+  jsonSchema: JSONSchema.BaseSchema,
+): jsonSchema is JSONSchema.BaseSchema & {
+  type: 'object';
+  required?: string[];
+  properties?: Record<string, Record<string, unknown>>;
+} {
+  return (
+    jsonSchema.type === 'object' &&
+    !!jsonSchema.properties &&
+    Object.keys(jsonSchema.properties).length > 0
+  );
 }

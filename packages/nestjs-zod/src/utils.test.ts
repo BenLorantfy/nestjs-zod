@@ -1,152 +1,157 @@
-import { fixAllRefs, walkJsonSchema } from "./utils";
+import { fixAllRefs, walkJsonSchema } from './utils';
 
 describe('walkJsonSchema', () => {
-    it('should walk the schema and call the callback for each node', () => {
-        const visited: unknown[] = [];
-        
-        walkJsonSchema({
-            type: 'object',
-            properties: {
-                myProperty: {
-                    type: 'string'
-                },
-                myArray: {
-                    type: 'array',
-                    items: {
-                        type: 'number',
-                    }
-                }
-            }
-        }, (s) => {
-            visited.push(s);
-            return s;
-        })
+  it('should walk the schema and call the callback for each node', () => {
+    const visited: unknown[] = [];
 
-        expect(visited).toEqual([
-            expect.objectContaining({
-                type: 'object',
-            }),
-            expect.objectContaining({
-                type: 'string'
-            }),
-            expect.objectContaining({
-                type: 'array',
-            }),
-            expect.objectContaining({
-                type: 'number',
-            })
-        ]);
-    });
-
-    it('should walk propertyNames when present', () => {
-        const visited: unknown[] = [];
-
-        walkJsonSchema(
-            {
-                type: 'object',
-                properties: {
-                    foo: { type: 'number' },
-                },
-                propertyNames: {
-                    type: 'string',
-                    pattern: '^[a-z]+$',
-                },
+    walkJsonSchema(
+      {
+        type: 'object',
+        properties: {
+          myProperty: {
+            type: 'string',
+          },
+          myArray: {
+            type: 'array',
+            items: {
+              type: 'number',
             },
-            (s) => {
-                visited.push(s);
-                return s;
-            },
-        );
+          },
+        },
+      },
+      (s) => {
+        visited.push(s);
+        return s;
+      },
+    );
 
-        expect(visited).toEqual([
-            expect.objectContaining({ type: 'object' }),
-            expect.objectContaining({ type: 'number' }),
-            expect.objectContaining({
-                type: 'string',
-                pattern: '^[a-z]+$',
-            }),
-        ]);
-    });
+    expect(visited).toEqual([
+      expect.objectContaining({
+        type: 'object',
+      }),
+      expect.objectContaining({
+        type: 'string',
+      }),
+      expect.objectContaining({
+        type: 'array',
+      }),
+      expect.objectContaining({
+        type: 'number',
+      }),
+    ]);
+  });
 
-    it('should recurse into propertyNames sub-schemas (e.g. oneOf)', () => {
-        const visited: unknown[] = [];
+  it('should walk propertyNames when present', () => {
+    const visited: unknown[] = [];
 
-        walkJsonSchema(
-            {
-                type: 'object',
-                propertyNames: {
-                    oneOf: [
-                        { type: 'string', pattern: '^a' },
-                        { type: 'string', pattern: '^b' },
-                    ],
-                },
-            },
-            (s) => {
-                visited.push(s);
-                return s;
-            },
-        );
+    walkJsonSchema(
+      {
+        type: 'object',
+        properties: {
+          foo: { type: 'number' },
+        },
+        propertyNames: {
+          type: 'string',
+          pattern: '^[a-z]+$',
+        },
+      },
+      (s) => {
+        visited.push(s);
+        return s;
+      },
+    );
 
-        expect(visited).toEqual([
-            expect.objectContaining({ type: 'object' }),
-            expect.objectContaining({ oneOf: expect.any(Array) }),
-            expect.objectContaining({ type: 'string', pattern: '^a' }),
-            expect.objectContaining({ type: 'string', pattern: '^b' }),
-        ]);
-    });
-})
+    expect(visited).toEqual([
+      expect.objectContaining({ type: 'object' }),
+      expect.objectContaining({ type: 'number' }),
+      expect.objectContaining({
+        type: 'string',
+        pattern: '^[a-z]+$',
+      }),
+    ]);
+  });
+
+  it('should recurse into propertyNames sub-schemas (e.g. oneOf)', () => {
+    const visited: unknown[] = [];
+
+    walkJsonSchema(
+      {
+        type: 'object',
+        propertyNames: {
+          oneOf: [
+            { type: 'string', pattern: '^a' },
+            { type: 'string', pattern: '^b' },
+          ],
+        },
+      },
+      (s) => {
+        visited.push(s);
+        return s;
+      },
+    );
+
+    expect(visited).toEqual([
+      expect.objectContaining({ type: 'object' }),
+      expect.objectContaining({ oneOf: expect.any(Array) }),
+      expect.objectContaining({ type: 'string', pattern: '^a' }),
+      expect.objectContaining({ type: 'string', pattern: '^b' }),
+    ]);
+  });
+});
 
 describe('fixAllRefs', () => {
-    it('should fix all refs to point to the components/schemas section instead of $defs', () => {
-        const schema = {
-            type: 'object',
-            properties: {
-                myProperty: {
-                    '$ref': '#/$defs/MySchema'
-                }
-            }
-        } as const
+  it('should fix all refs to point to the components/schemas section instead of $defs', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        myProperty: {
+          $ref: '#/$defs/MySchema',
+        },
+      },
+    } as const;
 
-        expect(fixAllRefs({ schema })).toEqual({
-            type: 'object',
-            properties: {
-                myProperty: {
-                    '$ref': '#/components/schemas/MySchema'
-                }
-            }
-        })
-    })
+    expect(fixAllRefs({ schema })).toEqual({
+      type: 'object',
+      properties: {
+        myProperty: {
+          $ref: '#/components/schemas/MySchema',
+        },
+      },
+    });
+  });
 
-    it('should fix refs that use # to point to the named schema', () => {
-        const schema = {
-            type: 'object',
-            properties: {
-                previousBook: {
-                    '$ref': '#'
-                }
-            }
-        } as const
+  it('should fix refs that use # to point to the named schema', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        previousBook: {
+          $ref: '#',
+        },
+      },
+    } as const;
 
-        expect(fixAllRefs({ schema, rootSchemaName: 'Book' })).toEqual({
-            type: 'object',
-            properties: {
-                previousBook: {
-                    '$ref': '#/components/schemas/Book'
-                }
-            }
-        })
-    })
+    expect(fixAllRefs({ schema, rootSchemaName: 'Book' })).toEqual({
+      type: 'object',
+      properties: {
+        previousBook: {
+          $ref: '#/components/schemas/Book',
+        },
+      },
+    });
+  });
 
-    it('should throw error if schema is trying to reference itself but the schema has no name', () => {
-        const schema = {
-            type: 'object',
-            properties: {
-                previousBook: {
-                    '$ref': '#'
-                }
-            }
-        } as const
+  it('should throw error if schema is trying to reference itself but the schema has no name', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        previousBook: {
+          $ref: '#',
+        },
+      },
+    } as const;
 
-        expect(() => fixAllRefs({ schema })).toThrow('[fixAllRefs] rootSchemaName is required when fixing a ref to #');
-    })
-})
+    expect(() => fixAllRefs({ schema })).toThrow(
+      '[fixAllRefs] rootSchemaName is required when fixing a ref to #',
+    );
+  });
+});
