@@ -8,6 +8,7 @@ import { assert } from './assert';
 
 type DtoSchema = Exclude<Exclude<OpenAPIObject['components'], undefined>['schemas'], undefined>[string];
 type OpenAPIParameter = Exclude<Exclude<Exclude<OpenAPIObject['paths'], undefined>['/'], undefined>['parameters'], undefined>[number];
+type OperationsObject = Exclude<Exclude<Exclude<OpenAPIObject['paths'], undefined>['/'], undefined>['get'], undefined>
 
 /**
  * This function performs some post-processing on the OpenAPI document.  It
@@ -39,196 +40,23 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
     const version = versionParam === 'auto' ? (doc.openapi.startsWith('3.1') ? '3.1' : '3.0') : versionParam;
 
     for (let [oldSchemaName, oldOpenapiSchema] of Object.entries(doc.components?.schemas || {})) {
-        // Ignore non-object types, which are not added by us
-        if (!('type' in oldOpenapiSchema) || oldOpenapiSchema.type !== 'object') {
-            schemas[oldSchemaName] = oldOpenapiSchema;
-            continue;
+        const { newSchema, newSchemaName, additionalNewSchemas } = cleanupSchema({ oldSchemaName, oldOpenapiSchema, version });
+
+        for (let [additionalSchemaName, additionalSchema] of Object.entries(additionalNewSchemas)) {
+            registerSchema(schemas, additionalSchemaName, additionalSchema);
         }
 
-        let newSchemaName = oldSchemaName;
-        let addedDefs = false;
-        let hasRefs = false;
-        let hasNull = false;
-        let hasConst = false;
-        const defRenames: Record<string, string> = {};
-
-        // Clone so we can mutate
-        let newOpenapiSchema = deepmerge<typeof oldOpenapiSchema>({}, oldOpenapiSchema);
-
-        for (let propertySchema of Object.values(newOpenapiSchema.properties || {})) {
-            if (SELF_REQUIRED_KEY in propertySchema) {
-                delete propertySchema[SELF_REQUIRED_KEY];
-            }
-
-            if (HAS_CONST_KEY in propertySchema) {
-                hasConst = Boolean(propertySchema[HAS_CONST_KEY]);
-                delete propertySchema[HAS_CONST_KEY];
-            }
-
-            if (HAS_NULL_KEY in propertySchema) {
-                hasNull = Boolean(propertySchema[HAS_NULL_KEY]);
-                delete propertySchema[HAS_NULL_KEY];
-            }
-
-            if (PARENT_HAS_REFS_KEY in propertySchema) {
-                hasRefs = Boolean(propertySchema[PARENT_HAS_REFS_KEY]);
-                delete propertySchema[PARENT_HAS_REFS_KEY];
-            }
-
-            // Remove `type` if we added `type: ''`
-            if (EMPTY_TYPE_KEY in propertySchema && propertySchema[EMPTY_TYPE_KEY]) {
-                delete propertySchema[EMPTY_TYPE_KEY];
-                if ('type' in propertySchema && propertySchema.type === '') {
-                    delete propertySchema.type;
-                }
-            }
-
-            // Rename the schema if using `meta({ id: "NewName" })`
-            if (PARENT_ID_KEY in propertySchema && typeof propertySchema[PARENT_ID_KEY] === 'string') {
-                Object.assign(newOpenapiSchema, { id: propertySchema[PARENT_ID_KEY] });
-                newSchemaName = propertySchema[PARENT_ID_KEY];
-                delete propertySchema[PARENT_ID_KEY];
-            }
-
-            if (PARENT_METADATA_KEY in propertySchema && typeof propertySchema[PARENT_METADATA_KEY] === 'object') {
-                Object.assign(newOpenapiSchema, propertySchema[PARENT_METADATA_KEY]);
-                delete propertySchema[PARENT_METADATA_KEY];
-            }
-
-            if (PARENT_ADDITIONAL_PROPERTIES_KEY in propertySchema && typeof propertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY] === 'boolean') {
-                newOpenapiSchema.additionalProperties = propertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY];
-                delete propertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY];
-            }
-
-            // Add each $def as a schema
-            if (DEFS_KEY in propertySchema) {
-                const defs = propertySchema[DEFS_KEY] as Record<string, JSONSchema.BaseSchema>;
-                delete propertySchema[DEFS_KEY];
-
-                if (!addedDefs) {
-                    // If the def has no ID, then we need to prefix the def key
-                    // with the root schema name to make it globally unique 
-                    // This can happen if the def is part of a recursive schema
-                    // (for example, `___schema0`)
-                    for (let [defSchemaId, defSchema] of Object.entries(defs)) {
-                        if (!('id' in defSchema)) {
-                            defRenames[defSchemaId] = `${newSchemaName}${defSchemaId}`;
-                        }
-                    }
-
-                    for (let [defSchemaId, defSchema] of Object.entries(defs)) {
-                        let fixedDef = fixAllRefs({ schema: defSchema, rootSchemaName: newSchemaName, defRenames })  
-
-                        if (version === '3.0') {
-                            fixedDef = convertToOpenApi3Point0(fixedDef);
-                        }
-
-                        const newDefSchemaKey = defRenames[defSchemaId] || defSchemaId;
-
-                        if (schemas[newDefSchemaKey] && !isDeepStrictEqual(schemas[newDefSchemaKey], fixedDef)) {
-                            throw new Error(`[cleanupOpenApiDoc] Found multiple schemas with name \`${newDefSchemaKey}\`.  Please review your schemas to ensure that you are not using the same schema name for different schemas`);
-                        }
-
-                        // @ts-ignore TODO: fix this
-                        schemas[newDefSchemaKey] = fixedDef;
-                    }
-
-                    addedDefs = true;
-                }
-            }
-        }
-
-        if (newSchemaName !== oldSchemaName) {
+        if (oldSchemaName !== newSchemaName) {
             renames[oldSchemaName] = newSchemaName;
-
-            // @ts-expect-error TODO: is ID a valid openapi field?
-            newOpenapiSchema['id'] = newSchemaName;
         }
 
-        if (hasRefs) {
-            // @ts-ignore TODO: fix this
-            newOpenapiSchema = fixAllRefs({
-                // @ts-expect-error TODO: fix TS error
-                schema: newOpenapiSchema,
-                rootSchemaName: newSchemaName,
-                defRenames,
-            });
-        }
-
-        // Zod generates openapi schemas like this when a field is nullable:
-        //
-        // {
-        //   anyOf: [
-        //     { type: 'string' },
-        //     { type: 'null' }
-        //   ]
-        // }
-        //
-        // However, this is not valid openapi in 3.0.  So if the user wants to generate openapi 3.0 docs,
-        // we convert it to this:
-        //
-        // { 
-        //   type: 'string', 
-        //   nullable: true 
-        // }
-        //
-        // This is the default behavior, since nestjs/swagger seems to generate
-        // a 3.0 document by default
-        if ((hasNull || hasConst) && version === '3.0') {
-            // @ts-expect-error TODO: fix this
-            newOpenapiSchema = convertToOpenApi3Point0(newOpenapiSchema);
-        }
-
-        // When the consumer does this `createZodDto(z.array(...))`, then
-        // `_OPENAPI_METADATA_FACTORY` will return: 
-        // `{ root: { type: 'array', [UNWRAP_ROOT_KEY]: true } }`
-        // This is a workaround for the fact that the factory doesn't support
-        // returning array schemas directly.  
-        // If we see `UNWRAP_ROOT_KEY`, then we unwrap the array
-        // schema (replace the root object schema with the array schema)
-        if (newOpenapiSchema.properties && 'root' in newOpenapiSchema.properties && UNWRAP_ROOT_KEY in newOpenapiSchema.properties.root) {
-            const replaceRoot = newOpenapiSchema.properties.root[UNWRAP_ROOT_KEY];
-            delete newOpenapiSchema.properties.root[UNWRAP_ROOT_KEY];
-            if (replaceRoot) {
-                // @ts-expect-error TODO: fix this
-                newOpenapiSchema = newOpenapiSchema.properties.root;
-            }
-        }
-
-        if (schemas[newSchemaName] && !isDeepStrictEqual(schemas[newSchemaName], newOpenapiSchema)) {
-            throw new Error(`[cleanupOpenApiDoc] Found multiple schemas with name \`${newSchemaName}\`.  Please review your schemas to ensure that you are not using the same schema name for different schemas`);
-        }
-        
-        schemas[newSchemaName] = newOpenapiSchema;
+        registerSchema(schemas, newSchemaName, newSchema);
     }
 
-    // Rename all the references for 
     const paths = deepmerge<typeof doc.paths>(doc.paths, {})
     for (let { get, patch, post, delete: del, put, head } of Object.values(paths)) {
         for (let methodObject of Object.values({ get, patch, post, del, put, head })) {
-            const content = methodObject?.requestBody && 'content' in methodObject?.requestBody && methodObject?.requestBody.content || {}
-            for (let requestBodyObject of Object.values(content)) {
-                if (requestBodyObject.schema && '$ref' in requestBodyObject.schema) {
-                    const oldSchemaName = getSchemaNameFromRef(requestBodyObject.schema.$ref);
-                    if (renames[oldSchemaName]) {
-                        const newSchemaName = renames[oldSchemaName];
-                        requestBodyObject.schema.$ref = requestBodyObject.schema.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
-                    }
-                }
-            }
-
-            for (let statusCodeObject of Object.values(methodObject?.responses || {})) {
-                const content = statusCodeObject && 'content' in statusCodeObject && statusCodeObject.content || {};
-                for (let responseBodyObject of Object.values(content)) {
-                    if (responseBodyObject.schema && '$ref' in responseBodyObject.schema) {
-                        const oldSchemaName = getSchemaNameFromRef(responseBodyObject.schema.$ref);
-                        if (renames[oldSchemaName]) {
-                            const newSchemaName = renames[oldSchemaName];
-                            responseBodyObject.schema.$ref = responseBodyObject.schema.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
-                        }
-                    }
-                }
-            }
+            fixRefsInBodies({ methodObject, renames });
 
             for (let i = 0; i < (methodObject?.parameters || []).length; i++) {
                 assert(methodObject?.parameters, 'parameters is required');
@@ -271,12 +99,16 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                             throw err;
                         }
 
-                        if (schemas[defSchemaId] && !isDeepStrictEqual(schemas[defSchemaId], fixedDef)) {
-                            throw new Error(`[cleanupOpenApiDoc] Found multiple schemas with name \`${defSchemaId}\`.  Please review your schemas to ensure that you are not using the same schema name for different schemas`);
+                        if (version === '3.0') {
+                            fixedDef = convertToOpenApi3Point0(fixedDef);
                         }
 
-                        // @ts-ignore TODO: fix this
-                        schemas[defSchemaId] = fixedDef;
+                        registerSchema(
+                            schemas, 
+                            defSchemaId, 
+                            // @ts-expect-error FIXME
+                            fixedDef
+                        );
                     }
                 }
 
@@ -296,6 +128,227 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
 }
 
 /**
+ * Registers a schema in the schema registry.
+ * 
+ * Mutates `schemaRegistry`
+ */
+function registerSchema(schemaRegistry: Record<string, DtoSchema>, schemaName: string, schema: DtoSchema) {
+    if (schemaRegistry[schemaName] && !isDeepStrictEqual(schemaRegistry[schemaName], schema)) {
+        throw new Error(`[cleanupOpenApiDoc] Found multiple schemas with name \`${schemaName}\`.  Please review your schemas to ensure that you are not using the same schema name for different schemas`);
+    }
+
+    schemaRegistry[schemaName] = schema;
+}
+
+/**
+ * In the process of cleaning up the OpenAPI document, we may rename schemas.
+ *
+ * This function fixes the `$ref` fields in the request body and responses to
+ * point to the correct schema names.
+ * 
+ * Mutates `methodObject`
+ */
+function fixRefsInBodies({ methodObject, renames }: { methodObject: OperationsObject|undefined, renames: Record<string, string> }) {
+    const content = methodObject?.requestBody && 'content' in methodObject?.requestBody && methodObject?.requestBody.content || {}
+    for (let requestBodyObject of Object.values(content)) {
+        if (requestBodyObject.schema && '$ref' in requestBodyObject.schema) {
+            const oldSchemaName = getSchemaNameFromRef(requestBodyObject.schema.$ref);
+            if (renames[oldSchemaName]) {
+                const newSchemaName = renames[oldSchemaName];
+                requestBodyObject.schema.$ref = requestBodyObject.schema.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
+            }
+        }
+    }
+
+    for (let statusCodeObject of Object.values(methodObject?.responses || {})) {
+        const content = statusCodeObject && 'content' in statusCodeObject && statusCodeObject.content || {};
+        for (let responseBodyObject of Object.values(content)) {
+            if (responseBodyObject.schema && '$ref' in responseBodyObject.schema) {
+                const oldSchemaName = getSchemaNameFromRef(responseBodyObject.schema.$ref);
+                if (renames[oldSchemaName]) {
+                    const newSchemaName = renames[oldSchemaName];
+                    responseBodyObject.schema.$ref = responseBodyObject.schema.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Cleans up a schema.
+ */
+function cleanupSchema({ oldSchemaName, oldOpenapiSchema, version }: { oldSchemaName: string, oldOpenapiSchema: DtoSchema, version: '3.1' | '3.0' }) {
+    const additionalNewSchemas: Record<string, DtoSchema> = {};
+        // Ignore non-object types, which are not added by us
+        if (!('type' in oldOpenapiSchema) || oldOpenapiSchema.type !== 'object') {
+            return {
+                newSchema: oldOpenapiSchema,
+                newSchemaName: oldSchemaName,
+                additionalNewSchemas,
+            }
+        }
+
+        let newSchemaName = oldSchemaName;
+        let addedDefs = false;
+        let hasRefs = false;
+        let hasNull = false;
+        let hasConst = false;
+        let hasId = false;
+        const defRenames: Record<string, string> = {};
+
+        // Clone so we can mutate
+        let newOpenapiSchema = deepmerge<typeof oldOpenapiSchema>({}, oldOpenapiSchema);
+
+        for (let propertySchema of Object.values(newOpenapiSchema.properties || {})) {
+            if (SELF_REQUIRED_KEY in propertySchema) {
+                delete propertySchema[SELF_REQUIRED_KEY];
+            }
+
+            if (HAS_CONST_KEY in propertySchema) {
+                hasConst = Boolean(propertySchema[HAS_CONST_KEY]);
+                delete propertySchema[HAS_CONST_KEY];
+            }
+
+            if (HAS_NULL_KEY in propertySchema) {
+                hasNull = Boolean(propertySchema[HAS_NULL_KEY]);
+                delete propertySchema[HAS_NULL_KEY];
+            }
+
+            if (PARENT_HAS_REFS_KEY in propertySchema) {
+                hasRefs = Boolean(propertySchema[PARENT_HAS_REFS_KEY]);
+                delete propertySchema[PARENT_HAS_REFS_KEY];
+            }
+
+            // Remove `type` if we added `type: ''`
+            if (EMPTY_TYPE_KEY in propertySchema && propertySchema[EMPTY_TYPE_KEY]) {
+                delete propertySchema[EMPTY_TYPE_KEY];
+                if ('type' in propertySchema && propertySchema.type === '') {
+                    delete propertySchema.type;
+                }
+            }
+
+            // Rename the schema if using `meta({ id: "NewName" })`
+            if (PARENT_ID_KEY in propertySchema && typeof propertySchema[PARENT_ID_KEY] === 'string') {
+                hasId = true;
+                Object.assign(newOpenapiSchema, { id: propertySchema[PARENT_ID_KEY] });
+                newSchemaName = propertySchema[PARENT_ID_KEY];
+                delete propertySchema[PARENT_ID_KEY];
+            }
+
+            if (PARENT_METADATA_KEY in propertySchema && typeof propertySchema[PARENT_METADATA_KEY] === 'object') {
+                Object.assign(newOpenapiSchema, propertySchema[PARENT_METADATA_KEY]);
+                delete propertySchema[PARENT_METADATA_KEY];
+            }
+
+            if (PARENT_ADDITIONAL_PROPERTIES_KEY in propertySchema && typeof propertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY] === 'boolean') {
+                newOpenapiSchema.additionalProperties = propertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY];
+                delete propertySchema[PARENT_ADDITIONAL_PROPERTIES_KEY];
+            }
+
+            // Add each $def as a schema
+            if (DEFS_KEY in propertySchema) {
+                const defs = propertySchema[DEFS_KEY] as Record<string, JSONSchema.BaseSchema>;
+                delete propertySchema[DEFS_KEY];
+
+                if (!addedDefs) {
+                    // If the def has no ID, then we need to prefix the def key
+                    // with the root schema name to make it globally unique 
+                    // This can happen if the def is part of a recursive schema
+                    // (for example, `___schema0`)
+                    for (let [defSchemaId, defSchema] of Object.entries(defs)) {
+                        if (!('id' in defSchema)) {
+                            defRenames[defSchemaId] = `${newSchemaName}${defSchemaId}`;
+                        }
+                    }
+
+                    for (let [defSchemaId, defSchema] of Object.entries(defs)) {
+                        let fixedDef = fixAllRefs({ schema: defSchema, rootSchemaName: newSchemaName, defRenames })  
+
+                        if (version === '3.0') {
+                            fixedDef = convertToOpenApi3Point0(fixedDef);
+                        }
+
+                        const newDefSchemaKey = defRenames[defSchemaId] || defSchemaId;
+
+                        registerSchema(
+                            additionalNewSchemas, 
+                            newDefSchemaKey, 
+                            // @ts-expect-error FIXME
+                            fixedDef
+                        );
+                    }
+
+                    addedDefs = true;
+                }
+            }
+        }
+
+        if (newSchemaName !== oldSchemaName && 'id' in newOpenapiSchema) {
+            newOpenapiSchema['id'] = newSchemaName;
+        }
+
+        if (hasRefs) {
+            // @ts-ignore TODO: fix this
+            newOpenapiSchema = fixAllRefs({
+                // @ts-expect-error TODO: fix TS error
+                schema: newOpenapiSchema,
+                rootSchemaName: newSchemaName,
+                defRenames,
+            });
+        }
+
+        // Zod generates openapi schemas like this when a field is nullable:
+        //
+        // {
+        //   anyOf: [
+        //     { type: 'string' },
+        //     { type: 'null' }
+        //   ]
+        // }
+        //
+        // However, this is not valid openapi in 3.0.  So if the user wants to generate openapi 3.0 docs,
+        // we convert it to this:
+        //
+        // { 
+        //   type: 'string', 
+        //   nullable: true 
+        // }
+        //
+        // This is the default behavior, since nestjs/swagger seems to generate
+        // a 3.0 document by default
+        if ((hasNull || hasConst || hasId) && version === '3.0') {
+            // @ts-expect-error TODO: fix this
+            newOpenapiSchema = convertToOpenApi3Point0(newOpenapiSchema);
+        }
+
+        // When the consumer does this `createZodDto(z.array(...))`, then
+        // `_OPENAPI_METADATA_FACTORY` will return: 
+        // `{ root: { type: 'array', [UNWRAP_ROOT_KEY]: true } }`
+        // This is a workaround for the fact that the factory doesn't support
+        // returning array schemas directly.  
+        // If we see `UNWRAP_ROOT_KEY`, then we unwrap the array
+        // schema (replace the root object schema with the array schema)
+        if (newOpenapiSchema.properties && 'root' in newOpenapiSchema.properties && UNWRAP_ROOT_KEY in newOpenapiSchema.properties.root) {
+            const replaceRoot = newOpenapiSchema.properties.root[UNWRAP_ROOT_KEY];
+            delete newOpenapiSchema.properties.root[UNWRAP_ROOT_KEY];
+            if (replaceRoot) {
+                // @ts-expect-error TODO: fix this
+                newOpenapiSchema = newOpenapiSchema.properties.root;
+            }
+        }
+
+        if (additionalNewSchemas[newSchemaName] && !isDeepStrictEqual(additionalNewSchemas[newSchemaName], newOpenapiSchema)) {
+            throw new Error(`[cleanupOpenApiDoc] Found multiple schemas with name \`${newSchemaName}\`.  Please review your schemas to ensure that you are not using the same schema name for different schemas`);
+        }
+        
+        return {
+            newSchema: newOpenapiSchema,
+            newSchemaName: newSchemaName,
+            additionalNewSchemas,
+        };
+}
+
+/**
  * Fixes various issues with parameters:
  * 1. Removes empty `type` fields
  * 2. Moves `const` from the root level of the parameter object to the schema
@@ -304,6 +357,9 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
  */
 function fixParameter(parameterInput: OpenAPIParameter, version: '3.1' | '3.0') {
     const parameter = deepmerge<typeof parameterInput>({}, parameterInput);
+    let hasId = false;
+    let hasConst = false;
+    let hasNull = false;
 
     // nestjs seems to move some stuff out of the schema and into the root level of the parameter object 🤷
     if (EMPTY_TYPE_KEY in parameter) {
@@ -323,6 +379,7 @@ function fixParameter(parameterInput: OpenAPIParameter, version: '3.1' | '3.0') 
     }
 
     if (PARENT_ID_KEY in parameter) {
+        hasId = true;
         delete parameter[PARENT_ID_KEY];
     }
 
@@ -342,13 +399,19 @@ function fixParameter(parameterInput: OpenAPIParameter, version: '3.1' | '3.0') 
         }
     }
 
-    if (HAS_CONST_KEY in parameter) {
-        delete parameter[HAS_CONST_KEY];
+    if (HAS_NULL_KEY in parameter) {
+        hasNull = true;
+        delete parameter[HAS_NULL_KEY];
+    }
 
-        if (version === '3.0' && 'schema' in parameter && parameter.schema) {
-            // @ts-expect-error TODO: fix this
-            parameter.schema = convertToOpenApi3Point0(parameter.schema);
-        }
+    if (HAS_CONST_KEY in parameter) {
+        hasConst = true;
+        delete parameter[HAS_CONST_KEY];
+    }
+
+    if (version === '3.0' && 'schema' in parameter && parameter.schema && (hasConst || hasId || hasNull)) {
+        // @ts-expect-error TODO: fix this
+        parameter.schema = convertToOpenApi3Point0(parameter.schema);
     }
 
     return parameter;

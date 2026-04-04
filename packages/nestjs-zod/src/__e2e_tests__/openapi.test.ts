@@ -353,6 +353,44 @@ describe('issue#349', () => {
         expect(JSON.stringify(doc)).not.toContain(PREFIX);
     });
 
+    test('keeps nullable referenced schema valid in OpenAPI 3.0 for query parameters', async () => {
+        const Author = z.object({
+            name: z.string().nullable(),
+        }).meta({ id: 'Author' });
+
+        class QueryDto extends createZodDto(z.object({
+            author: Author.nullable(),
+        })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Get()
+            getBooks(@Query() query: QueryDto) {
+                return query;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+        expect(get(doc, 'components.schemas.Author.properties.name')).toEqual({
+            type: 'string',
+            nullable: true,
+        });
+        expect(get(doc, 'paths./.get.parameters')).toEqual([
+            {
+                in: 'query',
+                name: 'author',
+                required: true,
+                schema: {
+                    allOf: [{ $ref: '#/components/schemas/Author' }],
+                    nullable: true,
+                }
+            }
+        ]);
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    });
+
     test('marks parent anyOf schema nullable for multi-variant unions', async () => {
         class BookDto extends createZodDto(z.object({
             author: z.object({
@@ -749,7 +787,6 @@ test('with nested named schema', async () => {
         components: {
             schemas: {
                 Author: {
-                    id: "Author",
                     properties: {
                         name: {
                             type: 'string'
@@ -817,7 +854,9 @@ test('named output schemas', async () => {
         }
     }
 
-    const doc = await getSwaggerDoc(BookController);
+    const doc = await getSwaggerDoc(BookController, {
+        version: '3.1',
+    });
 
     // Renames the schema component itself
     expect(Object.keys(doc.components?.schemas || {})).toEqual(['Book2', 'Book2_Output']);
@@ -854,7 +893,9 @@ test('output schemas with named sub-schemas', async () => {
         }
     }
 
-    const doc = await getSwaggerDoc(BookController);
+    const doc = await getSwaggerDoc(BookController, {
+        version: '3.1',
+    });
 
     // Both the DTO and the nested zod schema should be renamed and suffixed with _Output
     expect(Object.keys(doc.components?.schemas || {})).toEqual(['Author908908290384_Output', 'BookDto_Output']);
@@ -904,7 +945,9 @@ describe('issue#304 - id and title for array schemas', () => {
             }
         }
     
-        const doc = await getSwaggerDoc(BookController);
+        const doc = await getSwaggerDoc(BookController, {
+            version: '3.1',
+        });
     
         expect(Object.keys(doc.components?.schemas || {})).toContain('BookList_Output');
         expect(Object.keys(doc.components?.schemas || {})).not.toContain('BookListDto_Output');
@@ -913,6 +956,34 @@ describe('issue#304 - id and title for array schemas', () => {
         expect(get(doc, 'components.schemas.BookList_Output.title')).toEqual('BookList');
     })
 })
+
+describe('issue#359', () => {
+    test('components.schemas entries do not include a top-level id field', async () => {
+        const Author = z.object({ name: z.string() }).meta({ id: 'Author' });
+
+        class BookDto extends createZodDto(z.object({
+            title: z.string(),
+            author: Author,
+        }).meta({ id: 'Book' })) { }
+
+        @Controller()
+        class BookController {
+            constructor() { }
+
+            @Post()
+            createBook(@Body() book: BookDto) {
+                return book;
+            }
+        }
+
+        const doc = await getSwaggerDoc(BookController);
+
+        expect(doc.components?.schemas).toBeDefined();
+        for (const schemaName of Object.keys(doc.components!.schemas!)) {
+            expect(doc.components!.schemas![schemaName]).not.toHaveProperty('id');
+        }
+    });
+});
 
 test('query param union', async () => {
     class QueryParamsDto extends createZodDto(z.object({
@@ -980,7 +1051,6 @@ test('query param with nested named schema', async () => {
                 'true',
                 'false'
             ],
-            id: 'BooleanString',
             type: 'string'
         }
     });
@@ -1206,7 +1276,6 @@ test('allows using the same schema as a root DTO and a nested DTO', async () => 
                     required: ['product'],
                 },
                 Product: {
-                    id: 'Product',
                     properties: {
                         name: {
                             type: 'string'
@@ -1313,7 +1382,9 @@ test('recursive named schemas', async () => {
         }
     }
 
-    const doc = await getSwaggerDoc(WorkflowController);
+    const doc = await getSwaggerDoc(WorkflowController, {
+        version: '3.1',
+    });
     expect(doc.components?.schemas).toEqual({
         Node: {
             id: 'Node',
@@ -1421,7 +1492,9 @@ test('mutually recursive named schemas', async () => {
         }
     }
 
-    const doc = await getSwaggerDoc(MyController);
+    const doc = await getSwaggerDoc(MyController, {
+        version: '3.1',
+    });
     expect(doc.components?.schemas).toEqual({
         BlogPost: {
             id: 'BlogPost',
@@ -1728,7 +1801,9 @@ test('add title metadata', async () => {
         }
     }
 
-    const doc = await getSwaggerDoc(WorkflowController);
+    const doc = await getSwaggerDoc(WorkflowController, {
+        version: '3.1',
+    });
     expect(doc.components?.schemas).toEqual({
         Node: {
             id: 'Node',
@@ -1782,7 +1857,6 @@ describe('issue#187', () => {
                 type: 'object'
             },
             Thing: {
-                id: 'Thing',
                 properties: {
                     name: {
                         type: 'string',
@@ -1843,7 +1917,6 @@ describe('issue#187', () => {
                 type: 'object',
             },
             Thing2: {
-                id: 'Thing2',
                 properties: {
                     nameObj: {
                         properties: {
@@ -1859,7 +1932,6 @@ describe('issue#187', () => {
                 type: 'object'
             },
             Thing2_Output: {
-                id: 'Thing2_Output',
                 additionalProperties: false,
                 properties: {
                     nameObj: {
@@ -1919,7 +1991,6 @@ describe('issue#187', () => {
                 type: 'object'
             },
             EmptyObject: {
-                id: 'EmptyObject',
                 type: 'object',
                 properties: {}
             }
@@ -2154,7 +2225,9 @@ describe('issue#220', () => {
             }
         }
 
-        const doc = await getSwaggerDoc(CatalogController);
+        const doc = await getSwaggerDoc(CatalogController, {
+            version: '3.1',
+        });
 
         expect(get(doc, 'paths./catalog/library.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Library_Output');
         expect(get(doc, 'paths./catalog/books/{id}.get.responses.default.content.application/json.schema.$ref')).toEqual('#/components/schemas/Book_Output');
@@ -2480,14 +2553,16 @@ async function createApp(controllerClass: Type<unknown>) {
 
 async function getSwaggerDoc(controllerClass: Type<unknown>, {
     cleanUp = true,
+    version,
 }: {
     cleanUp?: boolean,
+    version?: '3.1' | '3.0' | 'auto',
 } = {}) {
     const app = await createApp(controllerClass);
 
     const doc = SwaggerModule.createDocument(app, new DocumentBuilder().build());
     if (cleanUp) {
-        return cleanupOpenApiDoc(doc);
+        return cleanupOpenApiDoc(doc, { version });
     } else {
         return doc;
     }
