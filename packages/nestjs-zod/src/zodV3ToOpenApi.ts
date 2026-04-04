@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Type } from '@nestjs/common'
 import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface'
 import { z } from 'zod/v3';
 import deepmerge from 'deepmerge'
 
 export interface ExtendedSchemaObject extends SchemaObject {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   [key: `x-${string}`]: any
 }
 

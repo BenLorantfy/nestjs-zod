@@ -89,7 +89,7 @@ describe('scalar types', () => {
   ]
 
   for (const [zodType, expectedType, expectedFormat] of testCases) {
-    // eslint-disable-next-line no-loop-func
+     
     it(expectedType, () => {
       const openApiObject = zodV3ToOpenAPI(zodType)
 

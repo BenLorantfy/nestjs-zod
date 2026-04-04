@@ -97,19 +97,19 @@ export function walkJsonSchema(schema: JSONSchema.BaseSchema, callback: (schema:
   // Handle object properties
   if (schema.type === 'object' && schema.properties) {
     for (const key in schema.properties) {
-    // @ts-expect-error
+    // @ts-expect-error FIXME
       schema.properties[key] = walkJsonSchema(schema.properties[key], callback);
     }
   }
 
   // Handle array items
   if (schema.type === 'array' && Array.isArray(schema.items)) {
-    // @ts-ignore
+    // @ts-expect-error FIXME
     schema.items = schema.items.map(item => walkJsonSchema(item, callback));
   }
 
   if (schema.type === 'array' && schema.items) {
-    // @ts-expect-error
+    // @ts-expect-error FIXME
     schema.items = walkJsonSchema(schema.items, callback);
   }
 

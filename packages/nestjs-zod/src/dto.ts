@@ -79,7 +79,7 @@ function openApiMetadataFactory({
     return {};
   }
 
-  const { $defs, $schema, ...generatedJsonSchema } = generateJsonSchema(schema, io);
+  const { $defs, $schema: _$schema, ...generatedJsonSchema } = generateJsonSchema(schema, io);
 
   /**
    * nestjs expects us to return a record of properties
@@ -112,8 +112,8 @@ function openApiMetadataFactory({
   
   const { hasRefs, hasNull, hasConst } = getSchemaMetadata(jsonSchema);
 
-  let properties: Record<string, unknown> = {};
-  for (let [propertyKey, propertySchema] of Object.entries(jsonSchema.properties || {})) {
+  const properties: Record<string, unknown> = {};
+  for (const [propertyKey, propertySchema] of Object.entries(jsonSchema.properties || {})) {
     const newPropertySchema: Record<string, unknown> = {
       // TODO: figure out why this fails at compile time
       ...(propertySchema as Record<string, unknown>),
@@ -232,7 +232,7 @@ function generateJsonSchema(schema: z3.ZodTypeAny | ($ZodType & { parse: (input:
   const $defs = ('$defs' in generatedJsonSchema && generatedJsonSchema.$defs) ? generatedJsonSchema.$defs : undefined;
 
   // Ensure the $ref is pointing to the correct schema
-  // @ts-expect-error
+  // @ts-expect-error FIXME
   const newSchema = fixRefsToPointById(generatedJsonSchema, $defs);
 
   // Ensure the key in the $defs object is the same as the id of the schema

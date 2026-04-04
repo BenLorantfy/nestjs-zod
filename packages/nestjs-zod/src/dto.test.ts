@@ -97,6 +97,7 @@ describe.each([
      schema: {
       parse: (input: unknown): { username: string, password: string } => {
         if(typeof input === 'object' && input !== null && 'username' in input && 'password' in input && typeof input.username === 'string' && typeof input.password === 'string') {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           return input as any;
         }
 

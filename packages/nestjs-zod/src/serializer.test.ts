@@ -1,5 +1,6 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { createMock } from '@golevelup/ts-jest'
-import { CallHandler, Controller, ExecutionContext, Get, Post } from '@nestjs/common'
+import { CallHandler, Controller, ExecutionContext, Get } from '@nestjs/common'
 import { Reflector } from '@nestjs/core'
 import { lastValueFrom, of } from 'rxjs'
 import request from 'supertest'

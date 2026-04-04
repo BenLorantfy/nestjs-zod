@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Body, Controller, Get, Module, Post, Query, Type } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { ApiBody, ApiOkResponse, ApiProperty, ApiResponse, DocumentBuilder } from '@nestjs/swagger';
@@ -102,7 +103,7 @@ describe('basic query params', () => {
             constructor() { }
 
             @Get()
-            getBooks(@Query() query: QueryParamsDto) {
+            getBooks(@Query() _query: QueryParamsDto) {
                 return [];
             }
         }
@@ -690,7 +691,7 @@ describe('direct array schemas', () => {
                 type: BookListDto
             })
             createBooks(@Body() books: BookListDto) {
-                for (let book of books) {
+                for (const book of books) {
                     console.log(book.title);
                 }
 
@@ -729,7 +730,7 @@ test('throws error if using array DTO for parameters', async () => {
         constructor() { }
 
         @Post()
-        createBooks(@Query() books: BookListDto) {
+        createBooks(@Query() _books: BookListDto) {
             return [];
         }
     }
@@ -998,7 +999,7 @@ test('query param union', async () => {
         constructor() { }
 
         @Get()
-        getBooks(@Query() query: QueryParamsDto) {
+        getBooks(@Query() _query: QueryParamsDto) {
             return [];
         }
     }
@@ -1038,7 +1039,7 @@ test('query param with nested named schema', async () => {
         constructor() { }
 
         @Get()
-        getBooks(@Query() query: QueryParamsDto) {
+        getBooks(@Query() _query: QueryParamsDto) {
             return [];
         }
     }
@@ -1086,7 +1087,7 @@ test('removes -parent-id from query param', async () => {
         constructor() { }
 
         @Get()
-        getBooks(@Query() query: QueryParamsDto) {
+        getBooks(@Query() _query: QueryParamsDto) {
             return [];
         }
     }
@@ -1834,7 +1835,7 @@ describe('issue#187', () => {
         class ThingController {
             @Get('boxed')
             @ApiResponse({ type: Box })
-            async boxed(@Body() request: Box) {
+            async boxed(@Body() _request: Box) {
                 throw new Error()
             }
 
@@ -1884,7 +1885,7 @@ describe('issue#187', () => {
         class ThingController {
             @Get('boxed')
             @ApiResponse({ type: Box.Output })
-            async boxed(@Body() request: Box) {
+            async boxed(@Body() _request: Box) {
                 throw new Error()
             }
 
@@ -2022,7 +2023,7 @@ describe('issue#188', () => {
         @Controller()
         class ThingController {
             @Get('thing')
-            async thing(@Body() body: NullableFieldAndUnionFieldDto) {
+            async thing(@Body() _body: NullableFieldAndUnionFieldDto) {
                 throw new Error()
             }
         }
@@ -2103,7 +2104,7 @@ describe('issue#196 - const support', () => {
 
             @Get()
             @ApiResponse({ type: ThingDto })
-            getThing(@Query() query: QueryParamsDto) {
+            getThing(@Query() _query: QueryParamsDto) {
                 return {};
             }
         }
@@ -2155,7 +2156,7 @@ describe('issue#196 - const support', () => {
 
             @Get()
             @ApiResponse({ type: ThingDto })
-            getThing(@Query() query: QueryParamsDto) {
+            getThing(@Query() _query: QueryParamsDto) {
                 return {};
             }
         }
@@ -2302,7 +2303,7 @@ describe('issue#208', () => {
             constructor() { }
 
             @Get()
-            getBooks(@Query() query: QueryParamsDto) {
+            getBooks(@Query() _query: QueryParamsDto) {
                 return [];
             }
         }
@@ -2344,7 +2345,7 @@ describe('issue#154 - sets required field correctly for query parameters', () =>
             constructor() { }
 
             @Get()
-            getBooks(@Query() query: QueryParamsDto) {
+            getBooks(@Query() _query: QueryParamsDto) {
                 return [];
             }
         }
@@ -2387,7 +2388,7 @@ describe('issue#154 - sets required field correctly for query parameters', () =>
             constructor() { }
 
             @Get()
-            getBooks(@Query() query: QueryParamsDto) {
+            getBooks(@Query() _query: QueryParamsDto) {
                 return [];
             }
         }
@@ -2444,7 +2445,7 @@ describe('issue#154 - sets required field correctly for query parameters', () =>
             constructor() { }
 
             @Get()
-            getBooks(@Query() query: QueryParamsDto) {
+            getBooks(@Query() _query: QueryParamsDto) {
                 return [];
             }
         }

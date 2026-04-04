@@ -20,8 +20,8 @@ test('serializes the return value and sets the openapi doc', async () => {
         @ZodResponse({ 
             type: BookDto
         })
-        createBook(@Body() book: BookDto) {
-            return book;
+        createBook(@Body() _book: BookDto) {
+            return _book;
         }
 
         // No typescript error should be present here, because `id` is optional
@@ -29,7 +29,7 @@ test('serializes the return value and sets the openapi doc', async () => {
         @ZodResponse({ 
             type: BookDto 
         })
-        async createBook2(@Body() book: BookDto) {
+        async createBook2(@Body() _book: BookDto) {
             return {}
         }
 
@@ -38,7 +38,7 @@ test('serializes the return value and sets the openapi doc', async () => {
         @ZodResponse({ 
             type: BookDto 
         })
-        createBook3(@Body() book: BookDto) {
+        createBook3(@Body() _book: BookDto) {
             return {
                 id: true
             }
@@ -172,7 +172,7 @@ test('responds with 500 error if the response is invalid when using arrays', asy
         constructor() { }
 
         @Get()
-        // @ts-expect-error
+        // @ts-expect-error FIXME
         @ZodResponse({ 
             status: 200, 
             description: 'Get books', 
@@ -212,6 +212,7 @@ test('throws error if trying to use array syntax with zod mini', async () => {
 
     expect(() => {
         @Controller('books')
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         class BookController {
             constructor() { }
     
@@ -299,6 +300,7 @@ test('throws error if trying to use .Output version of the DTO with ZodResponse'
         })) { }
     
         @Controller('books')
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         class BookController {
             constructor() { }
     

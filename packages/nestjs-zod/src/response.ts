@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { applyDecorators, HttpCode } from '@nestjs/common';
 import { ZodSerializerDto } from './serializer';
 import { ZodDto } from './dto';
@@ -8,9 +9,10 @@ import { ioSymbol } from './symbols';
 
 let ApiResponse: typeof import('@nestjs/swagger').ApiResponse | undefined
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   ApiResponse = require('@nestjs/swagger').ApiResponse
-} catch (e) {
-
+} catch {
+  // Do nothing
 }
 
 /**
@@ -62,7 +64,7 @@ export function ZodResponse<TSchema extends UnknownSchema>({ status, description
   assert(ApiResponse, 'ZodResponse requires @nestjs/swagger to be installed');
 
   if (Array.isArray(type)) {
-    // @ts-expect-error
+    // @ts-expect-error FIXME
     assert(type[0][ioSymbol] !== "output", 'There is no need to use Dto.Output with ZodResponse');
 
     return applyDecorators(...[
@@ -78,7 +80,7 @@ export function ZodResponse<TSchema extends UnknownSchema>({ status, description
     ])
 
   } else {
-    // @ts-expect-error
+    // @ts-expect-error FIXME
     assert(type[ioSymbol] !== "output", 'There is no need to use Dto.Output with ZodResponse');
 
     return applyDecorators(...[

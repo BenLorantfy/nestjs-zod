@@ -39,10 +39,10 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
     const renames: Record<string, string> = {};
     const version = versionParam === 'auto' ? (doc.openapi.startsWith('3.1') ? '3.1' : '3.0') : versionParam;
 
-    for (let [oldSchemaName, oldOpenapiSchema] of Object.entries(doc.components?.schemas || {})) {
+    for (const [oldSchemaName, oldOpenapiSchema] of Object.entries(doc.components?.schemas || {})) {
         const { newSchema, newSchemaName, additionalNewSchemas } = cleanupSchema({ oldSchemaName, oldOpenapiSchema, version });
 
-        for (let [additionalSchemaName, additionalSchema] of Object.entries(additionalNewSchemas)) {
+        for (const [additionalSchemaName, additionalSchema] of Object.entries(additionalNewSchemas)) {
             registerSchema(schemas, additionalSchemaName, additionalSchema);
         }
 
@@ -54,8 +54,8 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
     }
 
     const paths = deepmerge<typeof doc.paths>(doc.paths, {})
-    for (let { get, patch, post, delete: del, put, head } of Object.values(paths)) {
-        for (let methodObject of Object.values({ get, patch, post, del, put, head })) {
+    for (const { get, patch, post, delete: del, put, head } of Object.values(paths)) {
+        for (const methodObject of Object.values({ get, patch, post, del, put, head })) {
             fixRefsInBodies({ methodObject, renames });
 
             for (let i = 0; i < (methodObject?.parameters || []).length; i++) {
@@ -88,7 +88,7 @@ export function cleanupOpenApiDoc(doc: OpenAPIObject, { version: versionParam = 
                     const defs = parameter[DEFS_KEY] as Record<string, JSONSchema.BaseSchema>;
                     delete parameter[DEFS_KEY];
 
-                    for (let [defSchemaId, defSchema] of Object.entries(defs)) {                        
+                    for (const [defSchemaId, defSchema] of Object.entries(defs)) {                        
                         let fixedDef;
                         try {
                             fixedDef = fixAllRefs({ schema: defSchema });
@@ -149,8 +149,8 @@ function registerSchema(schemaRegistry: Record<string, DtoSchema>, schemaName: s
  * Mutates `methodObject`
  */
 function fixRefsInBodies({ methodObject, renames }: { methodObject: OperationsObject|undefined, renames: Record<string, string> }) {
-    const content = methodObject?.requestBody && 'content' in methodObject?.requestBody && methodObject?.requestBody.content || {}
-    for (let requestBodyObject of Object.values(content)) {
+    const content = (methodObject?.requestBody && 'content' in methodObject.requestBody && methodObject.requestBody.content) || {}
+    for (const requestBodyObject of Object.values(content)) {
         if (requestBodyObject.schema && '$ref' in requestBodyObject.schema) {
             const oldSchemaName = getSchemaNameFromRef(requestBodyObject.schema.$ref);
             if (renames[oldSchemaName]) {
@@ -160,9 +160,9 @@ function fixRefsInBodies({ methodObject, renames }: { methodObject: OperationsOb
         }
     }
 
-    for (let statusCodeObject of Object.values(methodObject?.responses || {})) {
+    for (const statusCodeObject of Object.values(methodObject?.responses || {})) {
         const content = statusCodeObject && 'content' in statusCodeObject && statusCodeObject.content || {};
-        for (let responseBodyObject of Object.values(content)) {
+        for (const responseBodyObject of Object.values(content)) {
             if (responseBodyObject.schema && '$ref' in responseBodyObject.schema) {
                 const oldSchemaName = getSchemaNameFromRef(responseBodyObject.schema.$ref);
                 if (renames[oldSchemaName]) {
@@ -199,7 +199,7 @@ function cleanupSchema({ oldSchemaName, oldOpenapiSchema, version }: { oldSchema
         // Clone so we can mutate
         let newOpenapiSchema = deepmerge<typeof oldOpenapiSchema>({}, oldOpenapiSchema);
 
-        for (let propertySchema of Object.values(newOpenapiSchema.properties || {})) {
+        for (const propertySchema of Object.values(newOpenapiSchema.properties || {})) {
             if (SELF_REQUIRED_KEY in propertySchema) {
                 delete propertySchema[SELF_REQUIRED_KEY];
             }
@@ -255,13 +255,13 @@ function cleanupSchema({ oldSchemaName, oldOpenapiSchema, version }: { oldSchema
                     // with the root schema name to make it globally unique 
                     // This can happen if the def is part of a recursive schema
                     // (for example, `___schema0`)
-                    for (let [defSchemaId, defSchema] of Object.entries(defs)) {
+                    for (const [defSchemaId, defSchema] of Object.entries(defs)) {
                         if (!('id' in defSchema)) {
                             defRenames[defSchemaId] = `${newSchemaName}${defSchemaId}`;
                         }
                     }
 
-                    for (let [defSchemaId, defSchema] of Object.entries(defs)) {
+                    for (const [defSchemaId, defSchema] of Object.entries(defs)) {
                         let fixedDef = fixAllRefs({ schema: defSchema, rootSchemaName: newSchemaName, defRenames })  
 
                         if (version === '3.0') {
@@ -288,7 +288,7 @@ function cleanupSchema({ oldSchemaName, oldOpenapiSchema, version }: { oldSchema
         }
 
         if (hasRefs) {
-            // @ts-ignore TODO: fix this
+            // @ts-expect-error FIXME TODO: fix this
             newOpenapiSchema = fixAllRefs({
                 // @ts-expect-error TODO: fix TS error
                 schema: newOpenapiSchema,
