@@ -1,7 +1,13 @@
 export interface UnknownSchema {
-    parse(input: unknown, options?: { reportInput?: boolean, [x: string | number | symbol]: unknown; }): unknown;
-    encode?(input: unknown, options?: { reportInput?: boolean, [x: string | number | symbol]: unknown; }): unknown;
-    array?: () => UnknownSchema;
+  parse(
+    input: unknown,
+    options?: { reportInput?: boolean; [x: string | number | symbol]: unknown },
+  ): unknown;
+  encode?(
+    input: unknown,
+    options?: { reportInput?: boolean; [x: string | number | symbol]: unknown },
+  ): unknown;
+  array?: () => UnknownSchema;
 }
 
 /**
@@ -20,7 +26,8 @@ export interface UnknownSchema {
  *    // Expect: { name?: string; age: number; visible: boolean; }
  *    type Props = RequiredBy<Props, 'age' | 'visible'>;
  */
-export type RequiredBy<
-  T extends object,
-  K extends keyof T = keyof T
-> = Omit<T, K> & Required<Pick<T, K>>;
+export type RequiredBy<T extends object, K extends keyof T = keyof T> = Omit<
+  T,
+  K
+> &
+  Required<Pick<T, K>>;

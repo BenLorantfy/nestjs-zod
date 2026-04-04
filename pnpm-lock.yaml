@@ -375,6 +375,9 @@ importers:
       eslint:
         specifier: ^10.0.0
         version: 10.0.0(jiti@2.6.1)
+      eslint-config-prettier:
+        specifier: ^10.1.8
+        version: 10.1.8(eslint@10.0.0(jiti@2.6.1))
       express:
         specifier: ^5.2.1
         version: 5.2.1
@@ -390,6 +393,9 @@ importers:
       lodash:
         specifier: ^4.17.23
         version: 4.17.23
+      prettier:
+        specifier: ^3.8.1
+        version: 3.8.1
       reflect-metadata:
         specifier: ^0.2.0
         version: 0.2.2
