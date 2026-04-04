@@ -1,8 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Type } from '@nestjs/common';
-import type { SchemaObject } from '@nestjs/swagger/dist/interfaces/open-api-spec.interface';
 import { z } from 'zod/v3';
 import deepmerge from 'deepmerge';
+import type { OpenAPIObject } from '@nestjs/swagger';
+
+type SchemaObject = Exclude<Exclude<
+  Exclude<OpenAPIObject['components'], undefined>['schemas'],
+  undefined
+>[string], { $ref: string }>
 
 export interface ExtendedSchemaObject extends SchemaObject {
   [key: `x-${string}`]: any;
