@@ -448,7 +448,7 @@ function cleanupSchema({
   //
   // This is the default behavior, since nestjs/swagger seems to generate
   // a 3.0 document by default
-  if ((hasNull || hasConst || hasId) && version === '3.0') {
+  if (version === '3.0') {
     // @ts-expect-error TODO: fix this
     newOpenapiSchema = convertToOpenApi3Point0(newOpenapiSchema);
   }
@@ -565,8 +565,7 @@ function fixParameter(
   if (
     version === '3.0' &&
     'schema' in parameter &&
-    parameter.schema &&
-    (hasConst || hasId || hasNull)
+    parameter.schema
   ) {
     // @ts-expect-error TODO: fix this
     parameter.schema = convertToOpenApi3Point0(parameter.schema);
