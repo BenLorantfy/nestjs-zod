@@ -1863,9 +1863,6 @@ test('recursive unnamed sub-schema with record', async () => {
         },
         children: {
           type: 'object',
-          propertyNames: {
-            type: 'string',
-          },
           additionalProperties: {
             $ref: '#/components/schemas/DogPersonDto__schema0',
           },
@@ -2873,7 +2870,7 @@ describe('issue#350', () => {
       }
     }
 
-    const doc = await getSwaggerDoc(QueueController);
+    const doc = await getSwaggerDoc(QueueController, { version: '3.1' });
 
     expect(
       get(
@@ -2888,6 +2885,157 @@ describe('issue#350', () => {
       ),
     ).toEqual('#/components/schemas/QueueName');
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  });
+});
+
+describe('openapi 3.0 schema compatibility', () => {
+  it('removes propertyNames from z.record() schemas for OpenAPI 3.0', async () => {
+    class RecordDto extends createZodDto(
+      z.object({
+        data: z.record(z.string(), z.number()),
+      }),
+    ) {}
+
+    @Controller()
+    class RecordController {
+      @Post()
+      create(@Body() body: RecordDto) {
+        return body;
+      }
+    }
+
+    const app = await createApp(RecordController);
+    const doc = cleanupOpenApiDoc(
+      SwaggerModule.createDocument(
+        app,
+        new DocumentBuilder().setOpenAPIVersion('3.0.0').build(),
+      ),
+    );
+
+    const dataSchema = get(doc, 'components.schemas.RecordDto.properties.data');
+    expect(dataSchema).not.toHaveProperty('propertyNames');
+    expect(dataSchema).toEqual({
+      type: 'object',
+      additionalProperties: { type: 'number' },
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  });
+
+  it('converts exclusiveMinimum from number to boolean for OpenAPI 3.0', async () => {
+    class BoundsDto extends createZodDto(
+      z.object({
+        exclusiveMin: z.number().gt(5),
+        exclusiveMax: z.number().lt(10),
+        inclusiveMin: z.number().gte(3),
+        inclusiveMax: z.number().lte(20),
+      }),
+    ) {}
+
+    @Controller()
+    class BoundsController {
+      @Post()
+      create(@Body() body: BoundsDto) {
+        return body;
+      }
+    }
+
+    const app = await createApp(BoundsController);
+    const doc = cleanupOpenApiDoc(
+      SwaggerModule.createDocument(
+        app,
+        new DocumentBuilder().setOpenAPIVersion('3.0.0').build(),
+      ),
+    );
+
+    const props = get(doc, 'components.schemas.BoundsDto.properties');
+
+    // gt(5) should become minimum: 5, exclusiveMinimum: true
+    expect(props.exclusiveMin).toEqual({
+      type: 'number',
+      minimum: 5,
+      exclusiveMinimum: true,
+    });
+
+    // lt(10) should become maximum: 10, exclusiveMaximum: true
+    expect(props.exclusiveMax).toEqual({
+      type: 'number',
+      maximum: 10,
+      exclusiveMaximum: true,
+    });
+
+    // gte(3) should become minimum: 3 (no exclusiveMinimum needed)
+    expect(props.inclusiveMin).toEqual({
+      type: 'number',
+      minimum: 3,
+    });
+
+    // lte(20) should become maximum: 20 (no exclusiveMaximum needed)
+    expect(props.inclusiveMax).toEqual({
+      type: 'number',
+      maximum: 20,
+    });
+
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  });
+
+  it('preserves propertyNames in OpenAPI 3.1', async () => {
+    class RecordDto extends createZodDto(
+      z.object({
+        data: z.record(z.string(), z.number()),
+      }),
+    ) {}
+
+    @Controller()
+    class RecordController {
+      @Post()
+      create(@Body() body: RecordDto) {
+        return body;
+      }
+    }
+
+    const app = await createApp(RecordController);
+    const doc = cleanupOpenApiDoc(
+      SwaggerModule.createDocument(
+        app,
+        new DocumentBuilder().setOpenAPIVersion('3.1.1').build(),
+      ),
+    );
+
+    const dataSchema = get(doc, 'components.schemas.RecordDto.properties.data');
+    expect(dataSchema).toHaveProperty('propertyNames');
+  });
+
+  it('preserves exclusiveMinimum as number in OpenAPI 3.1', async () => {
+    class BoundsDto extends createZodDto(
+      z.object({
+        value: z.number().gt(5),
+      }),
+    ) {}
+
+    @Controller()
+    class BoundsController {
+      @Post()
+      create(@Body() body: BoundsDto) {
+        return body;
+      }
+    }
+
+    const app = await createApp(BoundsController);
+    const doc = cleanupOpenApiDoc(
+      SwaggerModule.createDocument(
+        app,
+        new DocumentBuilder().setOpenAPIVersion('3.1.1').build(),
+      ),
+    );
+
+    const valueSchema = get(
+      doc,
+      'components.schemas.BoundsDto.properties.value',
+    );
+    expect(valueSchema).toEqual({
+      type: 'number',
+      exclusiveMinimum: 5,
+    });
   });
 });
 
