@@ -312,11 +312,24 @@ function cleanupSchema({
     oldOpenapiSchema,
   );
 
-  for (const propertySchema of Object.values(
+  for (const [propertyName, propertySchema] of Object.entries(
     newOpenapiSchema.properties || {},
   )) {
     if (SELF_REQUIRED_KEY in propertySchema) {
+      // Remove optional object properties from the parent `required` array.
+      // Some versions of @nestjs/swagger add them because `selfRequired`
+      // is used instead of `required: false` to avoid conflicts with
+      // nested required arrays.
+      if (!propertySchema[SELF_REQUIRED_KEY] && Array.isArray(newOpenapiSchema.required)) {
+        newOpenapiSchema.required = newOpenapiSchema.required.filter(
+          (name: string) => name !== propertyName,
+        );
+        if (newOpenapiSchema.required.length === 0) {
+          delete newOpenapiSchema.required;
+        }
+      }
       delete propertySchema[SELF_REQUIRED_KEY];
+      delete propertySchema.selfRequired;
     }
 
     if (HAS_CONST_KEY in propertySchema) {
