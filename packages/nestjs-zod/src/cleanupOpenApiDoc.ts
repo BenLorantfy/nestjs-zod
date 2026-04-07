@@ -562,7 +562,7 @@ function fixParameter(
     delete parameter[HAS_CONST_KEY];
   }
 
-  if(PARENT_ADDITIONAL_PROPERTIES_KEY in parameter){
+  if (PARENT_ADDITIONAL_PROPERTIES_KEY in parameter) {
     delete parameter[PARENT_ADDITIONAL_PROPERTIES_KEY];
   }
 
