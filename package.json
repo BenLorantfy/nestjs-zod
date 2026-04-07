@@ -2,5 +2,13 @@
     "name": "nestjs-zod-monorepo",
     "description": "All the NestJS + Zod utilities you need",
     "version": "0.0.1",
-    "private": true
+    "private": true,
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "@nestjs/core",
+            "@scarf/scarf",
+            "@swc/core",
+            "esbuild"
+        ]
+    }
 }
