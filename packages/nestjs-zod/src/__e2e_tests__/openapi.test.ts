@@ -2891,6 +2891,30 @@ describe('issue#350', () => {
   });
 });
 
+describe('issue#368', () => {
+    test('prefix removed from strict objects', async () => {
+        const Schema = z.object({
+            name: z.string(),
+        }).strict()
+
+        class Dto extends createZodDto(Schema) { }
+
+        @Controller()
+        class ApiController {
+            constructor() { }
+
+            @Get()
+            createBook(@Query() _: Dto) {
+                throw new Error()
+            }
+        }
+
+        const doc = await getSwaggerDoc(ApiController);
+        expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    })
+});
+
+
 async function createApp(controllerClass: Type<unknown>) {
   @Module({
     imports: [],
