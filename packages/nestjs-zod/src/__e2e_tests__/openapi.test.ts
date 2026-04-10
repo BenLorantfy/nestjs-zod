@@ -140,6 +140,50 @@ describe('basic query params', () => {
   });
 });
 
+describe('query params with DTO description', () => {
+  test.each([
+    ctx({ version: 'v4', cleanUp: true }),
+    ctx({ version: 'v3', cleanUp: true }),
+  ])(
+    '$ctx - cleans up parent-metadata from query params',
+    async ({ version }) => {
+      const zod = (version === 'v4' ? z : z3) as typeof z;
+
+      class QueryParamsDto extends createZodDto(
+        zod
+          .object({
+            filter: zod.string(),
+          })
+          .describe('My query params'),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Get()
+        getBooks(@Query() _query: QueryParamsDto) {
+          return [];
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController, { cleanUp: true });
+
+      expect(get(doc, 'paths./.get.parameters')).toEqual([
+        {
+          in: 'query',
+          name: 'filter',
+          required: true,
+          schema: {
+            type: 'string',
+          },
+        },
+      ]);
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    },
+  );
+});
+
 describe('unions', () => {
   test('v4', async () => {
     class BookDto extends createZodDto(
