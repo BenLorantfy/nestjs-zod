@@ -445,6 +445,34 @@ describe('issue#349', () => {
   });
 });
 
+describe('issue#374', () => {
+  test('nullable enum keeps null in the enum array after 3.0 cleanup', async () => {
+    class BookDto extends createZodDto(
+      z.object({
+        tag: z.enum(['a', 'b']).nullable(),
+      }),
+    ) {}
+
+    @Controller()
+    class BookController {
+      constructor() {}
+
+      @Post()
+      createBook(@Body() book: BookDto) {
+        return book;
+      }
+    }
+
+    const doc = await getSwaggerDoc(BookController);
+    expect(get(doc, 'components.schemas.BookDto.properties.tag')).toEqual({
+      type: 'string',
+      enum: ['a', 'b', null],
+      nullable: true,
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  });
+});
+
 test('nullable fields in referenced schema', async () => {
   const Author = z
     .object({

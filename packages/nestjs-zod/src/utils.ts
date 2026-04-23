@@ -78,9 +78,15 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
           if (sole.$ref && Object.keys(sole).length === 1) {
             return { allOf: [sole], nullable: true, ...rest };
           }
+          // Per OpenAPI 3.0.3, `enum` remains an independent constraint even
+          // when `nullable: true`, so `null` must be in the `enum` array for
+          // it to be an allowed value.
+          const enumValues = Array.isArray(sole.enum) ? sole.enum : undefined;
           return {
             ...sole,
             ...rest,
+            ...(enumValues &&
+              !enumValues.includes(null) && { enum: [...enumValues, null] }),
             nullable: true,
           };
         }
