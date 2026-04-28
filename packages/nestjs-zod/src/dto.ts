@@ -18,11 +18,30 @@ import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 import { ioSymbol } from './symbols';
 
+
+type Prettify<T> = { [K in keyof T]: T[K] } & {};
+
+// [U] extends [unknown] → chặn distribution, keyof U evaluate trên toàn bộ union
+type CommonKeys<U> = [U] extends [unknown] ? keyof U : never;
+
+// U extends unknown → cho distribute để lấy ALL keys
+type AllKeys<U> = U extends unknown ? keyof U : never;
+
+type OptionalKeys<U> = Exclude<AllKeys<U>, CommonKeys<U>>;
+
+type PickType<U, K extends PropertyKey> = 
+    U extends unknown ? K extends keyof U ? U[K] : never : never;
+
+type MergeUnion<U extends any> = Prettify<
+    { [K in CommonKeys<U>]: PickType<U, K> } &
+    { [K in OptionalKeys<U>]?: PickType<U, K> }
+>;
+
 export interface ZodDto<
   TSchema extends UnknownSchema = UnknownSchema,
   TCodec extends boolean = boolean,
 > {
-  new (): ReturnType<TSchema['parse']>;
+  new (): MergeUnion<ReturnType<TSchema['parse']>>;
   isZodDto: true;
   schema: TSchema;
   codec: TCodec;
@@ -30,6 +49,8 @@ export interface ZodDto<
   Output: ZodDto<UnknownSchema, TCodec>;
   _OPENAPI_METADATA_FACTORY(): unknown;
 }
+
+
 
 export function createZodDto<
   TSchema extends UnknownSchema,
