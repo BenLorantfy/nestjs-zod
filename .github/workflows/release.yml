@@ -13,7 +13,7 @@ on:
 
 permissions:
   id-token: write  # Required for OIDC
-  contents: read
+  contents: write
 
 jobs:
   publish-npm:
@@ -80,5 +80,14 @@ jobs:
           cp README.md packages/nestjs-zod
           sed -i 's/\/packages\/example/\.\.\/example/g' packages/nestjs-zod/README.md
 
-      - name: Publish to NPM
-        run: cd packages/nestjs-zod && npm publish
+      - name: Pack nestjs-zod tarball
+        run: cd packages/nestjs-zod && npm pack
+
+      - name: Upload tarball to GitHub Release assets
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: packages/nestjs-zod/*.tgz
+
+      # - name: Publish to NPM
+      #   run: cd packages/nestjs-zod && npm publish
