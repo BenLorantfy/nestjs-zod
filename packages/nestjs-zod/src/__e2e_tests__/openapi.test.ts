@@ -2888,7 +2888,7 @@ describe('issue#350', () => {
   });
 });
 
-describe('openapi 3.0 schema compatibility', () => {
+describe('issue#366 - propertyNames and exclusiveMinimum/Maximum in openapi 3.0', () => {
   it('removes propertyNames from z.record() schemas for OpenAPI 3.0', async () => {
     class RecordDto extends createZodDto(
       z.object({
@@ -2921,7 +2921,7 @@ describe('openapi 3.0 schema compatibility', () => {
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
   });
 
-  it('converts exclusiveMinimum from number to boolean for OpenAPI 3.0', async () => {
+  it('converts exclusiveMinimum/Maximum from number to boolean for OpenAPI 3.0', async () => {
     class BoundsDto extends createZodDto(
       z.object({
         exclusiveMin: z.number().gt(5),
@@ -2949,28 +2949,24 @@ describe('openapi 3.0 schema compatibility', () => {
 
     const props = get(doc, 'components.schemas.BoundsDto.properties');
 
-    // gt(5) should become minimum: 5, exclusiveMinimum: true
-    expect(props.exclusiveMin).toEqual({
+    expect(props?.exclusiveMin).toEqual({
       type: 'number',
       minimum: 5,
       exclusiveMinimum: true,
     });
 
-    // lt(10) should become maximum: 10, exclusiveMaximum: true
-    expect(props.exclusiveMax).toEqual({
+    expect(props?.exclusiveMax).toEqual({
       type: 'number',
       maximum: 10,
       exclusiveMaximum: true,
     });
 
-    // gte(3) should become minimum: 3 (no exclusiveMinimum needed)
-    expect(props.inclusiveMin).toEqual({
+    expect(props?.inclusiveMin).toEqual({
       type: 'number',
       minimum: 3,
     });
 
-    // lte(20) should become maximum: 20 (no exclusiveMaximum needed)
-    expect(props.inclusiveMax).toEqual({
+    expect(props?.inclusiveMax).toEqual({
       type: 'number',
       maximum: 20,
     });

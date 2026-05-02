@@ -5,14 +5,13 @@ import { fixAllRefs, convertToOpenApi3Point0 } from './utils';
 import {
   DEFS_KEY,
   EMPTY_TYPE_KEY,
-  HAS_CONST_KEY,
-  HAS_NULL_KEY,
   PARENT_ADDITIONAL_PROPERTIES_KEY,
   PARENT_HAS_REFS_KEY,
   PARENT_ID_KEY,
   PARENT_METADATA_KEY,
   SELF_REQUIRED_KEY,
   UNWRAP_ROOT_KEY,
+  USES_THREE_POINT_ONE_SYNTAX_KEY,
 } from './const';
 import { isDeepStrictEqual } from 'node:util';
 import { assert } from './assert';
@@ -301,9 +300,7 @@ function cleanupSchema({
   let newSchemaName = oldSchemaName;
   let addedDefs = false;
   let hasRefs = false;
-  let hasNull = false;
-  let hasConst = false;
-  let hasId = false;
+  let usesThreePointOneSyntax = false;
   const defRenames: Record<string, string> = {};
 
   // Clone so we can mutate
@@ -319,14 +316,9 @@ function cleanupSchema({
       delete propertySchema[SELF_REQUIRED_KEY];
     }
 
-    if (HAS_CONST_KEY in propertySchema) {
-      hasConst = Boolean(propertySchema[HAS_CONST_KEY]);
-      delete propertySchema[HAS_CONST_KEY];
-    }
-
-    if (HAS_NULL_KEY in propertySchema) {
-      hasNull = Boolean(propertySchema[HAS_NULL_KEY]);
-      delete propertySchema[HAS_NULL_KEY];
+    if (USES_THREE_POINT_ONE_SYNTAX_KEY in propertySchema) {
+      usesThreePointOneSyntax = Boolean(propertySchema[USES_THREE_POINT_ONE_SYNTAX_KEY]);
+      delete propertySchema[USES_THREE_POINT_ONE_SYNTAX_KEY];
     }
 
     if (PARENT_HAS_REFS_KEY in propertySchema) {
@@ -347,7 +339,6 @@ function cleanupSchema({
       PARENT_ID_KEY in propertySchema &&
       typeof propertySchema[PARENT_ID_KEY] === 'string'
     ) {
-      hasId = true;
       Object.assign(newOpenapiSchema, { id: propertySchema[PARENT_ID_KEY] });
       newSchemaName = propertySchema[PARENT_ID_KEY];
       delete propertySchema[PARENT_ID_KEY];
@@ -448,7 +439,7 @@ function cleanupSchema({
   //
   // This is the default behavior, since nestjs/swagger seems to generate
   // a 3.0 document by default
-  if (version === '3.0') {
+  if (usesThreePointOneSyntax && version === '3.0') {
     // @ts-expect-error TODO: fix this
     newOpenapiSchema = convertToOpenApi3Point0(newOpenapiSchema);
   }
@@ -501,9 +492,7 @@ function fixParameter(
   version: '3.1' | '3.0',
 ) {
   const parameter = deepmerge<typeof parameterInput>({}, parameterInput);
-  let hasId = false;
-  let hasConst = false;
-  let hasNull = false;
+  let usesThreePointOneSyntax = false;
 
   // nestjs seems to move some stuff out of the schema and into the root level of the parameter object 🤷
   if (EMPTY_TYPE_KEY in parameter) {
@@ -529,7 +518,6 @@ function fixParameter(
   }
 
   if (PARENT_ID_KEY in parameter) {
-    hasId = true;
     delete parameter[PARENT_ID_KEY];
   }
 
@@ -552,20 +540,16 @@ function fixParameter(
     }
   }
 
-  if (HAS_NULL_KEY in parameter) {
-    hasNull = true;
-    delete parameter[HAS_NULL_KEY];
-  }
-
-  if (HAS_CONST_KEY in parameter) {
-    hasConst = true;
-    delete parameter[HAS_CONST_KEY];
+  if (USES_THREE_POINT_ONE_SYNTAX_KEY in parameter) {
+    usesThreePointOneSyntax = Boolean(parameter[USES_THREE_POINT_ONE_SYNTAX_KEY]);
+    delete parameter[USES_THREE_POINT_ONE_SYNTAX_KEY];
   }
 
   if (
     version === '3.0' &&
     'schema' in parameter &&
-    parameter.schema
+    parameter.schema &&
+    usesThreePointOneSyntax
   ) {
     // @ts-expect-error TODO: fix this
     parameter.schema = convertToOpenApi3Point0(parameter.schema);
