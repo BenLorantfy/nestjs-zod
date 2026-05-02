@@ -317,7 +317,9 @@ function cleanupSchema({
     }
 
     if (USES_THREE_POINT_ONE_SYNTAX_KEY in propertySchema) {
-      usesThreePointOneSyntax = Boolean(propertySchema[USES_THREE_POINT_ONE_SYNTAX_KEY]);
+      usesThreePointOneSyntax = Boolean(
+        propertySchema[USES_THREE_POINT_ONE_SYNTAX_KEY],
+      );
       delete propertySchema[USES_THREE_POINT_ONE_SYNTAX_KEY];
     }
 
@@ -541,7 +543,9 @@ function fixParameter(
   }
 
   if (USES_THREE_POINT_ONE_SYNTAX_KEY in parameter) {
-    usesThreePointOneSyntax = Boolean(parameter[USES_THREE_POINT_ONE_SYNTAX_KEY]);
+    usesThreePointOneSyntax = Boolean(
+      parameter[USES_THREE_POINT_ONE_SYNTAX_KEY],
+    );
     delete parameter[USES_THREE_POINT_ONE_SYNTAX_KEY];
   }
 
