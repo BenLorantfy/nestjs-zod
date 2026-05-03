@@ -4,6 +4,7 @@ import {
   Controller,
   Get,
   Module,
+  Param,
   Post,
   Query,
   Type,
@@ -28,6 +29,8 @@ import request from 'supertest';
 import { setupApp } from '../testUtils';
 import { ZodSerializerDto } from '../serializer';
 import { ZodResponse } from '../response';
+import { Spectral } from '@stoplight/spectral-core';
+import { oas } from '@stoplight/spectral-rulesets';
 
 beforeEach(() => {
   z.globalRegistry.clear();
@@ -96,6 +99,7 @@ describe('basic request body', () => {
       }),
     );
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -137,6 +141,7 @@ describe('basic query params', () => {
       },
     ]);
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -177,6 +182,7 @@ describe('unions', () => {
     });
 
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 
   test('v3', async () => {
@@ -215,6 +221,7 @@ describe('unions', () => {
     });
 
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -267,6 +274,7 @@ describe('intersections', () => {
       }),
     );
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 
   test('v3', async () => {
@@ -302,6 +310,7 @@ describe('intersections', () => {
       required: ['numPages'],
     });
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -331,6 +340,7 @@ describe('basic nullable fields', () => {
       nullable: true,
     });
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -364,6 +374,7 @@ describe('issue#349', () => {
       nullable: true,
     });
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 
   test('keeps nullable referenced schema valid in OpenAPI 3.0 for query parameters', async () => {
@@ -406,6 +417,7 @@ describe('issue#349', () => {
       },
     ]);
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 
   test('marks parent anyOf schema nullable for multi-variant unions', async () => {
@@ -442,6 +454,7 @@ describe('issue#349', () => {
       nullable: true,
     });
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -474,6 +487,7 @@ test('nullable fields in referenced schema', async () => {
     nullable: true,
   });
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 describe('issue#313', () => {
@@ -507,6 +521,7 @@ describe('issue#313', () => {
       example: 'John',
     });
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -567,6 +582,7 @@ test('nullable fields in openapi 3.1', async () => {
     ],
   });
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
 
   // Alternatively, the user can leave the version on the OpenAPI document
   // unchanged (in which case it seems nestjs defaults to 3.0), but set the
@@ -600,6 +616,7 @@ test('nullable fields in openapi 3.1', async () => {
     ],
   });
   expect(JSON.stringify(doc2)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc2, '3.1')).toHaveLength(0);
 });
 
 describe('optional fields', () => {
@@ -636,6 +653,7 @@ describe('optional fields', () => {
       },
     });
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -708,6 +726,7 @@ describe('arrays', () => {
       }),
     );
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -768,6 +787,7 @@ describe('direct array schemas', () => {
         ),
       ).toEqual('#/components/schemas/BookListDto');
       expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
     },
   );
 });
@@ -824,6 +844,7 @@ test('named schemas', async () => {
   expect(
     get(doc, 'paths./.post.responses.200.content.application/json.schema.$ref'),
   ).toEqual('#/components/schemas/Book');
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 test('with nested named schema', async () => {
@@ -897,6 +918,7 @@ test('with nested named schema', async () => {
       },
     }),
   );
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 test('named output schemas', async () => {
@@ -950,6 +972,7 @@ test('named output schemas', async () => {
   expect(get(doc, 'components.schemas.Book2_Output.id')).toEqual(
     'Book2_Output',
   );
+  expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
 });
 
 test('output schemas with named sub-schemas', async () => {
@@ -997,6 +1020,7 @@ test('output schemas with named sub-schemas', async () => {
   expect(get(doc, 'components.schemas.Author908908290384_Output.id')).toEqual(
     'Author908908290384_Output',
   );
+  expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
 });
 
 test('properly adds sub-schemas for array schemas', async () => {
@@ -1025,6 +1049,7 @@ test('properly adds sub-schemas for array schemas', async () => {
   expect(get(doc, 'components.schemas.BookDto_Output.items.$ref')).toEqual(
     '#/components/schemas/Author3459835601_Output',
   );
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 describe('issue#304 - id and title for array schemas', () => {
@@ -1069,6 +1094,7 @@ describe('issue#304 - id and title for array schemas', () => {
     expect(get(doc, 'components.schemas.BookList_Output.title')).toEqual(
       'BookList',
     );
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
   });
 });
 
@@ -1101,6 +1127,7 @@ describe('issue#359', () => {
     for (const schemaName of Object.keys(doc.components!.schemas!)) {
       expect(doc.components!.schemas![schemaName]).not.toHaveProperty('id');
     }
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -1141,6 +1168,7 @@ test('query param union', async () => {
     },
   ]);
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 test('query param with nested named schema', async () => {
@@ -1191,6 +1219,7 @@ test('query param with nested named schema', async () => {
     },
   ]);
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 test('removes -parent-id from query param', async () => {
@@ -1214,6 +1243,7 @@ test('removes -parent-id from query param', async () => {
 
   const doc = await getSwaggerDoc(BookController);
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 test('allows mixing class-validator and zod schemas', async () => {
@@ -1278,6 +1308,7 @@ test('allows mixing class-validator and zod schemas', async () => {
     ),
   ).toEqual('#/components/schemas/FruitDto');
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 test('throws an error if a zod schema name conflicts with a class-validator schema name', async () => {
@@ -1479,6 +1510,7 @@ test('allows using the same schema as a root DTO and a nested DTO', async () => 
     }),
   );
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 test('recursive schemas', async () => {
@@ -1523,6 +1555,7 @@ test('recursive schemas', async () => {
     get(doc, 'paths./.post.requestBody.content.application/json.schema.$ref'),
   ).toEqual('#/components/schemas/NodeDto');
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 test('recursive named schemas', async () => {
@@ -1572,6 +1605,7 @@ test('recursive named schemas', async () => {
     get(doc, 'paths./.post.requestBody.content.application/json.schema.$ref'),
   ).toEqual('#/components/schemas/Node');
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
 });
 
 test('mutually recursive schemas', async () => {
@@ -1632,6 +1666,7 @@ test('mutually recursive schemas', async () => {
     get(doc, 'paths./.post.requestBody.content.application/json.schema.$ref'),
   ).toEqual('#/components/schemas/UserDto');
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 test('mutually recursive named schemas', async () => {
@@ -1703,6 +1738,7 @@ test('mutually recursive named schemas', async () => {
     get(doc, 'paths./.post.requestBody.content.application/json.schema.$ref'),
   ).toEqual('#/components/schemas/User');
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
 });
 
 test('recursive unnamed sub-schemas', async () => {
@@ -1811,6 +1847,7 @@ test('recursive unnamed sub-schemas', async () => {
     ),
   ).toEqual('#/components/schemas/DogPersonDto');
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 test('recursive unnamed sub-schema with record', async () => {
@@ -1863,9 +1900,6 @@ test('recursive unnamed sub-schema with record', async () => {
         },
         children: {
           type: 'object',
-          propertyNames: {
-            type: 'string',
-          },
           additionalProperties: {
             $ref: '#/components/schemas/DogPersonDto__schema0',
           },
@@ -1881,6 +1915,7 @@ test('recursive unnamed sub-schema with record', async () => {
     ),
   ).toEqual('#/components/schemas/DogPersonDto');
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 });
 
 test('throws an error if trying to use recursive schemas in parameters', async () => {
@@ -2023,6 +2058,7 @@ test('add title metadata', async () => {
     },
   });
   expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
 });
 
 describe('issue#187', () => {
@@ -2084,6 +2120,7 @@ describe('issue#187', () => {
       ),
     ).toEqual('#/components/schemas/Thing');
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 
   test('correctly reuses schema when used directly as an Output DTO and when used as a sub-schema', async () => {
@@ -2178,6 +2215,7 @@ describe('issue#187', () => {
       ),
     ).toEqual('#/components/schemas/Thing2_Output');
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 
   test('correctly reuses empty schema when used directly as a DTO and when used as a sub-schema', async () => {
@@ -2235,6 +2273,7 @@ describe('issue#187', () => {
       ),
     ).toEqual('#/components/schemas/EmptyObject');
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -2299,6 +2338,7 @@ describe('issue#188', () => {
         type: 'object',
       },
     });
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -2384,6 +2424,8 @@ describe('issue#196 - const support', () => {
       },
     ]);
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+    expect((await getOpenApiErrors(doc, '3.0')).length).toBeGreaterThan(0);
   });
 
   // OpenAPI 3.0 does not support const syntax, so we should use enum syntax
@@ -2443,6 +2485,7 @@ describe('issue#196 - const support', () => {
       },
     ]);
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -2482,7 +2525,7 @@ describe('issue#220', () => {
 
       @Get('books/:id')
       @ZodResponse({ type: Book })
-      async getBook() {
+      async getBook(@Param('id') _id: string) {
         return {} as any;
       }
     }
@@ -2525,6 +2568,7 @@ describe('issue#220', () => {
     );
 
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
   });
 });
 
@@ -2604,6 +2648,7 @@ describe('issue#342', () => {
     ).toEqual([false]);
 
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -2650,6 +2695,7 @@ describe('issue#208', () => {
       },
     ]);
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -2693,6 +2739,7 @@ describe('issue#154 - sets required field correctly for query parameters', () =>
       },
     ]);
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 
   it('required and optional object query params', async () => {
@@ -2754,6 +2801,7 @@ describe('issue#154 - sets required field correctly for query parameters', () =>
       },
     ]);
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 
   it('required and optional object query params with optional properties', async () => {
@@ -2813,6 +2861,7 @@ describe('issue#154 - sets required field correctly for query parameters', () =>
       },
     ]);
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -2847,6 +2896,7 @@ describe('issue#347', () => {
       'Schema description',
     );
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   });
 });
 
@@ -2873,7 +2923,7 @@ describe('issue#350', () => {
       }
     }
 
-    const doc = await getSwaggerDoc(QueueController);
+    const doc = await getSwaggerDoc(QueueController, { version: '3.1' });
 
     expect(
       get(
@@ -2888,6 +2938,187 @@ describe('issue#350', () => {
       ),
     ).toEqual('#/components/schemas/QueueName');
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+  });
+});
+
+describe('issue#366 - propertyNames and exclusiveMinimum/Maximum in openapi 3.0', () => {
+  it('removes propertyNames from z.record() schemas for OpenAPI 3.0', async () => {
+    class RecordDto extends createZodDto(
+      z.object({
+        data: z.record(z.string(), z.number()),
+      }),
+    ) {}
+
+    @Controller()
+    class RecordController {
+      @Post()
+      create(@Body() body: RecordDto) {
+        return body;
+      }
+    }
+
+    const app = await createApp(RecordController);
+    const doc = cleanupOpenApiDoc(
+      SwaggerModule.createDocument(
+        app,
+        new DocumentBuilder().setOpenAPIVersion('3.0.0').build(),
+      ),
+    );
+
+    const dataSchema = get(doc, 'components.schemas.RecordDto.properties.data');
+    expect(dataSchema).not.toHaveProperty('propertyNames');
+    expect(dataSchema).toEqual({
+      type: 'object',
+      additionalProperties: { type: 'number' },
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+  });
+
+  it('converts exclusiveMinimum/Maximum from number to boolean for OpenAPI 3.0', async () => {
+    class BoundsDto extends createZodDto(
+      z.object({
+        exclusiveMin: z.number().gt(5),
+        exclusiveMax: z.number().lt(10),
+        inclusiveMin: z.number().gte(3),
+        inclusiveMax: z.number().lte(20),
+      }),
+    ) {}
+
+    @Controller()
+    class BoundsController {
+      @Post()
+      create(@Body() body: BoundsDto) {
+        return body;
+      }
+    }
+
+    const app = await createApp(BoundsController);
+    const doc = cleanupOpenApiDoc(
+      SwaggerModule.createDocument(
+        app,
+        new DocumentBuilder().setOpenAPIVersion('3.0.0').build(),
+      ),
+    );
+
+    const props = get(doc, 'components.schemas.BoundsDto.properties');
+
+    expect(props?.exclusiveMin).toEqual({
+      type: 'number',
+      minimum: 5,
+      exclusiveMinimum: true,
+    });
+
+    expect(props?.exclusiveMax).toEqual({
+      type: 'number',
+      maximum: 10,
+      exclusiveMaximum: true,
+    });
+
+    expect(props?.inclusiveMin).toEqual({
+      type: 'number',
+      minimum: 3,
+    });
+
+    expect(props?.inclusiveMax).toEqual({
+      type: 'number',
+      maximum: 20,
+    });
+
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+  });
+
+  it('preserves propertyNames in OpenAPI 3.1', async () => {
+    class RecordDto extends createZodDto(
+      z.object({
+        data: z.record(z.string(), z.number()),
+      }),
+    ) {}
+
+    @Controller()
+    class RecordController {
+      @Post()
+      create(@Body() body: RecordDto) {
+        return body;
+      }
+    }
+
+    const app = await createApp(RecordController);
+    const doc = cleanupOpenApiDoc(
+      SwaggerModule.createDocument(
+        app,
+        new DocumentBuilder().setOpenAPIVersion('3.1.1').build(),
+      ),
+    );
+
+    const dataSchema = get(doc, 'components.schemas.RecordDto.properties.data');
+    expect(dataSchema).toHaveProperty('propertyNames');
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(1);
+  });
+
+  it('preserves exclusiveMinimum as number in OpenAPI 3.1', async () => {
+    class BoundsDto extends createZodDto(
+      z.object({
+        value: z.number().gt(5),
+      }),
+    ) {}
+
+    @Controller()
+    class BoundsController {
+      @Post()
+      create(@Body() body: BoundsDto) {
+        return body;
+      }
+    }
+
+    const app = await createApp(BoundsController);
+    const doc = cleanupOpenApiDoc(
+      SwaggerModule.createDocument(
+        app,
+        new DocumentBuilder().setOpenAPIVersion('3.1.1').build(),
+      ),
+    );
+
+    const valueSchema = get(
+      doc,
+      'components.schemas.BoundsDto.properties.value',
+    );
+    expect(valueSchema).toEqual({
+      type: 'number',
+      exclusiveMinimum: 5,
+    });
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(1);
+  });
+});
+
+describe('issue#368', () => {
+  test('prefix removed from strict objects', async () => {
+    const Schema = z
+      .object({
+        name: z.string(),
+      })
+      .strict();
+
+    class Dto extends createZodDto(Schema) {}
+
+    @Controller()
+    class ApiController {
+      constructor() {}
+
+      @Get()
+      createBook(@Query() _: Dto) {
+        throw new Error();
+      }
+    }
+
+    const doc = await getSwaggerDoc(ApiController);
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
   });
 });
 
@@ -3175,4 +3406,17 @@ function ctx(params: { version: string; cleanUp?: boolean }) {
     ...params,
     ctx: `${params.version}${params.cleanUp ? ` - cleaned` : ''}`,
   };
+}
+
+async function getOpenApiErrors(doc: object, version: '3.0' | '3.1') {
+  const versionedDoc = {
+    ...doc,
+    openapi: version === '3.0' ? '3.0.0' : '3.1.0',
+  };
+
+  const spectral = new Spectral();
+  // @ts-expect-error - FIXME
+  spectral.setRuleset(oas);
+  const results = await spectral.run(versionedDoc);
+  return results.filter((r) => r.severity === 0);
 }
