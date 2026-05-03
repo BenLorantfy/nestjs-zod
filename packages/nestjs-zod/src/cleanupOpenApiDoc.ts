@@ -315,7 +315,10 @@ function cleanupSchema({
     if (SELF_REQUIRED_KEY in propertySchema) {
       // @nestjs/swagger v7 has a bug where `required` is not set properly when
       // one of the parameters is an optional object
-      if (!propertySchema[SELF_REQUIRED_KEY] && Array.isArray(newOpenapiSchema.required)) {
+      if (
+        !propertySchema[SELF_REQUIRED_KEY] &&
+        Array.isArray(newOpenapiSchema.required)
+      ) {
         const idx = newOpenapiSchema.required.indexOf(propertyName);
         if (idx !== -1) {
           newOpenapiSchema.required.splice(idx, 1);

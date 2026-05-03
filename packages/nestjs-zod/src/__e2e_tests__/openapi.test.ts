@@ -3124,42 +3124,41 @@ describe('issue#368', () => {
 });
 
 describe('issue#371 - optional object properties in @nestjs/swagger version 7', () => {
-  test(
-    'does not include optional object as a required field',
-    async () => {
-      class BodyDto extends createZodDto(
-        z.object({
-          name: z.string(),
-          filter: z
-            .object({
-              age: z.number(),
-            })
-            .optional(),
-        }),
-      ) {}
+  test('does not include optional object as a required field', async () => {
+    class BodyDto extends createZodDto(
+      z.object({
+        name: z.string(),
+        filter: z
+          .object({
+            age: z.number(),
+          })
+          .optional(),
+      }),
+    ) {}
 
-      @Controller()
-      class TestController {
-        constructor() {}
+    @Controller()
+    class TestController {
+      constructor() {}
 
-        @Post()
-        create(@Body() _body: BodyDto) {
-          return {};
-        }
+      @Post()
+      create(@Body() _body: BodyDto) {
+        return {};
       }
+    }
 
-      const doc = await getSwaggerDoc(TestController, {
-        swaggerVersion: '7',
-      });
+    const doc = await getSwaggerDoc(TestController, {
+      swaggerVersion: '7',
+    });
 
-      expect(get(doc, 'components.schemas.BodyDto.required')).toEqual(['name']);
-      expect(get(doc, 'components.schemas.BodyDto.properties.filter')).not.toHaveProperty('selfRequired');
-      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(get(doc, 'components.schemas.BodyDto.required')).toEqual(['name']);
+    expect(
+      get(doc, 'components.schemas.BodyDto.properties.filter'),
+    ).not.toHaveProperty('selfRequired');
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
 
-      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
-      expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
-    },
-  );
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+  });
 });
 
 async function createApp(controllerClass: Type<unknown>) {
@@ -3191,7 +3190,9 @@ async function getSwaggerDoc(
 ) {
   const app = await createApp(controllerClass);
 
-  const doc = (swaggerVersion === '7' ? SwaggerModuleV7 : SwaggerModule).createDocument(app, new DocumentBuilder().build());
+  const doc = (
+    swaggerVersion === '7' ? SwaggerModuleV7 : SwaggerModule
+  ).createDocument(app, new DocumentBuilder().build());
   if (cleanUp) {
     // @ts-expect-error - FIXME
     return cleanupOpenApiDoc(doc, { version });
