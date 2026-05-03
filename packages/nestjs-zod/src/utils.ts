@@ -97,6 +97,22 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
         delete s.const;
       }
 
+      // `propertyNames` is not valid in OpenAPI 3.0
+      if ('propertyNames' in s) {
+        delete s.propertyNames;
+      }
+
+      // In JSON Schema 2020-12, `exclusiveMinimum` and `exclusiveMaximum` are
+      // numbers.  In OpenAPI 3.0, they are booleans alongside `minimum`/`maximum`.
+      if (typeof s.exclusiveMinimum === 'number') {
+        s.minimum = s.exclusiveMinimum;
+        s.exclusiveMinimum = true;
+      }
+      if (typeof s.exclusiveMaximum === 'number') {
+        s.maximum = s.exclusiveMaximum;
+        s.exclusiveMaximum = true;
+      }
+
       return s;
     },
     {
