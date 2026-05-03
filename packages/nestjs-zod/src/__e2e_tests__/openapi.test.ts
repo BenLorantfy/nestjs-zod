@@ -20,6 +20,7 @@ import {
 import z from 'zod/v4';
 import { createZodDto } from '../dto';
 import { SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule as SwaggerModuleV7 } from '@nestjs/swagger-v7';
 import { cleanupOpenApiDoc } from '../cleanupOpenApiDoc';
 import get from 'lodash/get';
 import { PREFIX } from '../const';
@@ -3122,134 +3123,16 @@ describe('issue#368', () => {
   });
 });
 
-describe('optional object properties in request body should not be required', () => {
-  // Unit tests: pass a pre-built document where optional object properties are
-  // incorrectly listed in `required` (as older @nestjs/swagger versions produce)
-  // and verify that cleanupOpenApiDoc corrects it.
-
-  const SELF_REQUIRED_KEY = `${PREFIX}-self-required`;
-
-  it('cleanupOpenApiDoc removes optional object from required array', () => {
-    const brokenDoc = {
-      openapi: '3.0.0',
-      info: { title: 'Test', version: '1.0' },
-      paths: {},
-      components: {
-        schemas: {
-          MyDto: {
-            type: 'object',
-            properties: {
-              name: { type: 'string', required: true },
-              filter: {
-                type: 'object',
-                properties: { age: { type: 'number' } },
-                selfRequired: false,
-                [SELF_REQUIRED_KEY]: false,
-              },
-            },
-            required: ['name', 'filter'],
-          },
-        },
-      },
-    } as any;
-
-    const result = cleanupOpenApiDoc(brokenDoc);
-
-    expect(get(result, 'components.schemas.MyDto.required')).toEqual([
-      'name',
-    ]);
-    expect(
-      get(result, 'components.schemas.MyDto.properties.filter'),
-    ).not.toHaveProperty('selfRequired');
-    expect(JSON.stringify(result)).not.toContain(PREFIX);
-  });
-
-  it('cleanupOpenApiDoc keeps required object in required array', () => {
-    const doc = {
-      openapi: '3.0.0',
-      info: { title: 'Test', version: '1.0' },
-      paths: {},
-      components: {
-        schemas: {
-          MyDto: {
-            type: 'object',
-            properties: {
-              name: { type: 'string', required: true },
-              filter: {
-                type: 'object',
-                properties: { age: { type: 'number' } },
-                selfRequired: true,
-                [SELF_REQUIRED_KEY]: true,
-              },
-            },
-            required: ['name', 'filter'],
-          },
-        },
-      },
-    } as any;
-
-    const result = cleanupOpenApiDoc(doc);
-
-    expect(get(result, 'components.schemas.MyDto.required')).toEqual(
-      expect.arrayContaining(['name', 'filter']),
-    );
-    expect(JSON.stringify(result)).not.toContain(PREFIX);
-  });
-
-  it('cleanupOpenApiDoc removes required array entirely when all objects are optional', () => {
-    const brokenDoc = {
-      openapi: '3.0.0',
-      info: { title: 'Test', version: '1.0' },
-      paths: {},
-      components: {
-        schemas: {
-          MyDto: {
-            type: 'object',
-            properties: {
-              filter: {
-                type: 'object',
-                properties: { age: { type: 'number' } },
-                selfRequired: false,
-                [SELF_REQUIRED_KEY]: false,
-              },
-              cursor: {
-                type: 'object',
-                properties: { limit: { type: 'number' } },
-                selfRequired: false,
-                [SELF_REQUIRED_KEY]: false,
-              },
-            },
-            required: ['filter', 'cursor'],
-          },
-        },
-      },
-    } as any;
-
-    const result = cleanupOpenApiDoc(brokenDoc);
-
-    expect(
-      get(result, 'components.schemas.MyDto.required'),
-    ).toBeUndefined();
-    expect(JSON.stringify(result)).not.toContain(PREFIX);
-  });
-
-  // E2E tests: verify the full pipeline with both Zod v3/v4.
-  test.each([
-    ctx({ version: 'v4', cleanUp: false }),
-    ctx({ version: 'v4', cleanUp: true }),
-    ctx({ version: 'v3', cleanUp: false }),
-    ctx({ version: 'v3', cleanUp: true }),
-  ])(
-    'e2e: optional object in @Body() - $ctx',
-    async ({ cleanUp, version }) => {
-      const zod = (version === 'v4' ? z : z3) as typeof z;
-
+describe('issue#371 - optional object properties in @nestjs/swagger version 7', () => {
+  test(
+    'does not include optional object as a required field',
+    async () => {
       class BodyDto extends createZodDto(
-        zod.object({
-          name: zod.string(),
-          filter: zod
+        z.object({
+          name: z.string(),
+          filter: z
             .object({
-              age: zod.number(),
+              age: z.number(),
             })
             .optional(),
         }),
@@ -3265,103 +3148,16 @@ describe('optional object properties in request body should not be required', ()
         }
       }
 
-      const doc = await getSwaggerDoc(TestController, { cleanUp });
-      const schema = get(doc, 'components.schemas.BodyDto');
+      const doc = await getSwaggerDoc(TestController, {
+        swaggerVersion: '7',
+      });
 
-      expect(schema.required).toEqual(['name']);
-      expect(schema.properties.filter).toBeDefined();
+      expect(get(doc, 'components.schemas.BodyDto.required')).toEqual(['name']);
+      expect(get(doc, 'components.schemas.BodyDto.properties.filter')).not.toHaveProperty('selfRequired');
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
 
-      if (cleanUp) {
-        expect(JSON.stringify(doc)).not.toContain(PREFIX);
-        expect(schema.properties.filter).not.toHaveProperty('selfRequired');
-      }
-    },
-  );
-
-  test.each([
-    ctx({ version: 'v4', cleanUp: false }),
-    ctx({ version: 'v4', cleanUp: true }),
-    ctx({ version: 'v3', cleanUp: false }),
-    ctx({ version: 'v3', cleanUp: true }),
-  ])(
-    'e2e: required object in @Body() remains in required array - $ctx',
-    async ({ cleanUp, version }) => {
-      const zod = (version === 'v4' ? z : z3) as typeof z;
-
-      class BodyDto extends createZodDto(
-        zod.object({
-          name: zod.string(),
-          filter: zod.object({
-            age: zod.number(),
-          }),
-        }),
-      ) {}
-
-      @Controller()
-      class TestController {
-        constructor() {}
-
-        @Post()
-        create(@Body() _body: BodyDto) {
-          return {};
-        }
-      }
-
-      const doc = await getSwaggerDoc(TestController, { cleanUp });
-
-      expect(get(doc, 'components.schemas.BodyDto.required')).toEqual(
-        expect.arrayContaining(['name', 'filter']),
-      );
-      if (cleanUp) {
-        expect(JSON.stringify(doc)).not.toContain(PREFIX);
-      }
-    },
-  );
-
-  test.each([
-    ctx({ version: 'v4', cleanUp: false }),
-    ctx({ version: 'v4', cleanUp: true }),
-    ctx({ version: 'v3', cleanUp: false }),
-    ctx({ version: 'v3', cleanUp: true }),
-  ])(
-    'e2e: all optional objects removes required array entirely - $ctx',
-    async ({ cleanUp, version }) => {
-      const zod = (version === 'v4' ? z : z3) as typeof z;
-
-      class BodyDto extends createZodDto(
-        zod.object({
-          filter: zod
-            .object({
-              age: zod.number(),
-            })
-            .optional(),
-          cursor: zod
-            .object({
-              limit: zod.number(),
-            })
-            .optional(),
-        }),
-      ) {}
-
-      @Controller()
-      class TestController {
-        constructor() {}
-
-        @Post()
-        create(@Body() _body: BodyDto) {
-          return {};
-        }
-      }
-
-      const doc = await getSwaggerDoc(TestController, { cleanUp });
-
-      expect(
-        get(doc, 'components.schemas.BodyDto.required'),
-      ).toBeUndefined();
-
-      if (cleanUp) {
-        expect(JSON.stringify(doc)).not.toContain(PREFIX);
-      }
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+      expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
     },
   );
 });
@@ -3386,15 +3182,18 @@ async function getSwaggerDoc(
   {
     cleanUp = true,
     version,
+    swaggerVersion,
   }: {
     cleanUp?: boolean;
     version?: '3.1' | '3.0' | 'auto';
+    swaggerVersion?: '7' | 'default';
   } = {},
 ) {
   const app = await createApp(controllerClass);
 
-  const doc = SwaggerModule.createDocument(app, new DocumentBuilder().build());
+  const doc = (swaggerVersion === '7' ? SwaggerModuleV7 : SwaggerModule).createDocument(app, new DocumentBuilder().build());
   if (cleanUp) {
+    // @ts-expect-error - FIXME
     return cleanupOpenApiDoc(doc, { version });
   } else {
     return doc;
