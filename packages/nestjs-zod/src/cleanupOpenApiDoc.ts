@@ -549,6 +549,10 @@ function fixParameter(
     delete parameter[USES_THREE_POINT_ONE_SYNTAX_KEY];
   }
 
+  if (PARENT_ADDITIONAL_PROPERTIES_KEY in parameter) {
+    delete parameter[PARENT_ADDITIONAL_PROPERTIES_KEY];
+  }
+
   if (
     version === '3.0' &&
     'schema' in parameter &&

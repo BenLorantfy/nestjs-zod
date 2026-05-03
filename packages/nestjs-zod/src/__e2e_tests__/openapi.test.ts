@@ -3095,6 +3095,33 @@ describe('issue#366 - propertyNames and exclusiveMinimum/Maximum in openapi 3.0'
   });
 });
 
+describe('issue#368', () => {
+  test('prefix removed from strict objects', async () => {
+    const Schema = z
+      .object({
+        name: z.string(),
+      })
+      .strict();
+
+    class Dto extends createZodDto(Schema) {}
+
+    @Controller()
+    class ApiController {
+      constructor() {}
+
+      @Get()
+      createBook(@Query() _: Dto) {
+        throw new Error();
+      }
+    }
+
+    const doc = await getSwaggerDoc(ApiController);
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+  });
+});
+
 async function createApp(controllerClass: Type<unknown>) {
   @Module({
     imports: [],
