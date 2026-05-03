@@ -3117,6 +3117,8 @@ describe('issue#368', () => {
 
     const doc = await getSwaggerDoc(ApiController);
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
   });
 });
 
