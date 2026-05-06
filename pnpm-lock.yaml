@@ -56,10 +56,10 @@ importers:
         version: 10.0.1(eslint@10.0.0(jiti@2.7.0))
       '@nestjs/cli':
         specifier: ^11.0.16
-        version: 11.0.16(@swc/cli@0.7.10(@swc/core@1.15.33)(chokidar@4.0.3))(@swc/core@1.15.33)(@types/node@25.2.3)(prettier@3.8.1)
+        version: 11.0.16(@swc/cli@0.7.10(@swc/core@1.15.33)(chokidar@4.0.3))(@swc/core@1.15.33)(@types/node@25.2.3)(prettier@3.8.3)
       '@nestjs/schematics':
         specifier: ^11.1.0
-        version: 11.1.0(chokidar@4.0.3)(prettier@3.8.1)(typescript@5.9.3)
+        version: 11.1.0(chokidar@4.0.3)(prettier@3.8.3)(typescript@5.9.3)
       '@nestjs/testing':
         specifier: ^11.1.12
         version: 11.1.12(@nestjs/common@11.1.5(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.5)(@nestjs/platform-express@11.1.5)
@@ -92,7 +92,7 @@ importers:
         version: 10.1.8(eslint@10.0.0(jiti@2.7.0))
       eslint-plugin-prettier:
         specifier: ^5.5.5
-        version: 5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.0.0(jiti@2.7.0)))(eslint@10.0.0(jiti@2.7.0))(prettier@3.8.1)
+        version: 5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.0.0(jiti@2.7.0)))(eslint@10.0.0(jiti@2.7.0))(prettier@3.8.3)
       globals:
         specifier: ^17.3.0
         version: 17.3.0
@@ -100,8 +100,8 @@ importers:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@25.2.3)(ts-node@10.9.2(@swc/core@1.15.33)(@types/node@25.2.3)(typescript@5.9.3))
       prettier:
-        specifier: ^3.8.1
-        version: 3.8.1
+        specifier: ^3.8.3
+        version: 3.8.3
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -153,10 +153,10 @@ importers:
     devDependencies:
       '@nestjs/cli':
         specifier: ^11.0.16
-        version: 11.0.16(@swc/cli@0.7.10(@swc/core@1.15.33)(chokidar@4.0.3))(@swc/core@1.15.33)(@types/node@25.2.3)(prettier@3.8.1)
+        version: 11.0.16(@swc/cli@0.7.10(@swc/core@1.15.33)(chokidar@4.0.3))(@swc/core@1.15.33)(@types/node@25.2.3)(prettier@3.8.3)
       '@nestjs/schematics':
         specifier: ^11.1.0
-        version: 11.1.0(chokidar@4.0.3)(prettier@3.8.1)(typescript@5.9.3)
+        version: 11.1.0(chokidar@4.0.3)(prettier@3.8.3)(typescript@5.9.3)
       '@nestjs/testing':
         specifier: ^11.1.12
         version: 11.1.12(@nestjs/common@11.1.5(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.5)(@nestjs/platform-express@11.1.5)
@@ -189,13 +189,13 @@ importers:
         version: 10.1.8(eslint@10.0.0(jiti@2.7.0))
       eslint-plugin-prettier:
         specifier: ^5.5.5
-        version: 5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.0.0(jiti@2.7.0)))(eslint@10.0.0(jiti@2.7.0))(prettier@3.8.1)
+        version: 5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.0.0(jiti@2.7.0)))(eslint@10.0.0(jiti@2.7.0))(prettier@3.8.3)
       jest:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@25.2.3)(ts-node@10.9.2(@swc/core@1.15.33)(@types/node@25.2.3)(typescript@5.9.3))
       prettier:
-        specifier: ^3.8.1
-        version: 3.8.1
+        specifier: ^3.8.3
+        version: 3.8.3
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -256,10 +256,10 @@ importers:
         version: 10.0.1(eslint@10.0.0(jiti@2.7.0))
       '@nestjs/cli':
         specifier: ^11.0.16
-        version: 11.0.16(@swc/cli@0.7.10(@swc/core@1.15.33)(chokidar@4.0.3))(@swc/core@1.15.33)(@types/node@25.2.3)(prettier@3.8.1)
+        version: 11.0.16(@swc/cli@0.7.10(@swc/core@1.15.33)(chokidar@4.0.3))(@swc/core@1.15.33)(@types/node@25.2.3)(prettier@3.8.3)
       '@nestjs/schematics':
         specifier: ^11.1.0
-        version: 11.1.0(chokidar@4.0.3)(prettier@3.8.1)(typescript@5.9.3)
+        version: 11.1.0(chokidar@4.0.3)(prettier@3.8.3)(typescript@5.9.3)
       '@nestjs/testing':
         specifier: ^11.1.12
         version: 11.1.12(@nestjs/common@11.1.5(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.5)(@nestjs/platform-express@11.1.5)
@@ -289,13 +289,13 @@ importers:
         version: 10.1.8(eslint@10.0.0(jiti@2.7.0))
       eslint-plugin-prettier:
         specifier: ^5.5.5
-        version: 5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.0.0(jiti@2.7.0)))(eslint@10.0.0(jiti@2.7.0))(prettier@3.8.1)
+        version: 5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.0.0(jiti@2.7.0)))(eslint@10.0.0(jiti@2.7.0))(prettier@3.8.3)
       globals:
         specifier: ^17.3.0
         version: 17.3.0
       prettier:
-        specifier: ^3.8.1
-        version: 3.8.1
+        specifier: ^3.8.3
+        version: 3.8.3
       source-map-support:
         specifier: ^0.5.21
         version: 0.5.21
@@ -406,8 +406,8 @@ importers:
         specifier: ^4.17.23
         version: 4.17.23
       prettier:
-        specifier: ^3.8.1
-        version: 3.8.1
+        specifier: ^3.8.3
+        version: 3.8.3
       reflect-metadata:
         specifier: ^0.2.0
         version: 0.2.2
@@ -5003,8 +5003,8 @@ packages:
     resolution: {integrity: sha512-SxToR7P8Y2lWmv/kTzVLC1t/GDI2WGjMwNhLLE9qtH8Q13C+aEmuRlzDst4Up4s0Wc8sF2M+J57iB3cMLqftfg==}
     engines: {node: '>=6.0.0'}
 
-  prettier@3.8.1:
-    resolution: {integrity: sha512-UOnG6LftzbdaHZcKoPFtOcCKztrQ57WkHDeRD9t/PTQtmT0NHSeWWepj6pS0z/N7+08BHFDQVUrfmfMRcZwbMg==}
+  prettier@3.8.3:
+    resolution: {integrity: sha512-7igPTM53cGHMW8xWuVTydi2KO233VFiTNyF5hLJqpilHfmn8C8gPf+PS7dUT64YcXFbiMGZxS9pCSxL/Dxm/Jw==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -7802,13 +7802,13 @@ snapshots:
       '@tybys/wasm-util': 0.10.2
     optional: true
 
-  '@nestjs/cli@11.0.16(@swc/cli@0.7.10(@swc/core@1.15.33)(chokidar@4.0.3))(@swc/core@1.15.33)(@types/node@25.2.3)(prettier@3.8.1)':
+  '@nestjs/cli@11.0.16(@swc/cli@0.7.10(@swc/core@1.15.33)(chokidar@4.0.3))(@swc/core@1.15.33)(@types/node@25.2.3)(prettier@3.8.3)':
     dependencies:
       '@angular-devkit/core': 19.2.19(chokidar@4.0.3)
       '@angular-devkit/schematics': 19.2.19(chokidar@4.0.3)
       '@angular-devkit/schematics-cli': 19.2.19(@types/node@25.2.3)(chokidar@4.0.3)
       '@inquirer/prompts': 7.10.1(@types/node@25.2.3)
-      '@nestjs/schematics': 11.1.0(chokidar@4.0.3)(prettier@3.8.1)(typescript@5.9.3)
+      '@nestjs/schematics': 11.1.0(chokidar@4.0.3)(prettier@3.8.3)(typescript@5.9.3)
       ansis: 4.2.0
       chokidar: 4.0.3
       cli-table3: 0.6.5
@@ -7939,7 +7939,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  '@nestjs/schematics@11.1.0(chokidar@4.0.3)(prettier@3.8.1)(typescript@5.9.3)':
+  '@nestjs/schematics@11.1.0(chokidar@4.0.3)(prettier@3.8.3)(typescript@5.9.3)':
     dependencies:
       '@angular-devkit/core': 19.2.24(chokidar@4.0.3)
       '@angular-devkit/schematics': 19.2.24(chokidar@4.0.3)
@@ -7948,7 +7948,7 @@ snapshots:
       pluralize: 8.0.0
       typescript: 5.9.3
     optionalDependencies:
-      prettier: 3.8.1
+      prettier: 3.8.3
     transitivePeerDependencies:
       - chokidar
 
@@ -9754,10 +9754,10 @@ snapshots:
     dependencies:
       eslint: 10.0.0(jiti@2.7.0)
 
-  eslint-plugin-prettier@5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.0.0(jiti@2.7.0)))(eslint@10.0.0(jiti@2.7.0))(prettier@3.8.1):
+  eslint-plugin-prettier@5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.0.0(jiti@2.7.0)))(eslint@10.0.0(jiti@2.7.0))(prettier@3.8.3):
     dependencies:
       eslint: 10.0.0(jiti@2.7.0)
-      prettier: 3.8.1
+      prettier: 3.8.3
       prettier-linter-helpers: 1.0.1
       synckit: 0.11.12
     optionalDependencies:
@@ -11403,7 +11403,7 @@ snapshots:
     dependencies:
       fast-diff: 1.3.0
 
-  prettier@3.8.1: {}
+  prettier@3.8.3: {}
 
   pretty-bytes@3.0.1:
     dependencies:
