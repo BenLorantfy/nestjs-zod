@@ -277,12 +277,13 @@ function generateJsonSchema(
   // Ensure the key in the $defs object is the same as the id of the schema
   const newDefs: Record<string, JSONSchema.BaseSchema> = {};
   Object.entries($defs || {}).forEach(([defKey, defValue]) => {
-    if (defValue.id) {
-      const newKey = defValue.id || defKey;
-      if (newDefs[newKey]) {
-        throw new Error(`[nestjs-zod] Duplicate id in $defs: ${newKey}`);
+    const effectiveId =
+      defValue.id ?? (defKey.startsWith('__schema') ? undefined : defKey);
+    if (effectiveId) {
+      if (newDefs[effectiveId]) {
+        throw new Error(`[nestjs-zod] Duplicate id in $defs: ${effectiveId}`);
       }
-      newDefs[newKey] = fixRefsToPointById(defValue, $defs);
+      newDefs[effectiveId] = fixRefsToPointById(defValue, $defs);
     } else {
       newDefs[defKey] = fixRefsToPointById(defValue, $defs);
     }
@@ -341,7 +342,9 @@ function fixRefsToPointById(
     (schema) => {
       if (schema.$ref && schema.$ref.startsWith('#/$defs/')) {
         const defKey = schema.$ref.replace('#/$defs/', '');
-        const defId = $defs?.[defKey].id;
+        const defEntry = $defs?.[defKey];
+        const defId =
+          defEntry?.id ?? (!defKey.startsWith('__schema') ? defKey : undefined);
         if (defId) {
           schema.$ref = `#/$defs/${defId}`;
         }

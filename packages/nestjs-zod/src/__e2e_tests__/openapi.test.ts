@@ -2891,6 +2891,47 @@ describe('issue#350', () => {
   });
 });
 
+describe('issue#388 — meta({ id }) enum shared across two DTOs', () => {
+  it('emits the enum once under its meta.id key in components.schemas', async () => {
+    const Status = z.enum(['active', 'inactive']).meta({ id: 'Status' });
+
+    class CreateDto extends createZodDto(z.object({ status: Status })) {}
+
+    class UpdateDto extends createZodDto(z.object({ status: Status })) {}
+
+    @Controller()
+    class MyController {
+      @Post('create')
+      create(@Body() body: CreateDto) {
+        return body;
+      }
+
+      @Post('update')
+      update(@Body() body: UpdateDto) {
+        return body;
+      }
+    }
+
+    const doc = await getSwaggerDoc(MyController);
+
+    // The enum schema must be registered under its meta.id name
+    expect(doc.components?.schemas?.['Status']).toEqual({
+      type: 'string',
+      enum: ['active', 'inactive'],
+    });
+
+    // Both DTOs must reference it by its meta.id name
+    expect(
+      get(doc, 'components.schemas.CreateDto.properties.status.$ref'),
+    ).toEqual('#/components/schemas/Status');
+    expect(
+      get(doc, 'components.schemas.UpdateDto.properties.status.$ref'),
+    ).toEqual('#/components/schemas/Status');
+
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  });
+});
+
 async function createApp(controllerClass: Type<unknown>) {
   @Module({
     imports: [],
