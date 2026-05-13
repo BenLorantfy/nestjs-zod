@@ -328,8 +328,8 @@ importers:
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.0.0(jiti@2.7.0))
       '@golevelup/ts-jest':
-        specifier: ^1.2.1
-        version: 1.2.1
+        specifier: ^3.0.0
+        version: 3.0.0
       '@ibm-cloud/openapi-ruleset':
         specifier: ^1.33.8
         version: 1.33.8
@@ -436,8 +436,8 @@ importers:
   packages/z:
     devDependencies:
       '@golevelup/ts-jest':
-        specifier: ^1.2.1
-        version: 1.2.1
+        specifier: ^3.0.0
+        version: 3.0.0
       '@nestjs/common':
         specifier: ^11.0.6
         version: 11.1.0(class-transformer@0.5.1)(class-validator@0.14.3)(reflect-metadata@0.2.2)(rxjs@7.8.2)
@@ -1530,8 +1530,8 @@ packages:
     resolution: {integrity: sha512-bIZEUzOI1jkhviX2cp5vNyXQc6olzb2ohewQubuYlMXZ2Q/XjBO0x0XhGPvc9fjSIiUN0vw+0hq53BJ4eQSJKQ==}
     engines: {node: ^20.19.0 || ^22.13.0 || >=24}
 
-  '@golevelup/ts-jest@1.2.1':
-    resolution: {integrity: sha512-1LQ6iDkKJve1AifgVNN0C27hUfd6zZ2qiAbK8x9Mvur+sB1YGc8Z70uEJPtyHL/akA8e4IEKZWC8lkKe/WuTlw==}
+  '@golevelup/ts-jest@3.0.0':
+    resolution: {integrity: sha512-ei0cvUKrVv8cJBW6df54yeod8PyzR2LTYG6wJ1xm+213p7HnThw5ShQcRH0/hhhnXnJCLrpmJM7e6fkRjHUF1g==}
 
   '@humanfs/core@0.19.1':
     resolution: {integrity: sha512-5DyQ4+1JEUzejeK1JGICcideyfUbGixgS9jNgex5nqkW+cY7WZhxBigmieN5Qnw9ZosSNVC9KQKyb+GUaGyKUA==}
@@ -7435,7 +7435,7 @@ snapshots:
       '@eslint/core': 1.1.0
       levn: 0.4.1
 
-  '@golevelup/ts-jest@1.2.1': {}
+  '@golevelup/ts-jest@3.0.0': {}
 
   '@humanfs/core@0.19.1': {}
 

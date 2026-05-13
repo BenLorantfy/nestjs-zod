@@ -36,7 +36,7 @@
     "test": "TZ=UTC jest"
   },
   "devDependencies": {
-    "@golevelup/ts-jest": "^1.2.1",
+    "@golevelup/ts-jest": "^3.0.0",
     "@nestjs/common": "^11.0.6",
     "@nestjs/core": "^11.0.6",
     "@nestjs/swagger": "^11.0.3",
