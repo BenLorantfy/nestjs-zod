@@ -78,9 +78,16 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
           if (sole.$ref && Object.keys(sole).length === 1) {
             return { allOf: [sole], nullable: true, ...rest };
           }
+
+          const enumValues = Array.isArray(sole.enum) ? sole.enum : undefined;
           return {
             ...sole,
             ...rest,
+            // We need to add `null` to the `enum` array if it exists and is not
+            // already included, otherwise the schema does not allow `null`
+            // See: https://github.com/OAI/OpenAPI-Specification/issues/1900
+            ...(enumValues &&
+              !enumValues.includes(null) && { enum: [...enumValues, null] }),
             nullable: true,
           };
         }

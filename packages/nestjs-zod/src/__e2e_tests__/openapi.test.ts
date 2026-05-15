@@ -32,6 +32,8 @@ import { ZodSerializerDto } from '../serializer';
 import { ZodResponse } from '../response';
 import { Spectral } from '@stoplight/spectral-core';
 import { oas } from '@stoplight/spectral-rulesets';
+import express from 'express';
+import * as OpenApiValidator from 'express-openapi-validator';
 
 beforeEach(() => {
   z.globalRegistry.clear();
@@ -456,6 +458,48 @@ describe('issue#349', () => {
     });
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
     expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+  });
+});
+
+describe('issue#374', () => {
+  test('adds null literal to enum array when nullable', async () => {
+    class BookDto extends createZodDto(
+      z.object({
+        tag: z.enum(['a', 'b']).nullable(),
+      }),
+    ) {}
+
+    @Controller()
+    class BookController {
+      constructor() {}
+
+      @Post()
+      createBook(@Body() book: BookDto) {
+        return book;
+      }
+    }
+
+    const doc = await getSwaggerDoc(BookController);
+    expect(get(doc, 'components.schemas.BookDto.properties.tag')).toEqual({
+      type: 'string',
+      enum: ['a', 'b', null],
+      nullable: true,
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+
+    await expect(testPayload(doc, { tag: 'a' })).resolves.toHaveProperty(
+      'status',
+      200,
+    );
+    await expect(testPayload(doc, { tag: null })).resolves.toHaveProperty(
+      'status',
+      200,
+    );
+    await expect(testPayload(doc, { tag: 'c' })).resolves.toHaveProperty(
+      'status',
+      400,
+    );
   });
 });
 
@@ -3206,6 +3250,30 @@ function ctx(params: { version: string; cleanUp?: boolean }) {
     ...params,
     ctx: `${params.version}${params.cleanUp ? ` - cleaned` : ''}`,
   };
+}
+
+async function testPayload(doc: unknown, payload: Record<string, unknown>) {
+  const app = express();
+  app.use(express.json());
+  app.use(
+    OpenApiValidator.middleware({
+      // @ts-expect-error - FIXME
+      apiSpec: doc,
+      validateRequests: true,
+    }),
+  );
+  app.post('/', (req, res) => {
+    res.json(req.body);
+  });
+  const errorHandler: express.ErrorRequestHandler = (err, _req, res, _next) => {
+    res.status(err.status || 500).json({
+      message: err.message,
+      errors: err.errors,
+    });
+  };
+  app.use(errorHandler);
+
+  return request(app).post('/').send(payload);
 }
 
 async function getOpenApiErrors(doc: object, version: '3.0' | '3.1') {
