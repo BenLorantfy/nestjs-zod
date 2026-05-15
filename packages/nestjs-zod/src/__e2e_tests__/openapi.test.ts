@@ -488,9 +488,18 @@ describe('issue#374', () => {
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
     expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
 
-    await expect(testPayload(doc, { tag: 'a' })).resolves.toHaveProperty('status', 200);
-    await expect(testPayload(doc, { tag: null })).resolves.toHaveProperty('status', 200);
-    await expect(testPayload(doc, { tag: 'c' })).resolves.toHaveProperty('status', 400);
+    await expect(testPayload(doc, { tag: 'a' })).resolves.toHaveProperty(
+      'status',
+      200,
+    );
+    await expect(testPayload(doc, { tag: null })).resolves.toHaveProperty(
+      'status',
+      200,
+    );
+    await expect(testPayload(doc, { tag: 'c' })).resolves.toHaveProperty(
+      'status',
+      400,
+    );
   });
 });
 
@@ -3243,7 +3252,7 @@ function ctx(params: { version: string; cleanUp?: boolean }) {
   };
 }
 
-async function testPayload(doc: unknown, payload: Record<string,unknown>) {
+async function testPayload(doc: unknown, payload: Record<string, unknown>) {
   const app = express();
   app.use(express.json());
   app.use(
