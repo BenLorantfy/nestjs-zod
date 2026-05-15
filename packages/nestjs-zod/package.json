@@ -80,6 +80,7 @@
     "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
     "express": "^5.2.1",
+    "express-openapi-validator": "^5.6.2",
     "globals": "^17.3.0",
     "jest": "^29.5.0",
     "jiti": "^2.7.0",
