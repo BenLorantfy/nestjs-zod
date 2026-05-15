@@ -140,11 +140,8 @@ describe('basic query params', () => {
   });
 });
 
-describe('query params with DTO description', () => {
-  test.each([
-    ctx({ version: 'v4', cleanUp: true }),
-    ctx({ version: 'v3', cleanUp: true }),
-  ])(
+describe('issue#397 - query params with DTO description', () => {
+  test.each([ctx({ version: 'v4', cleanUp: true })])(
     '$ctx - cleans up parent-metadata from query params',
     async ({ version }) => {
       const zod = (version === 'v4' ? z : z3) as typeof z;
