@@ -212,7 +212,11 @@ const RESPONSE_PARAMTYPE = '1';
 function RequirePassthrough(): MethodDecorator {
   return (target, propertyKey) => {
     const args: Record<string, unknown> =
-      Reflect.getMetadata(ROUTE_ARGS_METADATA, target.constructor, propertyKey) || {};
+      Reflect.getMetadata(
+        ROUTE_ARGS_METADATA,
+        target.constructor,
+        propertyKey,
+      ) || {};
     const hasResponseParam = Object.keys(args).some((key) =>
       key.startsWith(`${RESPONSE_PARAMTYPE}:`),
     );

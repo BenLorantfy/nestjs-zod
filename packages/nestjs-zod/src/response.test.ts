@@ -361,14 +361,14 @@ test('throws error if trying to use .Output version of the DTO with ZodResponse'
   );
 });
 
-describe('issue#398 - enforce `passthrough: true` when using `@Res`', () => { 
+describe('issue#398 - enforce `passthrough: true` when using `@Res`', () => {
   test('throws error if @Res() is used without passthrough: true', () => {
     class BookDto extends createZodDto(
       z.object({
         id: z.string(),
       }),
     ) {}
-  
+
     expect(() => {
       @Controller('books')
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -383,14 +383,14 @@ describe('issue#398 - enforce `passthrough: true` when using `@Res`', () => {
       '[nestjs-zod] @ZodResponse requires the passthrough option to be set (e.g. @Res({ passthrough: true })) when using @Res(). Using @Res() without passthrough bypasses the serialization interceptor.',
     );
   });
-  
+
   test('does not throw if @Res({ passthrough: true }) is used', () => {
     class BookDto extends createZodDto(
       z.object({
         id: z.string(),
       }),
     ) {}
-  
+
     expect(() => {
       @Controller('books')
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -403,5 +403,4 @@ describe('issue#398 - enforce `passthrough: true` when using `@Res`', () => {
       }
     }).not.toThrow();
   });
-
 });
