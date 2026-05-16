@@ -78,9 +78,16 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
           if (sole.$ref && Object.keys(sole).length === 1) {
             return { allOf: [sole], nullable: true, ...rest };
           }
+
+          const enumValues = Array.isArray(sole.enum) ? sole.enum : undefined;
           return {
             ...sole,
             ...rest,
+            // We need to add `null` to the `enum` array if it exists and is not
+            // already included, otherwise the schema does not allow `null`
+            // See: https://github.com/OAI/OpenAPI-Specification/issues/1900
+            ...(enumValues &&
+              !enumValues.includes(null) && { enum: [...enumValues, null] }),
             nullable: true,
           };
         }
@@ -95,6 +102,22 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
       if (typeof s.const !== 'undefined') {
         s.enum = [s.const];
         delete s.const;
+      }
+
+      // `propertyNames` is not valid in OpenAPI 3.0
+      if ('propertyNames' in s) {
+        delete s.propertyNames;
+      }
+
+      // In JSON Schema 2020-12, `exclusiveMinimum` and `exclusiveMaximum` are
+      // numbers.  In OpenAPI 3.0, they are booleans alongside `minimum`/`maximum`.
+      if (typeof s.exclusiveMinimum === 'number') {
+        s.minimum = s.exclusiveMinimum;
+        s.exclusiveMinimum = true;
+      }
+      if (typeof s.exclusiveMaximum === 'number') {
+        s.maximum = s.exclusiveMaximum;
+        s.exclusiveMaximum = true;
       }
 
       return s;
