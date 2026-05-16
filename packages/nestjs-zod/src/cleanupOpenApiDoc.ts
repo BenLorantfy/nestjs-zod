@@ -226,6 +226,33 @@ function registerSchema(
  *
  * Mutates `methodObject`
  */
+
+function rewriteRefs(node: unknown, renames: Record<string, string>): void {
+  if (Array.isArray(node)) {
+    for (const item of node) {
+      rewriteRefs(item, renames);
+    }
+    return;
+  }
+
+  if (node === null || typeof node !== 'object') {
+    return;
+  }
+
+  if ('$ref' in node && typeof node.$ref === 'string') {
+    const oldSchemaName = getSchemaNameFromRef(node.$ref);
+    if (renames[oldSchemaName]) {
+      const newSchemaName = renames[oldSchemaName];
+      node.$ref = node.$ref.replace(`/${oldSchemaName}`, `/${newSchemaName}`);
+    }
+  }
+
+  const obj = node as Record<string, unknown>;
+  for (const value of Object.values(obj)) {
+    rewriteRefs(value, renames);
+  }
+}
+
 function fixRefsInBodies({
   methodObject,
   renames,
@@ -239,16 +266,7 @@ function fixRefsInBodies({
       methodObject.requestBody.content) ||
     {};
   for (const requestBodyObject of Object.values(content)) {
-    if (requestBodyObject.schema && '$ref' in requestBodyObject.schema) {
-      const oldSchemaName = getSchemaNameFromRef(requestBodyObject.schema.$ref);
-      if (renames[oldSchemaName]) {
-        const newSchemaName = renames[oldSchemaName];
-        requestBodyObject.schema.$ref = requestBodyObject.schema.$ref.replace(
-          `/${oldSchemaName}`,
-          `/${newSchemaName}`,
-        );
-      }
-    }
+    rewriteRefs(requestBodyObject.schema, renames);
   }
 
   for (const statusCodeObject of Object.values(methodObject?.responses || {})) {
@@ -258,19 +276,7 @@ function fixRefsInBodies({
         statusCodeObject.content) ||
       {};
     for (const responseBodyObject of Object.values(content)) {
-      if (responseBodyObject.schema && '$ref' in responseBodyObject.schema) {
-        const oldSchemaName = getSchemaNameFromRef(
-          responseBodyObject.schema.$ref,
-        );
-        if (renames[oldSchemaName]) {
-          const newSchemaName = renames[oldSchemaName];
-          responseBodyObject.schema.$ref =
-            responseBodyObject.schema.$ref.replace(
-              `/${oldSchemaName}`,
-              `/${newSchemaName}`,
-            );
-        }
-      }
+      rewriteRefs(responseBodyObject.schema, renames);
     }
   }
 }
