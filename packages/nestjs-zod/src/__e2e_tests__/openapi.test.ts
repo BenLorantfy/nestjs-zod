@@ -3205,6 +3205,51 @@ describe('issue#371 - optional object properties in @nestjs/swagger version 7', 
   });
 });
 
+describe('issue#375', () => {
+  test('rewrites $ref in array-response schema.items to the renamed schema id', async () => {
+    const ItemSchema = z
+      .object({ id: z.string() })
+      .meta({ id: 'Item', title: 'Item' });
+    class ItemDto extends createZodDto(ItemSchema) {}
+
+    @Controller('items')
+    class ItemsController {
+      @Get()
+      @ZodResponse({ type: [ItemDto] })
+      list(): ItemDto[] {
+        return [];
+      }
+
+      @Get(':id')
+      @ZodResponse({ type: ItemDto })
+      getItem(@Param('id') _id: string): ItemDto {
+        return { id: '1' };
+      }
+    }
+
+    const doc = await getSwaggerDoc(ItemsController);
+
+    const schemas = doc.components?.schemas ?? {};
+    expect(schemas).toHaveProperty('Item_Output');
+    expect(schemas).not.toHaveProperty('ItemDto');
+    expect(schemas).not.toHaveProperty('ItemDto_Output');
+
+    const getRef = get(
+      doc,
+      'paths./items/{id}.get.responses.default.content.application/json.schema.$ref',
+    );
+    const listItemsRef = get(
+      doc,
+      'paths./items.get.responses.default.content.application/json.schema.items.$ref',
+    );
+
+    expect(getRef).toBe('#/components/schemas/Item_Output');
+    expect(listItemsRef).toBe('#/components/schemas/Item_Output');
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+  });
+});
+
 async function createApp(controllerClass: Type<unknown>) {
   @Module({
     imports: [],
