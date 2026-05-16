@@ -150,39 +150,38 @@ describe('basic query params', () => {
 
 describe('issue#397', () => {
   test('cleans up description marker', async () => {
-      class QueryParamsDto extends createZodDto(
-        z
-          .object({
-            filter: z.string(),
-          })
-          .describe('My query params'),
-      ) {}
+    class QueryParamsDto extends createZodDto(
+      z
+        .object({
+          filter: z.string(),
+        })
+        .describe('My query params'),
+    ) {}
 
-      @Controller()
-      class BookController {
-        constructor() {}
+    @Controller()
+    class BookController {
+      constructor() {}
 
-        @Get()
-        getBooks(@Query() _query: QueryParamsDto) {
-          return [];
-        }
+      @Get()
+      getBooks(@Query() _query: QueryParamsDto) {
+        return [];
       }
+    }
 
-      const doc = await getSwaggerDoc(BookController, { cleanUp: true });
+    const doc = await getSwaggerDoc(BookController, { cleanUp: true });
 
-      expect(get(doc, 'paths./.get.parameters')).toEqual([
-        {
-          in: 'query',
-          name: 'filter',
-          required: true,
-          schema: {
-            type: 'string',
-          },
+    expect(get(doc, 'paths./.get.parameters')).toEqual([
+      {
+        in: 'query',
+        name: 'filter',
+        required: true,
+        schema: {
+          type: 'string',
         },
-      ]);
-      expect(JSON.stringify(doc)).not.toContain(PREFIX);
-    },
-  );
+      },
+    ]);
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  });
 });
 
 describe('unions', () => {
