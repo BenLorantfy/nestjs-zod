@@ -541,6 +541,14 @@ function fixParameter(
     delete parameter[PARENT_ID_KEY];
   }
 
+  if (PARENT_METADATA_KEY in parameter) {
+    delete parameter[PARENT_METADATA_KEY];
+  }
+
+  if (PARENT_ADDITIONAL_PROPERTIES_KEY in parameter) {
+    delete parameter[PARENT_ADDITIONAL_PROPERTIES_KEY];
+  }
+
   if (PARENT_HAS_REFS_KEY in parameter) {
     delete parameter[PARENT_HAS_REFS_KEY];
 

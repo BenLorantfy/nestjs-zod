@@ -148,6 +148,42 @@ describe('basic query params', () => {
   });
 });
 
+describe('issue#397', () => {
+  test('cleans up description marker', async () => {
+    class QueryParamsDto extends createZodDto(
+      z
+        .object({
+          filter: z.string(),
+        })
+        .describe('My query params'),
+    ) {}
+
+    @Controller()
+    class BookController {
+      constructor() {}
+
+      @Get()
+      getBooks(@Query() _query: QueryParamsDto) {
+        return [];
+      }
+    }
+
+    const doc = await getSwaggerDoc(BookController, { cleanUp: true });
+
+    expect(get(doc, 'paths./.get.parameters')).toEqual([
+      {
+        in: 'query',
+        name: 'filter',
+        required: true,
+        schema: {
+          type: 'string',
+        },
+      },
+    ]);
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+  });
+});
+
 describe('unions', () => {
   test('v4', async () => {
     class BookDto extends createZodDto(
