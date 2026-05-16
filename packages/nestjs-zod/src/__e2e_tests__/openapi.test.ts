@@ -149,7 +149,7 @@ describe('basic query params', () => {
 });
 
 describe('issue#397', () => {
-  test('cleans up markers', async () => {
+  test('cleans up description marker', async () => {
       class QueryParamsDto extends createZodDto(
         z
           .object({
