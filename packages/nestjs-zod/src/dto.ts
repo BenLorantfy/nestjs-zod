@@ -5,14 +5,13 @@ import { assert } from './assert';
 import {
   DEFS_KEY,
   EMPTY_TYPE_KEY,
-  HAS_CONST_KEY,
-  HAS_NULL_KEY,
   PARENT_ADDITIONAL_PROPERTIES_KEY,
   PARENT_HAS_REFS_KEY,
   PARENT_ID_KEY,
   UNWRAP_ROOT_KEY,
   SELF_REQUIRED_KEY,
   PARENT_METADATA_KEY,
+  USES_THREE_POINT_ONE_SYNTAX_KEY,
 } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
@@ -135,7 +134,7 @@ function openApiMetadataFactory({
         $defs,
       };
 
-  const { hasRefs, hasNull, hasConst } = getSchemaMetadata(jsonSchema);
+  const { hasRefs, usesThreePointOneSyntax } = getSchemaMetadata(jsonSchema);
 
   const properties: Record<string, unknown> = {};
   for (const [propertyKey, propertySchema] of Object.entries(
@@ -160,12 +159,8 @@ function openApiMetadataFactory({
       type: propertySchema.type || '',
     };
 
-    if (hasConst) {
-      newPropertySchema[HAS_CONST_KEY] = true;
-    }
-
-    if (hasNull) {
-      newPropertySchema[HAS_NULL_KEY] = true;
+    if (usesThreePointOneSyntax) {
+      newPropertySchema[USES_THREE_POINT_ONE_SYNTAX_KEY] = true;
     }
 
     if (hasRefs) {
@@ -354,25 +349,27 @@ function fixRefsToPointById(
 
 function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
   let hasRefs = false;
-  let hasNull = false;
-  let hasConst = false;
+  let usesThreePointOneSyntax = false;
   walkJsonSchema(jsonSchema, (schema) => {
-    if (schema.type === 'null') {
-      hasNull = true;
+    if (
+      schema.type === 'null' ||
+      schema.const ||
+      schema.id ||
+      'propertyNames' in schema ||
+      typeof schema.exclusiveMinimum === 'number' ||
+      typeof schema.exclusiveMaximum === 'number'
+    ) {
+      usesThreePointOneSyntax = true;
     }
     if (schema.$ref) {
       hasRefs = true;
-    }
-    if (schema.const) {
-      hasConst = true;
     }
     return schema;
   });
 
   return {
     hasRefs,
-    hasNull,
-    hasConst,
+    usesThreePointOneSyntax,
   };
 }
 
