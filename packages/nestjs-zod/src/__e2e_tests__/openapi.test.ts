@@ -140,16 +140,12 @@ describe('basic query params', () => {
   });
 });
 
-describe('issue#397 - query params with DTO description', () => {
-  test.each([ctx({ version: 'v4', cleanUp: true })])(
-    '$ctx - cleans up parent-metadata from query params',
-    async ({ version }) => {
-      const zod = (version === 'v4' ? z : z3) as typeof z;
-
+describe('issue#397', () => {
+  test('cleans up markers', async () => {
       class QueryParamsDto extends createZodDto(
-        zod
+        z
           .object({
-            filter: zod.string(),
+            filter: z.string(),
           })
           .describe('My query params'),
       ) {}
