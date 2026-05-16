@@ -1,4 +1,5 @@
-import { Body, Controller, Post, Get } from '@nestjs/common';
+import { Body, Controller, Post, Get, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { z } from 'zod/v4';
 import { z as zMini } from 'zod/v4-mini';
 import { createZodDto } from './dto';
@@ -358,4 +359,48 @@ test('throws error if trying to use .Output version of the DTO with ZodResponse'
       '[nestjs-zod] There is no need to use Dto.Output with ZodResponse',
     ),
   );
+});
+
+describe('issue#398 - enforce `passthrough: true` when using `@Res`', () => {
+  test('throws error if @Res() is used without passthrough: true', () => {
+    class BookDto extends createZodDto(
+      z.object({
+        id: z.string(),
+      }),
+    ) {}
+
+    expect(() => {
+      @Controller('books')
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      class BookController {
+        @Get()
+        @ZodResponse({ type: BookDto })
+        getBook(@Res() _res: Response) {
+          return { id: '1' };
+        }
+      }
+    }).toThrow(
+      '[nestjs-zod] @ZodResponse requires the passthrough option to be set (e.g. @Res({ passthrough: true })) when using @Res(). Using @Res() without passthrough bypasses the serialization interceptor.',
+    );
+  });
+
+  test('does not throw if @Res({ passthrough: true }) is used', () => {
+    class BookDto extends createZodDto(
+      z.object({
+        id: z.string(),
+      }),
+    ) {}
+
+    expect(() => {
+      @Controller('books')
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      class BookController {
+        @Get()
+        @ZodResponse({ type: BookDto })
+        getBook(@Res({ passthrough: true }) _res: Response) {
+          return { id: '1' };
+        }
+      }
+    }).not.toThrow();
+  });
 });
