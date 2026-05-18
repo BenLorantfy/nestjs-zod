@@ -4,13 +4,9 @@ import { createZodDto } from './dto';
 import { ZodValidationException } from './exception';
 import { ZodGuard, Source } from './guard';
 
-import * as z3 from 'zod/v3';
-import * as z4 from 'zod/v4';
+import { testMany } from './testUtils';
 
-describe.each([
-  { name: 'v4', z: z4 },
-  { name: 'v3', z: z3 as unknown as typeof z4 },
-])('$name', ({ z }) => {
+testMany('should work with any source and with Schema or DTO', async ({ z }) => {
   const UserSchema = z.object({
     username: z.string(),
     password: z.string(),
@@ -24,31 +20,29 @@ describe.each([
     contextMock.switchToHttp().getRequest.mockReturnValue({ [source]: value });
   }
 
-  it('should work with any source and with Schema or DTO', () => {
-    const sources: Source[] = ['body', 'params', 'query'];
+  const sources: Source[] = ['body', 'params', 'query'];
 
-    for (const source of sources) {
-      for (const schemaOrDto of [UserSchema, UserDto]) {
-        const guard = new ZodGuard(source, schemaOrDto);
+  for (const source of sources) {
+    for (const schemaOrDto of [UserSchema, UserDto]) {
+      const guard = new ZodGuard(source, schemaOrDto);
 
-        const valid = {
-          username: 'vasya',
-          password: '123',
-        };
+      const valid = {
+        username: 'vasya',
+        password: '123',
+      };
 
-        const invalid = {
-          username: 'vasya',
-          password: 123,
-        };
+      const invalid = {
+        username: 'vasya',
+        password: 123,
+      };
 
-        mockSource(source, valid);
-        expect(guard.canActivate(contextMock)).toBe(true);
+      mockSource(source, valid);
+      expect(guard.canActivate(contextMock)).toBe(true);
 
-        mockSource(source, invalid);
-        expect(() => guard.canActivate(contextMock)).toThrowError(
-          ZodValidationException,
-        );
-      }
+      mockSource(source, invalid);
+      expect(() => guard.canActivate(contextMock)).toThrowError(
+        ZodValidationException,
+      );
     }
-  });
+  }
 });

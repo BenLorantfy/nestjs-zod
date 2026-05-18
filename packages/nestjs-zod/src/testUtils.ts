@@ -23,6 +23,11 @@ import { Response } from 'express';
 import { ZodSerializationException } from './exception';
 import { ZodError } from 'zod/v4';
 
+import * as z3 from 'zod/v3';
+import * as z4 from 'zod/v4';
+import * as z4_0_0 from 'zod-v4_0_0';
+import { z as zMini } from 'zod/v4-mini';
+
 export async function setupApp(
   controllerClass: Type<unknown>,
   {
@@ -96,4 +101,31 @@ export async function setupApp(
       SwaggerModule.createDocument(app, new DocumentBuilder().build()),
     ),
   };
+}
+
+type Version = '3' | '4.0.0' | 'latest' | 'latest/mini';
+type ZForVersions<V extends Version> = 'latest/mini' extends V ? typeof zMini : typeof z4;
+
+export function testMany<V extends Version = Version>(
+  name: string,
+  fn: ({ z }: { z: ZForVersions<V> }) => Promise<void>,
+  versions: V[] = ['3', '4.0.0', 'latest', 'latest/mini'] as V[],
+) {
+  describe(name, () => {
+    beforeEach(() => {
+      z4.globalRegistry.clear();
+      zMini.globalRegistry.clear();
+      z4_0_0.globalRegistry.clear();
+    });
+
+    test.each(versions)('%s', (version) =>
+      fn({
+        z: {
+          '3': z3,
+          '4.0.0': z4_0_0,
+          'latest': z4,
+          'latest/mini': zMini,
+        }[version] as unknown as ZForVersions<V>,
+      }));
+  })
 }

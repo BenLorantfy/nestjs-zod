@@ -1,13 +1,11 @@
 import { Body, Controller, Post, Get } from '@nestjs/common';
-import { z } from 'zod/v4';
-import { z as zMini } from 'zod/v4-mini';
 import { createZodDto } from './dto';
 import { ZodResponse } from './response';
 import { get } from 'lodash';
 import request from 'supertest';
-import { setupApp } from './testUtils';
+import { setupApp, testMany } from './testUtils';
 
-test('serializes the return value and sets the openapi doc', async () => {
+testMany('serializes the return value and sets the openapi doc', async ({ z }) => {
   class BookDto extends createZodDto(
     z.object({
       id: z.string().optional().default('new-book'),
@@ -78,9 +76,9 @@ test('serializes the return value and sets the openapi doc', async () => {
       // The serializer should set the `id` field to `new-book`
       expect(res.body.id).toBe('new-book');
     });
-});
+}, ['latest', '4.0.0']);
 
-test('allows setting status code and description', async () => {
+testMany('allows setting status code and description', async ({ z}) => {
   class BookDto extends createZodDto(
     z.object({
       id: z.string(),
@@ -122,9 +120,9 @@ test('allows setting status code and description', async () => {
     .post('/books')
     .send({ id: '1' })
     .expect(202);
-});
+}, ['latest', 'latest/mini', '4.0.0']);
 
-test('serializes the return value and sets the openapi doc when using arrays', async () => {
+testMany('serializes the return value and sets the openapi doc when using arrays', async ({ z }) => {
   class BookDto extends createZodDto(
     z.object({
       id: z.string().optional().default('new-book'),
@@ -179,9 +177,9 @@ test('serializes the return value and sets the openapi doc when using arrays', a
     .expect((res) => {
       expect(res.body).toEqual([{ id: '1' }, { id: '2' }, { id: 'new-book' }]);
     });
-});
+}, ['latest', '4.0.0']);
 
-test('responds with 500 error if the response is invalid when using arrays', async () => {
+testMany('responds with 500 error if the response is invalid when using arrays', async ({ z }) => {
   class BookDto extends createZodDto(
     z.object({
       id: z.string(),
@@ -226,12 +224,12 @@ test('responds with 500 error if the response is invalid when using arrays', asy
         ],
       });
     });
-});
+}, ['latest', '4.0.0']);
 
-test('throws error if trying to use array syntax with zod mini', async () => {
+testMany('throws error if trying to use array syntax with version of zod that does not support it', async ({ z }) => {
   class BookDto extends createZodDto(
-    zMini.object({
-      id: zMini.string(),
+    z.object({
+      id: z.string(),
     }),
   ) {}
 
@@ -255,9 +253,9 @@ test('throws error if trying to use array syntax with zod mini', async () => {
   }).toThrow(
     '[nestjs-zod] ZodSerializerDto was used with array syntax (e.g. `ZodSerializerDto([MyDto])`) but the DTO schema does not have an array method',
   );
-});
+}, ['latest/mini']);
 
-test('supports codecs', async () => {
+testMany('supports codecs', async ({ z }) => {
   const stringToDate = z.codec(z.iso.datetime(), z.date(), {
     decode: (isoString) => new Date(isoString),
     encode: (date) => date.toISOString(),
@@ -325,9 +323,9 @@ test('supports codecs', async () => {
         dateWritten: '2025-10-10T01:40:32.591Z',
       });
     });
-});
+}, ['latest']);
 
-test('throws error if trying to use .Output version of the DTO with ZodResponse', async () => {
+testMany('throws error if trying to use .Output version of the DTO with ZodResponse', async ({ z }) => {
   let err;
   try {
     class BookDto extends createZodDto(
@@ -358,4 +356,4 @@ test('throws error if trying to use .Output version of the DTO with ZodResponse'
       '[nestjs-zod] There is no need to use Dto.Output with ZodResponse',
     ),
   );
-});
+}, ['4.0.0', 'latest', 'latest/mini']);
