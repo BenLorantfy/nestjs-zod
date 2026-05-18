@@ -19,7 +19,7 @@ afterEach(async () => {
 });
 
 describe('GET /api/people', () => {
-  it('should return a list of people', () => {
+  test('returns a list of people', () => {
     return request(app.getHttpServer())
       .get('/api/people')
       .expect(200)
@@ -29,4 +29,16 @@ describe('GET /api/people', () => {
         expect(res.body.data.length).toBeGreaterThan(0);
       });
   });
+
+  test('issue#327 - example showing headers', () => {
+    return request(app.getHttpServer())
+      .get('/api/starships/headers-example')
+      .expect(200)
+      .expect((res) => {
+        expect(res.body).toHaveProperty('data');
+        expect(Array.isArray(res.body.data)).toBe(true);
+        expect(res.body.data.length).toBeGreaterThan(0);
+        expect(res.headers['x-example']).toBe('example');
+      });
+  })
 });

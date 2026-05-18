@@ -108,7 +108,7 @@ type ZForVersions<V extends Version> = 'latest/mini' extends V ? typeof zMini : 
 
 export function testMany<V extends Version = Version>(
   name: string,
-  fn: ({ z }: { z: ZForVersions<V> }) => Promise<void>,
+  fn: (({ z }: { z: ZForVersions<V> }) => Promise<void>)|(({ z }: { z: ZForVersions<V> }) => void),
   versions: V[] = ['3', '4.0.0', 'latest', 'latest/mini'] as V[],
 ) {
   describe(name, () => {

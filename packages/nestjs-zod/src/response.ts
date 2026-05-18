@@ -180,6 +180,7 @@ export function ZodResponse<TSchema extends UnknownSchema>({
               : type[0],
           ],
         }),
+        RequirePassthrough(),
       ],
     );
   } else {
@@ -198,7 +199,37 @@ export function ZodResponse<TSchema extends UnknownSchema>({
           description,
           type: !type.codec && '_zod' in type.schema ? type.Output : type,
         }),
+        RequirePassthrough(),
       ],
     );
   }
+}
+
+const ROUTE_ARGS_METADATA = '__routeArguments__';
+const RESPONSE_PASSTHROUGH_METADATA = '__responsePassthrough__';
+const RESPONSE_PARAMTYPE = '1';
+
+function RequirePassthrough(): MethodDecorator {
+  return (target, propertyKey) => {
+    const args: Record<string, unknown> =
+      Reflect.getMetadata(
+        ROUTE_ARGS_METADATA,
+        target.constructor,
+        propertyKey,
+      ) || {};
+    const hasResponseParam = Object.keys(args).some((key) =>
+      key.startsWith(`${RESPONSE_PARAMTYPE}:`),
+    );
+    if (hasResponseParam) {
+      const passthrough = Reflect.getMetadata(
+        RESPONSE_PASSTHROUGH_METADATA,
+        target.constructor,
+        propertyKey,
+      );
+      assert(
+        passthrough === true,
+        '@ZodResponse requires the passthrough option to be set (e.g. @Res({ passthrough: true })) when using @Res(). Using @Res() without passthrough bypasses the serialization interceptor.',
+      );
+    }
+  };
 }
