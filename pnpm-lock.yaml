@@ -331,8 +331,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       '@ibm-cloud/openapi-ruleset':
-        specifier: ^1.33.8
-        version: 1.33.8
+        specifier: ^1.33.10
+        version: 1.33.10
       '@nest-zod/z':
         specifier: workspace:*
         version: link:../z
@@ -1558,12 +1558,12 @@ packages:
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
 
-  '@ibm-cloud/openapi-ruleset-utilities@1.9.0':
-    resolution: {integrity: sha512-AoFbSarOqFBYH+1TZ9Ahkm2IWYSi5v0pBk88fpV+5b3qGJukypX8PwvCWADjuyIccKg48/F73a6hTTkBzDQ2UA==}
+  '@ibm-cloud/openapi-ruleset-utilities@1.9.2':
+    resolution: {integrity: sha512-q9ZFdbtfxhaSeN6AykhVYk/EgkgV99dIW7ua15Wzy3s5BTH6tH1MZJA743QE9BQ+Iul/u1+XYNSaJm2/jiMQig==}
     engines: {node: '>=16.0.0'}
 
-  '@ibm-cloud/openapi-ruleset@1.33.8':
-    resolution: {integrity: sha512-/mdxMizWHPwM3TdkuSLbxD0KIOm7z6G4byXsZTFnQQobVbqj7pDVUDGGekPjPVOesNPScO9bMY9XYlTeoen0oQ==}
+  '@ibm-cloud/openapi-ruleset@1.33.10':
+    resolution: {integrity: sha512-6Efayit+4dbl0jDISE8M13Bd67vtKlG1rCZ1oimt/mAXxuYpnI7TiKgBysLdKmkJ+pBNcmn087KXDMIMdYlKNQ==}
     engines: {node: '>=16.0.0'}
 
   '@inquirer/ansi@1.0.2':
@@ -2441,6 +2441,10 @@ packages:
     resolution: {integrity: sha512-c06HB+rOKfe7tuxg0IdKDEA5XnjL2vrn/m/OVIIxtINtBzphZrOgtRn7epQ5bQF5SWp84Ue7UJWaGgDwVngMFw==}
     engines: {node: ^16.20 || ^18.18 || >= 20.17}
 
+  '@stoplight/spectral-functions@1.10.1':
+    resolution: {integrity: sha512-obu8ZfoHxELOapfGsCJixKZXZcffjg+lSoNuttpmUFuDzVLT3VmH8QkPXfOGOL5Pz80BR35ClNAToDkdnYIURg==}
+    engines: {node: ^16.20 || ^18.18 || >= 20.17}
+
   '@stoplight/spectral-functions@1.10.2':
     resolution: {integrity: sha512-PIfPUgTRo8EtAnL1MIrzhHoUuojSaE8shGSMaHS3BxGyc8d079BE5+TqJa1/WLUb9YT9JQnZ0Aj4xfi8NcJOIw==}
     engines: {node: ^16.20 || ^18.18 || >= 20.17}
@@ -2451,6 +2455,10 @@ packages:
 
   '@stoplight/spectral-ref-resolver@1.0.5':
     resolution: {integrity: sha512-gj3TieX5a9zMW29z3mBlAtDOCgN3GEc1VgZnCVlr5irmR4Qi5LuECuFItAq4pTn5Zu+sW5bqutsCH7D4PkpyAA==}
+    engines: {node: ^16.20 || ^18.18 || >= 20.17}
+
+  '@stoplight/spectral-rulesets@1.22.1':
+    resolution: {integrity: sha512-DaaQJioKuYkRsOuKIJfX2ek7G7f6OCU3CI3K7ABaOcTFMiHj29SJLDdb04mCjXZFXMlXHjmCl2ZpKW6heieXpw==}
     engines: {node: ^16.20 || ^18.18 || >= 20.17}
 
   '@stoplight/spectral-rulesets@1.22.2':
@@ -3181,6 +3189,10 @@ packages:
     resolution: {integrity: sha512-1pHv8LX9CpKut1Zp4EXey7Z8OfH11ONNH6Dhi2WDUt31VVZFXZzKwXcysBgqSumFCmR+0dqjMK5v5JiFHzi0+g==}
     engines: {node: 20 || >=22}
 
+  balanced-match@4.0.4:
+    resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
+    engines: {node: 18 || 20 || >=22}
+
   bare-events@2.8.2:
     resolution: {integrity: sha512-riJjyv1/mHLIPX4RwiK+oW9/4c3TEUeORHKefKAKnZ5kyslbN+HXowtbaVEqt4IMUB7OXlfixcs6gsFeo/jhiQ==}
     peerDependencies:
@@ -3238,6 +3250,10 @@ packages:
 
   brace-expansion@5.0.5:
     resolution: {integrity: sha512-VZznLgtwhn+Mact9tfiwx64fA9erHH/MCXEUfB/0bX/6Fz6ny5EGTXYltMocqg4xFAQZtnO3DHWWXi8RiuN7cQ==}
+    engines: {node: 18 || 20 || >=22}
+
+  brace-expansion@5.0.6:
+    resolution: {integrity: sha512-kLpxurY4Z4r9sgMsyG0Z9uzsBlgiU/EFKhj/h91/8yHu0edo7XuixOIH3VcJ8kkxs6/jPzoI6U9Vj3WqbMQ94g==}
     engines: {node: 18 || 20 || >=22}
 
   braces@3.0.3:
@@ -4849,6 +4865,10 @@ packages:
     resolution: {integrity: sha512-MClCe8IL5nRRmawL6ib/eT4oLyeKMGCghibcDWK+J0hh0Q8kqSdia6BvbRMVk6mPa6WqUa5uR2oxt6C5jd533A==}
     engines: {node: 20 || >=22}
 
+  minimatch@10.2.3:
+    resolution: {integrity: sha512-Rwi3pnapEqirPSbWbrZaa6N3nmqq4Xer/2XooiOKyV3q12ML06f7MOuc5DVH8ONZIFhwIYQ3yzPH4nt7iWHaTg==}
+    engines: {node: 18 || 20 || >=22}
+
   minimatch@10.2.5:
     resolution: {integrity: sha512-MULkVLfKGYDFYejP07QOurDLLQpcjk7Fw+7jXS2R2czRQzR56yHRveU5NDJEOviH+hETZKSkIk5c+T23GjFUMg==}
     engines: {node: 18 || 20 || >=22}
@@ -6026,6 +6046,10 @@ packages:
   v8-to-istanbul@9.3.0:
     resolution: {integrity: sha512-kiGUalWN+rgBJ/1OHZsBtU4rXZOfj/7rKQxULKlIzwzQSvMJUUNgPwJEEh7gU6xEVxC0ahoOBvN2YI8GH6FNgA==}
     engines: {node: '>=10.12.0'}
+
+  validator@13.15.23:
+    resolution: {integrity: sha512-4yoz1kEWqUjzi5zsPbAS/903QXSYp0UOtHsPpp7p9rHAw/W+dkInskAE386Fat3oKRROwO98d9ZB0G4cObgUyw==}
+    engines: {node: '>= 0.10'}
 
   validator@13.15.26:
     resolution: {integrity: sha512-spH26xU080ydGggxRyR1Yhcbgx+j3y5jbNXk/8L+iRvdIEQ4uTRH2Sgf2dokud6Q4oAtsbNvJ1Ft+9xmm6IZcA==}
@@ -7489,22 +7513,22 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@ibm-cloud/openapi-ruleset-utilities@1.9.0': {}
+  '@ibm-cloud/openapi-ruleset-utilities@1.9.2': {}
 
-  '@ibm-cloud/openapi-ruleset@1.33.8':
+  '@ibm-cloud/openapi-ruleset@1.33.10':
     dependencies:
-      '@ibm-cloud/openapi-ruleset-utilities': 1.9.0
+      '@ibm-cloud/openapi-ruleset-utilities': 1.9.2
       '@stoplight/spectral-formats': 1.8.2
-      '@stoplight/spectral-functions': 1.10.2
-      '@stoplight/spectral-rulesets': 1.22.2
+      '@stoplight/spectral-functions': 1.10.1
+      '@stoplight/spectral-rulesets': 1.22.1
       chalk: 4.1.2
       inflected: 2.1.0
       jsonschema: 1.5.0
-      lodash: 4.17.23
+      lodash: 4.18.1
       loglevel: 1.9.2
       loglevel-plugin-prefix: 0.8.4
-      minimatch: 10.2.5
-      validator: 13.15.26
+      minimatch: 10.2.3
+      validator: 13.15.23
     transitivePeerDependencies:
       - encoding
 
@@ -8383,7 +8407,7 @@ snapshots:
       '@stoplight/path': 1.3.2
       '@stoplight/types': 13.20.0
       jsonc-parser: 2.2.1
-      lodash: 4.17.23
+      lodash: 4.18.1
       safe-stable-stringify: 1.1.1
 
   '@stoplight/ordered-object-literal@1.0.5': {}
@@ -8425,6 +8449,22 @@ snapshots:
     transitivePeerDependencies:
       - encoding
 
+  '@stoplight/spectral-functions@1.10.1':
+    dependencies:
+      '@stoplight/better-ajv-errors': 1.0.3(ajv@8.20.0)
+      '@stoplight/json': 3.21.7
+      '@stoplight/spectral-core': 1.22.0
+      '@stoplight/spectral-formats': 1.8.2
+      '@stoplight/spectral-runtime': 1.1.5
+      ajv: 8.20.0
+      ajv-draft-04: 1.0.0(ajv@8.20.0)
+      ajv-errors: 3.0.0(ajv@8.20.0)
+      ajv-formats: 2.1.1(ajv@8.20.0)
+      lodash: 4.17.23
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - encoding
+
   '@stoplight/spectral-functions@1.10.2':
     dependencies:
       '@stoplight/better-ajv-errors': 1.0.3(ajv@8.20.0)
@@ -8454,6 +8494,26 @@ snapshots:
       '@stoplight/json-ref-resolver': 3.1.6
       '@stoplight/spectral-runtime': 1.1.5
       dependency-graph: 0.11.0
+      tslib: 2.8.1
+    transitivePeerDependencies:
+      - encoding
+
+  '@stoplight/spectral-rulesets@1.22.1':
+    dependencies:
+      '@asyncapi/specs': 6.11.1
+      '@stoplight/better-ajv-errors': 1.0.3(ajv@8.20.0)
+      '@stoplight/json': 3.21.7
+      '@stoplight/spectral-core': 1.22.0
+      '@stoplight/spectral-formats': 1.8.2
+      '@stoplight/spectral-functions': 1.10.2
+      '@stoplight/spectral-runtime': 1.1.5
+      '@stoplight/types': 13.20.0
+      '@types/json-schema': 7.0.15
+      ajv: 8.20.0
+      ajv-formats: 2.1.1(ajv@8.20.0)
+      json-schema-traverse: 1.0.0
+      leven: 3.1.0
+      lodash: 4.18.1
       tslib: 2.8.1
     transitivePeerDependencies:
       - encoding
@@ -9399,6 +9459,8 @@ snapshots:
 
   balanced-match@4.0.3: {}
 
+  balanced-match@4.0.4: {}
+
   bare-events@2.8.2: {}
 
   base64-js@1.5.1: {}
@@ -9475,6 +9537,10 @@ snapshots:
   brace-expansion@5.0.5:
     dependencies:
       balanced-match: 4.0.3
+
+  brace-expansion@5.0.6:
+    dependencies:
+      balanced-match: 4.0.4
 
   braces@3.0.3:
     dependencies:
@@ -11416,6 +11482,10 @@ snapshots:
     dependencies:
       brace-expansion: 5.0.2
 
+  minimatch@10.2.3:
+    dependencies:
+      brace-expansion: 5.0.6
+
   minimatch@10.2.5:
     dependencies:
       brace-expansion: 5.0.5
@@ -12678,6 +12748,8 @@ snapshots:
       '@jridgewell/trace-mapping': 0.3.31
       '@types/istanbul-lib-coverage': 2.0.6
       convert-source-map: 2.0.0
+
+  validator@13.15.23: {}
 
   validator@13.15.26: {}
 
