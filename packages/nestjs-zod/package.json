@@ -89,7 +89,7 @@
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1",
     "supertest": "^7.2.2",
-    "ts-jest": "^29.4.6",
+    "ts-jest": "^29.4.10",
     "tsdown": "^0.22.0",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.56.0",
