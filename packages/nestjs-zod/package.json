@@ -92,7 +92,7 @@
     "ts-jest": "^29.4.10",
     "tsdown": "^0.22.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "^8.59.4",
+    "typescript-eslint": "^8.60.0",
     "zod": "^4.1.12"
   },
   "peerDependencies": {
