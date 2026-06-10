@@ -94,8 +94,8 @@ importers:
         specifier: ^5.5.5
         version: 5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.0.0(jiti@2.7.0)))(eslint@10.0.0(jiti@2.7.0))(prettier@3.8.3)
       globals:
-        specifier: ^17.3.0
-        version: 17.3.0
+        specifier: ^17.6.0
+        version: 17.6.0
       jest:
         specifier: ^29.7.0
         version: 29.7.0(@types/node@25.9.1)(ts-node@10.9.2(@swc/core@1.15.33)(@types/node@25.9.1)(typescript@5.9.3))
@@ -291,8 +291,8 @@ importers:
         specifier: ^5.5.5
         version: 5.5.5(@types/eslint@9.6.1)(eslint-config-prettier@10.1.8(eslint@10.0.0(jiti@2.7.0)))(eslint@10.0.0(jiti@2.7.0))(prettier@3.8.3)
       globals:
-        specifier: ^17.3.0
-        version: 17.3.0
+        specifier: ^17.6.0
+        version: 17.6.0
       prettier:
         specifier: ^3.8.3
         version: 3.8.3
@@ -397,8 +397,8 @@ importers:
         specifier: ^5.6.2
         version: 5.6.2(@types/json-schema@7.0.15)(express@5.2.1)
       globals:
-        specifier: ^17.3.0
-        version: 17.3.0
+        specifier: ^17.6.0
+        version: 17.6.0
       jest:
         specifier: ^29.5.0
         version: 29.7.0(@types/node@25.9.1)(ts-node@10.9.2(@swc/core@1.15.33)(@types/node@25.9.1)(typescript@5.9.3))
@@ -4188,8 +4188,8 @@ packages:
     resolution: {integrity: sha512-oahGvuMGQlPw/ivIYBjVSrWAfWLBeku5tpPE2fOPLi+WHffIWbuh2tCjhyQhTBPMf5E9jDEH4FOmTYgYwbKwtQ==}
     engines: {node: '>=18'}
 
-  globals@17.3.0:
-    resolution: {integrity: sha512-yMqGUQVVCkD4tqjOJf3TnrvaaHDMYp4VlUSObbkIiuCPe/ofdMBFIAcBbCSRFWOnos6qRiTVStDwqPLUclaxIw==}
+  globals@17.6.0:
+    resolution: {integrity: sha512-sepffkT8stwnIYbsMBpoCHJuJM5l98FUF2AnE07hfvE0m/qp3R586hw4jF4uadbhvg1ooIdzuu7CsfD2jzCaNA==}
     engines: {node: '>=18'}
 
   globalthis@1.0.4:
@@ -10832,7 +10832,7 @@ snapshots:
 
   globals@14.0.0: {}
 
-  globals@17.3.0: {}
+  globals@17.6.0: {}
 
   globalthis@1.0.4:
     dependencies:
