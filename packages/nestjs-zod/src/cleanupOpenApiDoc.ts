@@ -395,7 +395,7 @@ function cleanupSchema({
         // This can happen if the def is part of a recursive schema
         // (for example, `___schema0`)
         for (const [defSchemaId, defSchema] of Object.entries(defs)) {
-          if (!('id' in defSchema)) {
+          if (!('id' in defSchema) && defSchemaId.startsWith('__schema')) {
             defRenames[defSchemaId] = `${newSchemaName}${defSchemaId}`;
           }
         }
