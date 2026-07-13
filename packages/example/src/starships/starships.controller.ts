@@ -65,7 +65,7 @@ export class StarshipsController {
   ];
 
   @Get()
-  @ZodResponse({ type: StarshipListDto, description: 'List of all starships' })
+  @ZodResponse({ status: 200, type: StarshipListDto, description: 'List of all starships' })
   getStarships() {
     return {
       data: this.mockStarships,
@@ -104,7 +104,7 @@ export class StarshipsController {
    * > decorator.
    */
   @Get('headers-example')
-  @ZodResponse({ type: StarshipListDto, description: 'List of all starships' })
+  @ZodResponse({ status: 200, type: StarshipListDto, description: 'List of all starships' })
   getStarships2(@Res({ passthrough: true }) res: Response) {
     res.header('X-Example', 'example');
     return {

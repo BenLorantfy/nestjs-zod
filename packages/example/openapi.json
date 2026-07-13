@@ -1,0 +1,608 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/people": {
+      "get": {
+        "operationId": "PeopleController_getPeople",
+        "parameters": [
+          {
+            "name": "filter",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "properties": {
+                "name": {
+                  "description": "Filter by name",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            },
+            "style": "deepObject"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all people",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PersonList"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "People"
+        ]
+      },
+      "post": {
+        "operationId": "PeopleController_createPerson",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePersonFormDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Person created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Person"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/people/{id}": {
+      "get": {
+        "operationId": "PeopleController_getPerson",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of all people",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetPersonResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Person not found"
+          }
+        },
+        "tags": [
+          "People"
+        ]
+      }
+    },
+    "/api/starships": {
+      "get": {
+        "operationId": "StarshipsController_getStarships",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of all starships",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StarshipList_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Starships"
+        ]
+      },
+      "post": {
+        "operationId": "StarshipsController_createStarship",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStarshipForm"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Starship created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Starship_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Starships"
+        ]
+      }
+    },
+    "/api/starships/headers-example": {
+      "get": {
+        "operationId": "StarshipsController_getStarships2",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "List of all starships",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StarshipList_Output"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "Starships"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Example API",
+    "description": "Example API description",
+    "version": "1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "schemas": {
+      "Person": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "description": "Unique identifier for the person",
+            "type": "integer",
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0
+          },
+          "created": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "height": {
+            "description": "Height in centimeters",
+            "type": "string"
+          },
+          "mass": {
+            "description": "Mass in kilograms",
+            "type": "string"
+          },
+          "hairColor": {
+            "description": "Hair color",
+            "type": "string"
+          },
+          "skinColor": {
+            "description": "Skin color",
+            "type": "string"
+          },
+          "eyeColor": {
+            "description": "Eye color",
+            "type": "string"
+          },
+          "birthYear": {
+            "description": "Birth year (e.g., \"19BBY\")",
+            "type": "string"
+          },
+          "gender": {
+            "description": "Gender of the person",
+            "type": "string",
+            "enum": [
+              "male",
+              "female",
+              "n/a"
+            ]
+          },
+          "homeworldId": {
+            "description": "ID of the person's homeworld",
+            "type": "string"
+          },
+          "filmIds": {
+            "description": "Array of film IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "speciesIds": {
+            "description": "Array of species IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "vehicleIds": {
+            "description": "Array of vehicle IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "starshipIds": {
+            "description": "Array of starship IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "created",
+          "name",
+          "height",
+          "mass",
+          "hairColor",
+          "skinColor",
+          "eyeColor",
+          "birthYear",
+          "gender",
+          "homeworldId",
+          "filmIds",
+          "speciesIds",
+          "vehicleIds",
+          "starshipIds"
+        ]
+      },
+      "PersonList": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Person"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "GetPersonResponse": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/Person"
+          }
+        },
+        "required": [
+          "data"
+        ]
+      },
+      "CreatePersonFormDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "height": {
+            "description": "Height in centimeters",
+            "type": "string"
+          },
+          "mass": {
+            "description": "Mass in kilograms",
+            "type": "string"
+          },
+          "hairColor": {
+            "description": "Hair color",
+            "type": "string"
+          },
+          "skinColor": {
+            "description": "Skin color",
+            "type": "string"
+          },
+          "eyeColor": {
+            "description": "Eye color",
+            "type": "string"
+          },
+          "birthYear": {
+            "description": "Birth year (e.g., \"19BBY\")",
+            "type": "string"
+          },
+          "gender": {
+            "description": "Gender of the person",
+            "type": "string",
+            "enum": [
+              "male",
+              "female",
+              "n/a"
+            ]
+          },
+          "homeworldId": {
+            "description": "ID of the person's homeworld",
+            "type": "string"
+          },
+          "filmIds": {
+            "description": "Array of film IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "speciesIds": {
+            "description": "Array of species IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "vehicleIds": {
+            "description": "Array of vehicle IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "starshipIds": {
+            "description": "Array of starship IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "height",
+          "mass",
+          "hairColor",
+          "skinColor",
+          "eyeColor",
+          "birthYear",
+          "gender",
+          "homeworldId",
+          "filmIds",
+          "speciesIds",
+          "vehicleIds",
+          "starshipIds"
+        ]
+      },
+      "Starship_Output": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "Unique identifier for the starship",
+            "exclusiveMinimum": true,
+            "maximum": 9007199254740991,
+            "minimum": 0
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "model": {
+            "type": "string",
+            "description": "Starship model"
+          },
+          "manufacturer": {
+            "type": "string",
+            "description": "Manufacturer of the starship"
+          },
+          "costInCredits": {
+            "type": "string",
+            "description": "Cost in credits"
+          },
+          "length": {
+            "type": "string",
+            "description": "Length in meters"
+          },
+          "maxAtmospheringSpeed": {
+            "type": "string",
+            "description": "Maximum atmosphering speed"
+          },
+          "crew": {
+            "type": "string",
+            "description": "Number of crew members"
+          },
+          "passengers": {
+            "type": "string",
+            "description": "Number of passengers"
+          },
+          "cargoCapacity": {
+            "type": "string",
+            "description": "Cargo capacity in kilograms"
+          },
+          "consumables": {
+            "type": "string",
+            "description": "Consumables duration"
+          },
+          "hyperdriveRating": {
+            "type": "string",
+            "description": "Hyperdrive rating"
+          },
+          "mglt": {
+            "type": "string",
+            "description": "MGLT (Megalight per hour)"
+          },
+          "starshipClass": {
+            "type": "string",
+            "description": "Class of the starship"
+          },
+          "pilotIds": {
+            "type": "array",
+            "description": "Array of pilot IDs",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filmIds": {
+            "type": "array",
+            "description": "Array of film IDs",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "model",
+          "manufacturer",
+          "costInCredits",
+          "length",
+          "maxAtmospheringSpeed",
+          "crew",
+          "passengers",
+          "cargoCapacity",
+          "consumables",
+          "hyperdriveRating",
+          "mglt",
+          "starshipClass",
+          "pilotIds",
+          "filmIds"
+        ],
+        "additionalProperties": false
+      },
+      "StarshipList_Output": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/Starship_Output"
+            }
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
+      },
+      "CreateStarshipForm": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "model": {
+            "description": "Starship model",
+            "type": "string"
+          },
+          "manufacturer": {
+            "description": "Manufacturer of the starship",
+            "type": "string"
+          },
+          "costInCredits": {
+            "description": "Cost in credits",
+            "type": "string"
+          },
+          "length": {
+            "description": "Length in meters",
+            "type": "string"
+          },
+          "maxAtmospheringSpeed": {
+            "description": "Maximum atmosphering speed",
+            "type": "string"
+          },
+          "crew": {
+            "description": "Number of crew members",
+            "type": "string"
+          },
+          "passengers": {
+            "description": "Number of passengers",
+            "type": "string"
+          },
+          "cargoCapacity": {
+            "description": "Cargo capacity in kilograms",
+            "type": "string"
+          },
+          "consumables": {
+            "description": "Consumables duration",
+            "type": "string"
+          },
+          "hyperdriveRating": {
+            "description": "Hyperdrive rating",
+            "type": "string"
+          },
+          "mglt": {
+            "description": "MGLT (Megalight per hour)",
+            "type": "string"
+          },
+          "starshipClass": {
+            "description": "Class of the starship",
+            "type": "string"
+          },
+          "pilotIds": {
+            "description": "Array of pilot IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "filmIds": {
+            "description": "Array of film IDs",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "model",
+          "manufacturer",
+          "costInCredits",
+          "length",
+          "maxAtmospheringSpeed",
+          "crew",
+          "passengers",
+          "cargoCapacity",
+          "consumables",
+          "hyperdriveRating",
+          "mglt",
+          "starshipClass",
+          "pilotIds",
+          "filmIds"
+        ]
+      }
+    }
+  }
+}

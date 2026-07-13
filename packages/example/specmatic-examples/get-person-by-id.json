@@ -1,0 +1,28 @@
+{
+  "http-request": {
+    "method": "GET",
+    "path": "/api/people/1"
+  },
+  "http-response": {
+    "status": 200,
+    "body": {
+      "data": {
+        "id": 1,
+        "created": "2025-12-11T17:04:50.197Z",
+        "name": "Luke Skywalker",
+        "height": "172",
+        "mass": "77",
+        "hairColor": "blond",
+        "skinColor": "fair",
+        "eyeColor": "blue",
+        "birthYear": "19BBY",
+        "gender": "male",
+        "homeworldId": "1",
+        "filmIds": ["1", "2", "3", "6"],
+        "speciesIds": [],
+        "vehicleIds": ["14", "30"],
+        "starshipIds": ["12", "22"]
+      }
+    }
+  }
+}

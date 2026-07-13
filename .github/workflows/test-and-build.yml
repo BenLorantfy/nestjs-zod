@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -20,6 +22,11 @@ jobs:
         with:
           node-version: 20
           cache: 'pnpm'
+      - name: Use Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
       - run: pnpm install
       - name: Build z
         run: cd packages/z && pnpm build
@@ -41,6 +48,14 @@ jobs:
         run: cd packages/example && pnpm build
       - name: Test example app
         run: cd packages/example && pnpm test
+      - name: Check example app OpenAPI spec is up to date
+        run: |
+          cd packages/example && pnpm run generate:openapi
+          git diff --exit-code -- packages/example/openapi.json
+      - name: Backward compatibility check for example app OpenAPI spec
+        if: github.event_name == 'pull_request'
+        run: pnpm exec specmatic backward-compatibility-check --repo-dir="$GITHUB_WORKSPACE" --base-branch=origin/main --target-path=packages/example/openapi.json
+        working-directory: packages/example
       - name: Build example-esm app
         run: cd packages/example-esm && pnpm build
       - name: Cache Playwright Browsers
@@ -62,6 +77,10 @@ jobs:
         run: |
           cd packages/example && pnpm run start &
           cd packages/example && pnpm run test:swagger
+      - name: Test example app contract
+        run: |
+          cd packages/example && pnpm run start &
+          cd packages/example && pnpm run test:contract
       - name: Test example-esm app swagger
         run: |
           cd packages/example-esm && pnpm run start &

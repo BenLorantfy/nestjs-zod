@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Query, Param, NotFoundException } from '@nestjs/common';
-import { ApiQuery, ApiTags } from '@nestjs/swagger';
+import { ApiQuery, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 import { CreatePersonFormDto, PersonDto, PersonListDto, PersonFilterDto, Person, GetPersonParams, GetPersonResponse } from './people.dto';
 
@@ -61,7 +61,7 @@ export class PeopleController {
   ];
 
   @Get()
-  @ZodResponse({ type: PersonListDto, description: 'List of all people' })
+  @ZodResponse({ status: 200, type: PersonListDto, description: 'List of all people' })
   getPeople(@Query() query: PersonFilterDto) {
     return {
       data: this.mockPeople.filter(person => query.filter?.name ? person.name.includes(query.filter.name) : true),
@@ -69,7 +69,8 @@ export class PeopleController {
   }
 
   @Get(':id')
-  @ZodResponse({ type: GetPersonResponse, description: 'List of all people' })
+  @ZodResponse({ status: 200, type: GetPersonResponse, description: 'List of all people' })
+  @ApiResponse({ status: 404, description: 'Person not found' })
   getPerson(@Param() { id }: GetPersonParams) {
     const person = this.mockPeople.find(person => person.id === id);
     if (!person) {
@@ -81,7 +82,7 @@ export class PeopleController {
   }
 
   @Post()
-  @ZodResponse({ type: PersonDto, description: 'Person created successfully' })
+  @ZodResponse({ status: 201, type: PersonDto, description: 'Person created successfully' })
   createPerson(@Body() createPersonDto: CreatePersonFormDto) {
     const newPerson = {
       ...createPersonDto,
