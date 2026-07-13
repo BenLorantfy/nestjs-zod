@@ -1,0 +1,14 @@
+{
+  "http-request": {
+    "method": "GET",
+    "path": "/api/people/9999"
+  },
+  "http-response": {
+    "status": 404,
+    "body": {
+      "message": "Person not found",
+      "error": "Not Found",
+      "statusCode": 404
+    }
+  }
+}

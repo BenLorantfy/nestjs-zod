@@ -70,7 +70,18 @@ export class PeopleController {
 
   @Get(':id')
   @ZodResponse({ status: 200, type: GetPersonResponse, description: 'List of all people' })
-  @ApiResponse({ status: 404, description: 'Person not found' })
+  @ApiResponse({
+    status: 404,
+    description: 'Person not found',
+    schema: {
+      type: 'object',
+      properties: {
+        message: { type: 'string' },
+        error: { type: 'string' },
+        statusCode: { type: 'number' },
+      },
+    },
+  })
   getPerson(@Param() { id }: GetPersonParams) {
     const person = this.mockPeople.find(person => person.id === id);
     if (!person) {
