@@ -1,0 +1,39 @@
+{
+  "http-request": {
+    "method": "POST",
+    "path": "/api/people",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Test Person",
+      "height": "172",
+      "mass": "77",
+      "hairColor": "blond",
+      "skinColor": "fair",
+      "eyeColor": "blue",
+      "birthYear": "19BBY",
+      "gender": "invalid",
+      "homeworldId": "1",
+      "filmIds": [],
+      "speciesIds": [],
+      "vehicleIds": [],
+      "starshipIds": []
+    }
+  },
+  "http-response": {
+    "status": 400,
+    "body": {
+      "statusCode": 400,
+      "message": "Validation failed",
+      "errors": [
+        {
+          "code": "invalid_value",
+          "values": ["male", "female", "n/a"],
+          "path": ["gender"],
+          "message": "Invalid option: expected one of \"male\"|\"female\"|\"n/a\""
+        }
+      ]
+    }
+  }
+}

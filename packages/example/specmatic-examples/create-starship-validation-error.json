@@ -1,0 +1,40 @@
+{
+  "http-request": {
+    "method": "POST",
+    "path": "/api/starships",
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "body": {
+      "name": "Test Ship",
+      "model": "Test",
+      "manufacturer": "Test Co",
+      "costInCredits": "1000",
+      "length": "10",
+      "maxAtmospheringSpeed": "100",
+      "crew": "1",
+      "passengers": "0",
+      "cargoCapacity": "0",
+      "consumables": "1 day",
+      "hyperdriveRating": "1.0",
+      "mglt": "10",
+      "pilotIds": [],
+      "filmIds": []
+    }
+  },
+  "http-response": {
+    "status": 400,
+    "body": {
+      "statusCode": 400,
+      "message": "Validation failed",
+      "errors": [
+        {
+          "expected": "string",
+          "code": "invalid_type",
+          "path": ["starshipClass"],
+          "message": "Invalid input: expected string, received undefined"
+        }
+      ]
+    }
+  }
+}

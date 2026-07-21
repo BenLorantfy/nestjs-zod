@@ -94,6 +94,18 @@ export class PeopleController {
 
   @Post()
   @ZodResponse({ status: 201, type: PersonDto, description: 'Person created successfully' })
+  @ApiResponse({
+    status: 400,
+    description: 'Validation failed',
+    schema: {
+      type: 'object',
+      properties: {
+        statusCode: { type: 'number' },
+        message: { type: 'string' },
+        errors: { type: 'array', items: { type: 'object' } },
+      },
+    },
+  })
   createPerson(@Body() createPersonDto: CreatePersonFormDto) {
     const newPerson = {
       ...createPersonDto,
