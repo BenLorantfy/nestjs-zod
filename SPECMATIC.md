@@ -131,3 +131,7 @@ The value it adds is genuine, not cosmetic:
 - The backward-compatibility-check step closes a second, distinct gap — protecting API consumers from breaking changes — which schema-driven generation has no mechanism to detect on its own.
 
 The main residual gap: coverage depends entirely on which fixtures exist. `GET /api/people/:id`'s 404 and both POST endpoints' 400s are now covered, but nothing yet exercises `PersonFilterDto`'s query validation path, since (per section 7.2) it has no clean, deterministic invalid input to fixture.
+
+## 11. Shipping this value beyond `packages/example`
+
+Everything above only protects this repo's own reference app. `nestjs-zod-cli` (`packages/cli`) — the codemod tool behind the README's "Automatic Setup" (`npx nestjs-zod-cli /path/to/nestjs/project`) — now has a Specmatic setup step (`packages/cli/specmaticSetup.js`) that runs after the swagger/OpenAPI step, when opted into. It scaffolds the same pattern documented in sections 2 and 6 — `scripts/generate-openapi.ts`, `generate:openapi`/`test:contract` npm scripts, and a `specmatic-examples/` directory (with a README pointing at the same "capture real responses, don't hand-guess error shapes" lesson from section 7) — into *any* consumer's NestJS project, not just this one. It does not (and cannot) fabricate example fixtures for a consumer's actual routes, since it has no way to know their response shapes; that step is left to the consumer, following the scaffolded README.

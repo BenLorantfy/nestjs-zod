@@ -6,6 +6,7 @@ const { exec } = require('node:child_process');
 const fs = require('fs');
 const Enquirer = require('enquirer');
 const enquirer = new Enquirer();
+const { setupSpecmatic } = require('./specmaticSetup');
 
 const options = {
   // dry: true,
@@ -54,7 +55,10 @@ async function main() {
     process.exit(1);
   }
 
-  await tryInstallMissingPackages(projectFolder);
+  await tryInstallMissingPackages(projectFolder, [
+    { name: 'nestjs-zod', target: 'dependencies' },
+    { name: 'zod', target: 'dependencies' },
+  ]);
 
   const updatedFiles = [path.join('src', 'app.module.ts')];
   logger.info('Updating app.module.ts');
@@ -74,12 +78,17 @@ async function main() {
 
   logger.success('Updated app.module.ts')
 
-  if (await checkShouldUpdateMain(projectFolder)) {
+  const swaggerSetUp = await checkShouldUpdateMain(projectFolder);
+  if (swaggerSetUp) {
+    await tryInstallMissingPackages(projectFolder, [
+      { name: '@nestjs/swagger', target: 'dependencies' },
+    ]);
+
     logger.info('Updating main.ts');
     try {
       const result2 = await jscodeshift(
-        path.join(__dirname, 'swaggerTransform.js'), 
-        [path.join(projectFolder, 'src', 'main.ts')], 
+        path.join(__dirname, 'swaggerTransform.js'),
+        [path.join(projectFolder, 'src', 'main.ts')],
         options
       )
       if (result2.error > 0) {
@@ -91,6 +100,14 @@ async function main() {
     }
     logger.success('Updated main.ts');
     updatedFiles.push([path.join('src', 'main.ts')])
+  }
+
+  let specmaticResult = { setUp: false, createdFiles: [] };
+  if (swaggerSetUp) {
+    specmaticResult = await setupSpecmatic(projectFolder, { logger, enquirer, tryInstallMissingPackages, execAsync, getProjectPackageJson, inferPackageManager });
+    updatedFiles.push(...specmaticResult.createdFiles);
+  } else {
+    logger.info('Skipping Specmatic setup since swagger/openapi generation was not configured');
   }
 
   if (await shouldFormatFiles(projectFolder)) {
@@ -105,18 +122,28 @@ async function main() {
   }
   console.log("");
   console.log("\x1b[32mSuccessfully setup nestjs-zod\x1b[0m")
+
+  if (specmaticResult.setUp) {
+    console.log("");
+    console.log("Specmatic contract testing was scaffolded.  Next steps:");
+    console.log("  1. Run your app's \"generate:openapi\" script to produce openapi.json");
+    console.log("  2. Start your app");
+    console.log("  3. Capture real request/response examples into specmatic-examples/ (see specmatic-examples/README.md)");
+    console.log("  4. Run your app's \"test:contract\" script");
+  }
 }
 
-async function tryInstallMissingPackages(projectFolder) {
+/**
+ * @param {string} projectFolder
+ * @param {Array<{ name: string, target: 'dependencies' | 'devDependencies' }>} packages
+ */
+async function tryInstallMissingPackages(projectFolder, packages) {
   const pkgInfo = getProjectPackageJson(projectFolder);
 
-  /**
-   * @type {Array<'nestjs-zod'|'zod'>}
-   */
-  const uninstalledPackages = [];
-
-  if (!Boolean(pkgInfo.dependencies['nestjs-zod'])) uninstalledPackages.push('nestjs-zod');
-  if (!Boolean(pkgInfo.dependencies['zod'])) uninstalledPackages.push('zod');
+  const missingPackages = packages.filter(
+    ({ name, target }) => !Boolean(pkgInfo[target]?.[name])
+  );
+  const uninstalledPackages = missingPackages.map(({ name }) => name);
   if (uninstalledPackages.length === 0) return;
 
   const inferredPackageManager = inferPackageManager(projectFolder);
@@ -141,9 +168,12 @@ async function tryInstallMissingPackages(projectFolder) {
 
   const actualPackageManager = userResponse.install === 'Yes' ? inferredPackageManager : userResponse.install === 'Yes, but use npm' ? 'npm' : userResponse.install === 'Yes, but use pnpm' ? 'pnpm' : 'yarn';
 
+  const isDev = missingPackages.every(({ target }) => target === 'devDependencies');
+  const devFlag = isDev ? (actualPackageManager === 'npm' ? '--save-dev' : '-D') : '';
+
   logger.info(`Installing ${uninstalledPackages.join(' and ')} using ${actualPackageManager}`);
   try {
-    await execAsync(`cd ${projectFolder} && ${actualPackageManager} ${actualPackageManager === 'yarn' ? 'add' : 'install'} ${uninstalledPackages.map(packageName => `${packageName}@latest`).join(' ')}`);
+    await execAsync(`cd ${projectFolder} && ${actualPackageManager} ${actualPackageManager === 'yarn' ? 'add' : 'install'} ${devFlag} ${uninstalledPackages.map(packageName => `${packageName}@latest`).join(' ')}`);
     logger.success(`Installed ${uninstalledPackages.join(' and ')} using ${actualPackageManager}`);
   } catch (error) {
     logger.error(`Failed to install ${uninstalledPackages.join(' and ')} using ${actualPackageManager}`);
