@@ -16,6 +16,6 @@ nestjs-zod-cli /path/to/nestjs/project
 - If swagger/OpenAPI generation is set up, optionally scaffolds [Specmatic](https://specmatic.io/) contract testing for your app:
   - `scripts/generate-openapi.ts`, which writes `openapi.json` from your app's routes
   - `generate:openapi` and `test:contract` npm scripts
-  - a `specmatic-examples/` directory with a README explaining how to add fixtures
+  - the `test:contract` script reads fixtures from `specmatic-examples/`, which you create and populate yourself with request/response JSON files
 
 All steps are idempotent — re-running the CLI on an already-setup project is a no-op for the parts that are already in place.

@@ -29,9 +29,8 @@ const GITIGNORE_ENTRIES = [
 async function setupSpecmatic(projectFolder, { logger, enquirer, tryInstallMissingPackages, getProjectPackageJson }) {
   const scriptsDir = path.join(projectFolder, 'scripts');
   const generateOpenApiPath = path.join(scriptsDir, 'generate-openapi.ts');
-  const examplesDir = path.join(projectFolder, 'specmatic-examples');
 
-  if (fs.existsSync(generateOpenApiPath) && fs.existsSync(examplesDir)) {
+  if (fs.existsSync(generateOpenApiPath)) {
     logger.info('Specmatic already set up, skipping');
     return { setUp: false, createdFiles: [] };
   }
@@ -61,12 +60,6 @@ async function setupSpecmatic(projectFolder, { logger, enquirer, tryInstallMissi
 
   fs.mkdirSync(scriptsDir, { recursive: true });
   fs.writeFileSync(generateOpenApiPath, createGenerateOpenApiScript(pkgInfo.name));
-
-  fs.mkdirSync(examplesDir, { recursive: true });
-  const readmePath = path.join(examplesDir, 'README.md');
-  if (!fs.existsSync(readmePath)) {
-    fs.writeFileSync(readmePath, createExamplesReadme());
-  }
 
   addPackageJsonScripts(projectFolder, pkgInfo, port);
   addGitignoreEntries(projectFolder);
@@ -126,43 +119,6 @@ async function main() {
 }
 
 main();
-`;
-}
-
-function createExamplesReadme() {
-  return `# Specmatic examples
-
-This directory holds fixtures for [Specmatic](https://specmatic.io/) contract tests. Each file
-replays a real HTTP request against your running app and checks the real response against
-\`openapi.json\`.
-
-Each fixture is a JSON file shaped like:
-
-\`\`\`json
-{
-  "http-request": {
-    "method": "GET",
-    "path": "/your-route/1"
-  },
-  "http-response": {
-    "status": 200,
-    "body": { "...": "..." }
-  }
-}
-\`\`\`
-
-**Don't hand-write the response bodies.** Start your app and capture the real response, e.g.:
-
-\`\`\`bash
-curl -s -i http://localhost:3000/your-route/1
-\`\`\`
-
-then copy the body verbatim into the fixture. This matters most for error responses (404s from
-\`NotFoundException\`, 400s from \`ZodValidationPipe\`) since their exact shape comes from
-NestJS/nestjs-zod internals, not your own code, and is easy to guess wrong.
-
-Add one fixture per response shape worth protecting (a happy path, plus each distinct error
-case your routes can produce), then run your app's \`test:contract\` script.
 `;
 }
 

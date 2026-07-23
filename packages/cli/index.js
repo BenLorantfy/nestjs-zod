@@ -128,7 +128,7 @@ async function main() {
     console.log("Specmatic contract testing was scaffolded.  Next steps:");
     console.log("  1. Run your app's \"generate:openapi\" script to produce openapi.json");
     console.log("  2. Start your app");
-    console.log("  3. Capture real request/response examples into specmatic-examples/ (see specmatic-examples/README.md)");
+    console.log("  3. Capture real request/response examples as JSON fixtures in specmatic-examples/ (see the nestjs-zod README for the fixture format)");
     console.log("  4. Run your app's \"test:contract\" script");
   }
 }
