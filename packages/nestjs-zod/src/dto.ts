@@ -1,6 +1,11 @@
 import { UnknownSchema } from './types';
 import type * as z3 from 'zod/v3';
-import { toJSONSchema, $ZodType, JSONSchema } from 'zod/v4/core';
+import {
+  toJSONSchema,
+  globalRegistry,
+  $ZodType,
+  JSONSchema,
+} from 'zod/v4/core';
 import { assert } from './assert';
 import {
   DEFS_KEY,
@@ -103,6 +108,9 @@ function openApiMetadataFactory({
     ...generatedJsonSchema
   } = generateJsonSchema(schema, io);
 
+  const zodId = '_zod' in schema ? globalRegistry.get(schema)?.id : undefined;
+  const rootId = zodId && io === 'output' ? `${zodId}_Output` : zodId;
+
   /**
    * nestjs expects us to return a record of properties
    *
@@ -119,7 +127,6 @@ function openApiMetadataFactory({
   } = !isObjectTypeWithProperties(generatedJsonSchema)
     ? {
         type: 'object' as const,
-        id: generatedJsonSchema.id,
         title: generatedJsonSchema.title,
         properties: {
           root: {
@@ -207,8 +214,8 @@ function openApiMetadataFactory({
     // nestjs expects us to return a record of properties, instead of a
     // proper jsonschema.  This means `id` is lost.  So here, we add it
     // back to each property, under a custom field name
-    if (jsonSchema.id) {
-      newPropertySchema[PARENT_ID_KEY] = jsonSchema.id;
+    if (rootId) {
+      newPropertySchema[PARENT_ID_KEY] = rootId;
     }
 
     if (typeof jsonSchema.additionalProperties === 'boolean') {
@@ -252,11 +259,6 @@ function generateJsonSchema(
     '_zod' in schema
       ? toJSONSchema(schema, {
           io,
-          override: ({ jsonSchema }) => {
-            if (io === 'output' && 'id' in jsonSchema) {
-              jsonSchema.id = `${jsonSchema.id}_Output`;
-            }
-          },
         })
       : zodV3ToOpenAPI(schema);
 
@@ -265,22 +267,16 @@ function generateJsonSchema(
       ? generatedJsonSchema.$defs
       : undefined;
 
-  // Ensure the $ref is pointing to the correct schema
   // @ts-expect-error FIXME
-  const newSchema = fixRefsToPointById(generatedJsonSchema, $defs);
+  const newSchema = cleanupRefs(generatedJsonSchema, io);
 
-  // Ensure the key in the $defs object is the same as the id of the schema
   const newDefs: Record<string, JSONSchema.BaseSchema> = {};
   Object.entries($defs || {}).forEach(([defKey, defValue]) => {
-    if (defValue.id) {
-      const newKey = defValue.id || defKey;
-      if (newDefs[newKey]) {
-        throw new Error(`[nestjs-zod] Duplicate id in $defs: ${newKey}`);
-      }
-      newDefs[newKey] = fixRefsToPointById(defValue, $defs);
-    } else {
-      newDefs[defKey] = fixRefsToPointById(defValue, $defs);
+    const newKey = io === 'output' ? `${defKey}_Output` : defKey;
+    if (newDefs[newKey]) {
+      throw new Error(`[nestjs-zod] Duplicate id in $defs: ${newKey}`);
     }
+    newDefs[newKey] = cleanupRefs(defValue, io);
   });
 
   if ($defs) {
@@ -291,55 +287,26 @@ function generateJsonSchema(
 }
 
 /**
- * Changes all $refs in a schema to point based off the schema's ID, not the
- * keys of the $defs object.  For example, given this schema:
- * ```json
- * {
- *  type: "object",
- *  properties: {
- *    author: {
- *      $ref: "#/$defs/Author"
- *    }
- *  }
- * }
- * ```
- * and this $defs object:
- * ```json
- * {
- *   Author: {
- *    id: "Author_Output",
- *    type: "object",
- *    properties: {
- *      // ...
- *    }
- *  }
- * }
- * ```
- * It will return this schema:
- * ```json
- * {
- *  type: "object",
- *  properties: {
- *    author: {
- *      $ref: "#/$defs/Author_Output"
- *    }
- *  }
- * }
- * ```
+ * Suffixes refs with `_Output` if `io` is `output`
+ *
+ * Also removes the `id` field from the schema, since this is not a valid
+ * openapi field.  Some earlier versions of zod 4 included `id`
  */
-function fixRefsToPointById(
+function cleanupRefs(
   rootSchema: JSONSchema.JSONSchema,
-  $defs: Record<string, JSONSchema.JSONSchema> | undefined,
+  io: 'input' | 'output',
 ) {
   return walkJsonSchema(
     rootSchema,
     (schema) => {
       if (schema.$ref && schema.$ref.startsWith('#/$defs/')) {
         const defKey = schema.$ref.replace('#/$defs/', '');
-        const defId = $defs?.[defKey].id;
-        if (defId) {
-          schema.$ref = `#/$defs/${defId}`;
+        if (defKey && io === 'output') {
+          schema.$ref = `#/$defs/${defKey}_Output`;
         }
+      }
+      if ('id' in schema) {
+        delete schema['id'];
       }
       return schema;
     },

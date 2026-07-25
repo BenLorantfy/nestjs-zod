@@ -359,7 +359,6 @@ function cleanupSchema({
       PARENT_ID_KEY in propertySchema &&
       typeof propertySchema[PARENT_ID_KEY] === 'string'
     ) {
-      Object.assign(newOpenapiSchema, { id: propertySchema[PARENT_ID_KEY] });
       newSchemaName = propertySchema[PARENT_ID_KEY];
       delete propertySchema[PARENT_ID_KEY];
     }
@@ -390,12 +389,11 @@ function cleanupSchema({
       delete propertySchema[DEFS_KEY];
 
       if (!addedDefs) {
-        // If the def has no ID, then we need to prefix the def key
-        // with the root schema name to make it globally unique
-        // This can happen if the def is part of a recursive schema
-        // (for example, `___schema0`)
-        for (const [defSchemaId, defSchema] of Object.entries(defs)) {
-          if (!('id' in defSchema)) {
+        for (const defSchemaId of Object.keys(defs)) {
+          // Assume if schema starts with `___schema`, then it is part of a
+          // recursive schema and we need to prefix it with the root schema name
+          // to make it globally unique
+          if (defSchemaId.startsWith('__schema')) {
             defRenames[defSchemaId] = `${newSchemaName}${defSchemaId}`;
           }
         }

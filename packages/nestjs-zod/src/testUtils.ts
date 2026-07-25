@@ -23,6 +23,12 @@ import { Response } from 'express';
 import { ZodSerializationException } from './exception';
 import { ZodError } from 'zod/v4';
 
+import * as z3 from 'zod/v3';
+import * as z4 from 'zod/v4';
+import * as z4_0_0 from 'zod-v4_0_0';
+import { z as zMini } from 'zod/v4-mini';
+import * as zodV4Core from 'zod/v4/core';
+
 export async function setupApp(
   controllerClass: Type<unknown>,
   {
@@ -96,4 +102,90 @@ export async function setupApp(
       SwaggerModule.createDocument(app, new DocumentBuilder().build()),
     ),
   };
+}
+
+type BaseVersion = '3' | '4.0.0' | 'latest' | 'latest/mini';
+type DirtyVersion = `${BaseVersion} - dirty`;
+type Version = BaseVersion | DirtyVersion;
+type ZForVersions<V extends Version> = 'latest/mini' extends V
+  ? typeof zMini
+  : typeof z4;
+
+export function testMany<V extends Version = BaseVersion>(
+  name: string,
+  fn:
+    | (({
+        z,
+        cleanUp,
+      }: {
+        z: ZForVersions<V>;
+        cleanUp: boolean;
+      }) => Promise<void>)
+    | (({ z, cleanUp }: { z: ZForVersions<V>; cleanUp: boolean }) => void),
+  versions: V[] = ['3', '4.0.0', 'latest', 'latest/mini'] as V[],
+) {
+  describe(name, () => {
+    beforeEach(() => {
+      z4.globalRegistry.clear();
+      zMini.globalRegistry.clear();
+      z4_0_0.globalRegistry.clear();
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+    });
+
+    test.each(versions)('%s', (version) => {
+      const isDirty = version.endsWith(' - dirty');
+      const baseVersion = (
+        isDirty ? version.replace(' - dirty', '') : version
+      ) as BaseVersion;
+
+      const versionedToJSONSchema: Record<BaseVersion, unknown> = {
+        '3': undefined,
+        '4.0.0': z4_0_0.toJSONSchema,
+        latest: z4.toJSONSchema,
+        'latest/mini': zMini.toJSONSchema,
+      };
+      const versionedGlobalRegistry: Record<
+        BaseVersion,
+        typeof zodV4Core.globalRegistry | undefined
+      > = {
+        '3': undefined,
+        '4.0.0':
+          z4_0_0.globalRegistry as unknown as typeof zodV4Core.globalRegistry,
+        latest: z4.globalRegistry,
+        'latest/mini': zMini.globalRegistry,
+      };
+      const toJSONSchemaMock = versionedToJSONSchema[baseVersion];
+      if (toJSONSchemaMock) {
+        jest
+          .spyOn(zodV4Core, 'toJSONSchema')
+          .mockImplementation(toJSONSchemaMock);
+      }
+      const globalRegistryMock = versionedGlobalRegistry[baseVersion];
+      if (
+        globalRegistryMock &&
+        globalRegistryMock !== zodV4Core.globalRegistry
+      ) {
+        jest
+          .spyOn(zodV4Core.globalRegistry, 'get')
+          .mockImplementation((schema) =>
+            globalRegistryMock.get(
+              schema as Parameters<typeof globalRegistryMock.get>[0],
+            ),
+          );
+      }
+
+      return fn({
+        z: {
+          '3': z3,
+          '4.0.0': z4_0_0,
+          latest: z4,
+          'latest/mini': zMini,
+        }[baseVersion] as unknown as ZForVersions<V>,
+        cleanUp: !isDirty,
+      });
+    });
+  });
 }
