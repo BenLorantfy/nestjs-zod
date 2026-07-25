@@ -172,40 +172,44 @@ testMany(
   },
 );
 
-testMany('should properly serialize when using array syntax', async ({ z }) => {
-  class BookDto extends createZodDto(
-    z.object({
-      id: z.string().default('new-book'),
-    }),
-  ) {}
+testMany(
+  'should properly serialize when using array syntax',
+  async ({ z }) => {
+    class BookDto extends createZodDto(
+      z.object({
+        id: z.string().default('new-book'),
+      }),
+    ) {}
 
-  @Controller('books')
-  class BookController {
-    constructor() {}
+    @Controller('books')
+    class BookController {
+      constructor() {}
 
-    @Get()
-    @ZodSerializerDto([BookDto])
-    getBook() {
-      return [{}, {}];
+      @Get()
+      @ZodSerializerDto([BookDto])
+      getBook() {
+        return [{}, {}];
+      }
     }
-  }
 
-  const { app } = await setupApp(BookController);
+    const { app } = await setupApp(BookController);
 
-  await request(app.getHttpServer())
-    .get('/books')
-    .expect(200)
-    .expect((res) => {
-      expect(res.body).toEqual([
-        {
-          id: 'new-book',
-        },
-        {
-          id: 'new-book',
-        },
-      ]);
-    });
-}, ['3', '4.0.0', 'latest']);
+    await request(app.getHttpServer())
+      .get('/books')
+      .expect(200)
+      .expect((res) => {
+        expect(res.body).toEqual([
+          {
+            id: 'new-book',
+          },
+          {
+            id: 'new-book',
+          },
+        ]);
+      });
+  },
+  ['3', '4.0.0', 'latest'],
+);
 
 testMany(
   'should include input data in issues when reportInput is true',

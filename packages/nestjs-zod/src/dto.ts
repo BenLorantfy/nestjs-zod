@@ -1,6 +1,11 @@
 import { UnknownSchema } from './types';
 import type * as z3 from 'zod/v3';
-import { toJSONSchema, globalRegistry, $ZodType, JSONSchema } from 'zod/v4/core';
+import {
+  toJSONSchema,
+  globalRegistry,
+  $ZodType,
+  JSONSchema,
+} from 'zod/v4/core';
 import { assert } from './assert';
 import {
   DEFS_KEY,
@@ -280,7 +285,6 @@ function generateJsonSchema(
 
   return newSchema;
 }
-
 
 /**
  * Suffixes refs with `_Output` if `io` is `output`

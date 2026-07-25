@@ -107,11 +107,21 @@ export async function setupApp(
 type BaseVersion = '3' | '4.0.0' | 'latest' | 'latest/mini';
 type DirtyVersion = `${BaseVersion} - dirty`;
 type Version = BaseVersion | DirtyVersion;
-type ZForVersions<V extends Version> = 'latest/mini' extends V ? typeof zMini : typeof z4;
+type ZForVersions<V extends Version> = 'latest/mini' extends V
+  ? typeof zMini
+  : typeof z4;
 
 export function testMany<V extends Version = BaseVersion>(
   name: string,
-  fn: (({ z, cleanUp }: { z: ZForVersions<V>; cleanUp: boolean }) => Promise<void>)|(({ z, cleanUp }: { z: ZForVersions<V>; cleanUp: boolean }) => void),
+  fn:
+    | (({
+        z,
+        cleanUp,
+      }: {
+        z: ZForVersions<V>;
+        cleanUp: boolean;
+      }) => Promise<void>)
+    | (({ z, cleanUp }: { z: ZForVersions<V>; cleanUp: boolean }) => void),
   versions: V[] = ['3', '4.0.0', 'latest', 'latest/mini'] as V[],
 ) {
   describe(name, () => {
@@ -127,12 +137,17 @@ export function testMany<V extends Version = BaseVersion>(
 
     test.each(versions)('%s', (version) => {
       const isDirty = version.endsWith(' - dirty');
-      const baseVersion = (isDirty ? version.replace(' - dirty', '') : version) as BaseVersion;
+      const baseVersion = (
+        isDirty ? version.replace(' - dirty', '') : version
+      ) as BaseVersion;
 
-      const versionedToJSONSchema: Record<BaseVersion, ((...args: any[]) => any) | undefined> = {
+      const versionedToJSONSchema: Record<
+        BaseVersion,
+        ((...args: any[]) => any) | undefined
+      > = {
         '3': undefined,
         '4.0.0': z4_0_0.toJSONSchema,
-        'latest': z4.toJSONSchema,
+        latest: z4.toJSONSchema,
         'latest/mini': zMini.toJSONSchema,
       };
       const versionedGlobalRegistry: Record<
@@ -140,13 +155,16 @@ export function testMany<V extends Version = BaseVersion>(
         typeof zodV4Core.globalRegistry | undefined
       > = {
         '3': undefined,
-        '4.0.0': z4_0_0.globalRegistry as unknown as typeof zodV4Core.globalRegistry,
-        'latest': z4.globalRegistry,
+        '4.0.0':
+          z4_0_0.globalRegistry as unknown as typeof zodV4Core.globalRegistry,
+        latest: z4.globalRegistry,
         'latest/mini': zMini.globalRegistry,
       };
       const toJSONSchemaMock = versionedToJSONSchema[baseVersion];
       if (toJSONSchemaMock) {
-        jest.spyOn(zodV4Core, 'toJSONSchema').mockImplementation(toJSONSchemaMock);
+        jest
+          .spyOn(zodV4Core, 'toJSONSchema')
+          .mockImplementation(toJSONSchemaMock);
       }
       const globalRegistryMock = versionedGlobalRegistry[baseVersion];
       if (
@@ -166,11 +184,11 @@ export function testMany<V extends Version = BaseVersion>(
         z: {
           '3': z3,
           '4.0.0': z4_0_0,
-          'latest': z4,
+          latest: z4,
           'latest/mini': zMini,
         }[baseVersion] as unknown as ZForVersions<V>,
         cleanUp: !isDirty,
       });
     });
-  })
+  });
 }
