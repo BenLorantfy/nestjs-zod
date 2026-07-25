@@ -1,7 +1,6 @@
 import { Body, Controller, Post, Get, Res } from '@nestjs/common';
 import type { Response } from 'express';
 import { z } from 'zod/v4';
-import { z as zMini } from 'zod/v4-mini';
 import { createZodDto } from './dto';
 import { ZodResponse } from './response';
 import { get } from 'lodash';

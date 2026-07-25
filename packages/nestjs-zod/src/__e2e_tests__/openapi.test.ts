@@ -25,7 +25,6 @@ import { cleanupOpenApiDoc } from '../cleanupOpenApiDoc';
 import get from 'lodash/get';
 import { PREFIX } from '../const';
 import { IsString } from 'class-validator';
-import z3 from 'zod/v3';
 import request from 'supertest';
 import { setupApp, testMany } from '../testUtils';
 import { ZodSerializerDto } from '../serializer';
@@ -2190,50 +2189,46 @@ testMany(
   ['4.0.0', 'latest'],
 );
 
-testMany(
-  'does not touch refs for schemas that are not from a zod dto',
-  async ({ z }) => {
-    class MySchema {
-      @ApiProperty({
-        type: 'array',
-        items: {
-          $ref: '#/$defs/MyThing',
-        },
-      })
-      things!: unknown[];
+test('does not touch refs for schemas that are not from a zod dto', async () => {
+  class MySchema {
+    @ApiProperty({
+      type: 'array',
+      items: {
+        $ref: '#/$defs/MyThing',
+      },
+    })
+    things!: unknown[];
+  }
+
+  class MyQueryParams {
+    @ApiProperty({
+      type: 'array',
+      items: {
+        $ref: '#/$defs/MyFilter',
+      },
+    })
+    filters!: unknown[];
+  }
+
+  @Controller()
+  class MyController {
+    constructor() {}
+
+    @Post()
+    createThing(@Query() query: MyQueryParams, @Body() thing: MySchema) {
+      return thing;
     }
+  }
 
-    class MyQueryParams {
-      @ApiProperty({
-        type: 'array',
-        items: {
-          $ref: '#/$defs/MyFilter',
-        },
-      })
-      filters!: unknown[];
-    }
-
-    @Controller()
-    class MyController {
-      constructor() {}
-
-      @Post()
-      createThing(@Query() query: MyQueryParams, @Body() thing: MySchema) {
-        return thing;
-      }
-    }
-
-    const doc = await getSwaggerDoc(MyController);
-    expect(
-      get(doc, 'components.schemas.MySchema.properties.things.items.$ref'),
-    ).toEqual('#/$defs/MyThing');
-    expect(get(doc, 'paths./.post.parameters[0].schema.items.$ref')).toEqual(
-      '#/$defs/MyFilter',
-    );
-    expect(JSON.stringify(doc)).not.toContain(PREFIX);
-  },
-  ['4.0.0', 'latest'],
-);
+  const doc = await getSwaggerDoc(MyController);
+  expect(
+    get(doc, 'components.schemas.MySchema.properties.things.items.$ref'),
+  ).toEqual('#/$defs/MyThing');
+  expect(get(doc, 'paths./.post.parameters[0].schema.items.$ref')).toEqual(
+    '#/$defs/MyFilter',
+  );
+  expect(JSON.stringify(doc)).not.toContain(PREFIX);
+});
 
 testMany(
   'add title metadata',
@@ -3501,13 +3496,6 @@ async function getSwaggerDoc(
   } else {
     return doc;
   }
-}
-
-function ctx(params: { version: string; cleanUp?: boolean }) {
-  return {
-    ...params,
-    ctx: `${params.version}${params.cleanUp ? ` - cleaned` : ''}`,
-  };
 }
 
 async function testPayload(doc: unknown, payload: Record<string, unknown>) {

@@ -73,39 +73,30 @@ testMany(
   },
 );
 
-testMany(
-  'interceptor should not strip out password if no UserDto is defined',
-  async ({ z }) => {
-    const UserSchema = z.object({
-      username: z.string(),
-    });
+test('interceptor should not strip out password if no UserDto is defined', async () => {
+  const testUser = {
+    username: 'test',
+    password: 'test',
+  };
 
-    class UserDto extends createZodDto(UserSchema) {}
+  const context = createMock<ExecutionContext>();
 
-    const testUser = {
-      username: 'test',
-      password: 'test',
-    };
+  const handler = createMock<CallHandler>({
+    handle: () => of(testUser),
+  });
 
-    const context = createMock<ExecutionContext>();
+  const reflector = createMock<Reflector>({
+    getAllAndOverride: jest.fn(),
+  });
 
-    const handler = createMock<CallHandler>({
-      handle: () => of(testUser),
-    });
+  const interceptor = new ZodSerializerInterceptor(reflector);
 
-    const reflector = createMock<Reflector>({
-      getAllAndOverride: jest.fn(),
-    });
+  const userObservable = interceptor.intercept(context, handler);
+  const user = (await lastValueFrom(userObservable)) as typeof testUser;
 
-    const interceptor = new ZodSerializerInterceptor(reflector);
-
-    const userObservable = interceptor.intercept(context, handler);
-    const user = (await lastValueFrom(userObservable)) as typeof testUser;
-
-    expect(user.password).toBe('test');
-    expect(user.username).toBe('test');
-  },
-);
+  expect(user.password).toBe('test');
+  expect(user.username).toBe('test');
+});
 
 testMany('should throw an error if the response is invalid', async ({ z }) => {
   class BookDto extends createZodDto(
