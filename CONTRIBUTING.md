@@ -37,7 +37,7 @@ This repository is a monorepo and includes several packages under the `packages`
 
 Please write tests for any PR you create
 
-`packages/example` is additionally covered by [Specmatic](https://specmatic.io/) contract tests. CI regenerates `packages/example/openapi.json` and fails if it's stale, then runs `specmatic test` to replay the fixtures in `packages/example/specmatic-examples/*.json` against the running app and verify real responses match the documented OpenAPI schema. If you change a request/response shape in `packages/example`, update the corresponding DTO, regenerate the spec (`pnpm run generate:openapi`), and update/add a matching fixture in `specmatic-examples/`.
+`packages/example` is additionally covered by [Specmatic](https://specmatic.io/) contract tests. CI runs `specmatic test` to replay the fixtures in `packages/example/specmatic-examples/*.json` against the running app and verify real responses match the documented OpenAPI schema in `packages/example/openapi.json`. If you change a request/response shape in `packages/example`, update the corresponding DTO, manually update `openapi.json` to match, and update/add a matching fixture in `specmatic-examples/`.
 
 ### Documentation
 

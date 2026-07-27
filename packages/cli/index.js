@@ -6,7 +6,6 @@ const { exec } = require('node:child_process');
 const fs = require('fs');
 const Enquirer = require('enquirer');
 const enquirer = new Enquirer();
-const { setupSpecmatic } = require('./specmaticSetup');
 
 const options = {
   // dry: true,
@@ -102,14 +101,6 @@ async function main() {
     updatedFiles.push([path.join('src', 'main.ts')])
   }
 
-  let specmaticResult = { setUp: false, createdFiles: [] };
-  if (swaggerSetUp) {
-    specmaticResult = await setupSpecmatic(projectFolder, { logger, enquirer, tryInstallMissingPackages, execAsync, getProjectPackageJson, inferPackageManager });
-    updatedFiles.push(...specmaticResult.createdFiles);
-  } else {
-    logger.info('Skipping Specmatic setup since swagger/openapi generation was not configured');
-  }
-
   if (await shouldFormatFiles(projectFolder)) {
     logger.info('Running formatter')
     try {
@@ -122,15 +113,6 @@ async function main() {
   }
   console.log("");
   console.log("\x1b[32mSuccessfully setup nestjs-zod\x1b[0m")
-
-  if (specmaticResult.setUp) {
-    console.log("");
-    console.log("Specmatic contract testing was scaffolded.  Next steps:");
-    console.log("  1. Run your app's \"generate:openapi\" script to produce openapi.json");
-    console.log("  2. Start your app");
-    console.log("  3. Capture real request/response examples as JSON fixtures in specmatic-examples/ (see the nestjs-zod README for the fixture format)");
-    console.log("  4. Run your app's \"test:contract\" script");
-  }
 }
 
 /**

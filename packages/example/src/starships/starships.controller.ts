@@ -1,5 +1,5 @@
 import { Controller, Get, Post, Body, Res } from '@nestjs/common';
-import { ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 import { ZodResponse } from 'nestjs-zod';
 import { CreateStarshipFormDto, StarshipDto, StarshipListDto, Starship } from './starships.dto';
 import { Response } from 'express';
@@ -65,7 +65,7 @@ export class StarshipsController {
   ];
 
   @Get()
-  @ZodResponse({ status: 200, type: StarshipListDto, description: 'List of all starships' })
+  @ZodResponse({ type: StarshipListDto, description: 'List of all starships' })
   getStarships() {
     return {
       data: this.mockStarships,
@@ -74,18 +74,6 @@ export class StarshipsController {
 
   @Post()
   @ZodResponse({ status: 201, type: StarshipDto, description: 'Starship created successfully' })
-  @ApiResponse({
-    status: 400,
-    description: 'Validation failed',
-    schema: {
-      type: 'object',
-      properties: {
-        statusCode: { type: 'number' },
-        message: { type: 'string' },
-        errors: { type: 'array', items: { type: 'object' } },
-      },
-    },
-  })
   createStarship(@Body() createStarshipDto: CreateStarshipFormDto) {
     const newStarship = {
       ...createStarshipDto,
@@ -116,7 +104,7 @@ export class StarshipsController {
    * > decorator.
    */
   @Get('headers-example')
-  @ZodResponse({ status: 200, type: StarshipListDto, description: 'List of all starships' })
+  @ZodResponse({ type: StarshipListDto, description: 'List of all starships' })
   getStarships2(@Res({ passthrough: true }) res: Response) {
     res.header('X-Example', 'example');
     return {

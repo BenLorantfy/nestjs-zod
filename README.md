@@ -62,7 +62,7 @@
 ```bash
 npx nestjs-zod-cli /path/to/nestjs/project
 ```
-This command runs a codemod that adds the validation pipe, serialization interceptor, http exception filter, and swagger cleanup function. If you opt into swagger/OpenAPI generation, it will also offer to scaffold [Specmatic](https://specmatic.io/) contract testing (an `openapi.json` generator script and `generate:openapi`/`test:contract` scripts) so your API's documented responses can be verified against what your app actually returns
+This command runs a codemod that adds the validation pipe, serialization interceptor, http exception filter, and swagger cleanup function.
 
 Alternatively, you can follow the manual setup steps below
 

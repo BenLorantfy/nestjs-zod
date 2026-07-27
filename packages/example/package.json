@@ -18,7 +18,6 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:swagger": "playwright test",
-    "generate:openapi": "ts-node -r tsconfig-paths/register scripts/generate-openapi.ts",
     "test:contract": "curl -sf --retry 10 --retry-delay 2 --retry-connrefused http://localhost:3001/api-json -o .specmatic-readiness-probe.json && specmatic test openapi.json --testBaseURL=http://localhost:3001 --examples=specmatic-examples"
   },
   "dependencies": {
