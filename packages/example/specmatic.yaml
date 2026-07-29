@@ -4,3 +4,7 @@ sources:
 
 examples:
   - specmatic-examples
+
+test:
+  resiliencyTests:
+    enable: all

@@ -101,6 +101,24 @@ async function main() {
     updatedFiles.push([path.join('src', 'main.ts')])
   }
 
+  let specmaticSetUp = false;
+  const specmaticYamlPath = path.join(projectFolder, 'specmatic.yaml');
+  if (swaggerSetUp && !fs.existsSync(specmaticYamlPath)) {
+    fs.writeFileSync(specmaticYamlPath, 'sources:\n  - test:\n      - openapi.json\n\nexamples:\n  - specmatic-examples\n\ntest:\n  resiliencyTests:\n    enable: all\n');
+
+    const pkgInfo = getProjectPackageJson(projectFolder);
+    pkgInfo.scripts = pkgInfo.scripts || {};
+    if (!pkgInfo.scripts['test:contract']) {
+      pkgInfo.scripts['test:contract'] = 'specmatic test --testBaseURL=http://localhost:3000';
+      fs.writeFileSync(path.join(projectFolder, 'package.json'), JSON.stringify(pkgInfo, null, 2) + '\n');
+      updatedFiles.push('package.json');
+    }
+
+    updatedFiles.push('specmatic.yaml');
+    specmaticSetUp = true;
+    logger.success('Created specmatic.yaml');
+  }
+
   if (await shouldFormatFiles(projectFolder)) {
     logger.info('Running formatter')
     try {
@@ -113,6 +131,15 @@ async function main() {
   }
   console.log("");
   console.log("\x1b[32mSuccessfully setup nestjs-zod\x1b[0m")
+
+  if (specmaticSetUp) {
+    console.log("");
+    console.log("Specmatic contract testing was scaffolded.  Next steps:");
+    console.log("  1. Make sure your app writes its OpenAPI spec to openapi.json (see the nestjs-zod README)");
+    console.log("  2. Start your app");
+    console.log("  3. Capture real request/response examples as JSON fixtures in specmatic-examples/ (see the nestjs-zod README for the fixture format)");
+    console.log("  4. Run your app's \"test:contract\" script");
+  }
 }
 
 /**
