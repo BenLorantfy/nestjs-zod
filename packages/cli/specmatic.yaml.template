@@ -5,8 +5,8 @@ systemUnderTest:
     definitions:
     - definition:
         source:
-          web:
-            url: http://localhost:3001
+          filesystem:
+            directory: "."
         specs:
         - "openapi.json"
     data:

@@ -16,7 +16,7 @@ async function bootstrap() {
       .build()
   );
 
-  SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc));
+  SwaggerModule.setup('api', app, cleanupOpenApiDoc(openApiDoc), { jsonDocumentUrl: 'openapi.json' });
 
   await app.listen(process.env.PORT ?? 3001);
 }

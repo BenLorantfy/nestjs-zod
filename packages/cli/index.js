@@ -104,7 +104,7 @@ async function main() {
   let specmaticSetUp = false;
   const specmaticYamlPath = path.join(projectFolder, 'specmatic.yaml');
   if (swaggerSetUp && !fs.existsSync(specmaticYamlPath)) {
-    fs.writeFileSync(specmaticYamlPath, 'sources:\n  - test:\n      - openapi.json\n\nexamples:\n  - specmatic-examples\n\ntest:\n  resiliencyTests:\n    enable: all\n');
+    fs.copyFileSync(path.join(__dirname, 'specmatic.yaml.template'), specmaticYamlPath);
 
     const pkgInfo = getProjectPackageJson(projectFolder);
     pkgInfo.scripts = pkgInfo.scripts || {};

@@ -71,10 +71,10 @@ Schema-driven codegen guarantees *internal* consistency — the DTO type, the va
 
 Specmatic (`specmatic@^2.50.0`, a JVM-based CLI) is wired into `packages/example`'s CI pipeline via two mechanisms:
 
-1. **Contract test** (`pnpm run test:contract`) — starts the example app for real, then runs `specmatic test --testBaseURL=...`, replaying fixture requests (`packages/example/specmatic-examples/*.json`) and asserting the *actual* HTTP responses conform to the documented OpenAPI schema. The spec path and examples directory are declared once in `packages/example/specmatic.yaml` (auto-discovered by the CLI) rather than repeated as flags.
-2. **Backward-compatibility check** — `specmatic backward-compatibility-check --base-branch=origin/main --target-path=packages/example/openapi.json`, introduced in commit `2ffb869`, diffs the spec on a PR branch against `origin/main` and fails if the change is not backward-compatible.
+1. **Contract test** (`pnpm run test:contract`) — starts the example app for real, then runs `specmatic test --testBaseURL=...`, replaying fixture requests (`packages/example/specmatic-examples/*.json`) and asserting the *actual* HTTP responses conform to the *actual* OpenAPI document the running app serves. `packages/example/specmatic.yaml` (Specmatic config v3) declares this as a `web` source pointing at `http://localhost:3001/openapi.json` — `main.ts` exposes that path via `SwaggerModule.setup('api', app, doc, { jsonDocumentUrl: 'openapi.json' })` — so the spec is fetched fresh from the live app on every run rather than read from a committed file.
+2. **Backward-compatibility check** — `specmatic backward-compatibility-check --base-branch=origin/main --target-path=packages/example/openapi.json`, introduced in commit `2ffb869`, diffs the spec on a PR branch against `origin/main` and fails if the change is not backward-compatible. This mechanism still uses the committed `openapi.json` file — it inherently must, since it diffs the spec at a *past* commit against the current one, which nothing live can provide.
 
-There used to be a third mechanism — a CI staleness check that regenerated `openapi.json` via a `scripts/generate-openapi.ts` script and diffed it against the committed file. That script has been removed; `openapi.json` is now a static, hand-maintained file, so nothing currently re-derives it from the live app code automatically. Keeping it in sync with `main.ts`/the controllers is a manual responsibility.
+There used to be a third mechanism — a CI staleness check that regenerated `openapi.json` via a `scripts/generate-openapi.ts` script and diffed it against the committed file. That script has been removed; `openapi.json` is now a static, hand-maintained file kept only for mechanism 2. Since mechanism 1 no longer reads it, `openapi.json` drifting from what the controllers actually document no longer breaks contract tests silently — it would only ever affect the backward-compatibility check, and even that just compares the file against itself across commits, not against runtime truth.
 
 Mechanism 1 is what has caught real bugs — see section 7 for both cases found so far.
 
@@ -104,8 +104,9 @@ Mechanism 1 is what has caught real bugs — see section 7 for both cases found 
 flowchart TD
     Code["App code + Zod schemas"] -.->|"manually kept in sync"| SpecFile["openapi.json (committed, hand-maintained)"]
 
-    LiveApp["Live example app\n(pnpm run start)"] --> ContractTest["specmatic test\n(replays specmatic-examples/*.json)"]
-    SpecFile --> ContractTest
+    LiveApp["Live example app\n(pnpm run start)"] -->|"serves /openapi.json"| LiveSpec["Live OpenAPI doc"]
+    LiveSpec --> ContractTest["specmatic test\n(web source, replays specmatic-examples/*.json)"]
+    LiveApp --> ContractTest
 
     SpecFile --> CompatCheck["specmatic backward-compatibility-check\n(vs origin/main)"]
     MainBranch[("origin/main openapi.json")] --> CompatCheck
@@ -116,7 +117,9 @@ flowchart TD
 
 ## 9. Current state
 
-Two of the three original CI mechanisms from section 6 are active: the live contract test and the backward-compatibility check against `origin/main`. The staleness check has been removed along with `scripts/generate-openapi.ts`, so `openapi.json` is no longer automatically re-derived from the app code. `specmatic-examples/` contains four fixtures: the original 200/404 pair for `GET /api/people/:id`, plus the two 400 validation-error fixtures from section 7.2. This is a factual snapshot of the repo's current state, not a permanent design decision.
+Two of the three original CI mechanisms from section 6 are active: the live contract test and the backward-compatibility check against `origin/main`. The staleness check has been removed along with `scripts/generate-openapi.ts`, so the committed `openapi.json` is no longer automatically re-derived from the app code — but that file now only feeds the backward-compatibility check (section 8), not the contract test, which reads the spec straight from the running app instead. `specmatic-examples/` contains four fixtures: the original 200/404 pair for `GET /api/people/:id`, plus the two 400 validation-error fixtures from section 7.2. This is a factual snapshot of the repo's current state, not a permanent design decision.
+
+Switching the contract test from the committed file to the live-served spec (Specmatic config v3, `web` source) surfaced that `e92690e` had quietly stripped the very decorators section 7 describes adding — `getPerson`'s 404 `@ApiResponse`, `createPerson`/`createStarship`'s 400 `@ApiResponse`, and several explicit `status:` values on `@ZodResponse` — leaving the live app's generated doc weaker than the hand-maintained file it used to be compared against. Those decorators were restored so the fixtures in `specmatic-examples/` pass against runtime truth again, which is the whole point of testing against the live spec rather than a file someone can forget to update.
 
 ## 10. Value assessment
 

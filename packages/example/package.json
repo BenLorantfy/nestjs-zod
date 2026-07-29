@@ -18,7 +18,7 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:swagger": "playwright test",
-    "test:contract": "curl -sf --retry 10 --retry-delay 2 --retry-connrefused http://localhost:3001/api-json -o .specmatic-readiness-probe.json && specmatic test --testBaseURL=http://localhost:3001"
+    "test:contract": "curl -sf --retry 10 --retry-delay 2 --retry-connrefused http://localhost:3001/openapi.json -o .specmatic-readiness-probe.json && specmatic test --testBaseURL=http://localhost:3001"
   },
   "dependencies": {
     "@nestjs/common": "^11.1.5",
