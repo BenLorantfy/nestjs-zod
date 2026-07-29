@@ -1,0 +1,6 @@
+sources:
+  - test:
+      - openapi.json
+
+examples:
+  - specmatic-examples

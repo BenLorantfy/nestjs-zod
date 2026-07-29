@@ -71,7 +71,7 @@ Schema-driven codegen guarantees *internal* consistency — the DTO type, the va
 
 Specmatic (`specmatic@^2.50.0`, a JVM-based CLI) is wired into `packages/example`'s CI pipeline via two mechanisms:
 
-1. **Contract test** (`pnpm run test:contract`) — starts the example app for real, then runs `specmatic test openapi.json --testBaseURL=... --examples=specmatic-examples`, replaying fixture requests (`packages/example/specmatic-examples/*.json`) and asserting the *actual* HTTP responses conform to the documented OpenAPI schema.
+1. **Contract test** (`pnpm run test:contract`) — starts the example app for real, then runs `specmatic test --testBaseURL=...`, replaying fixture requests (`packages/example/specmatic-examples/*.json`) and asserting the *actual* HTTP responses conform to the documented OpenAPI schema. The spec path and examples directory are declared once in `packages/example/specmatic.yaml` (auto-discovered by the CLI) rather than repeated as flags.
 2. **Backward-compatibility check** — `specmatic backward-compatibility-check --base-branch=origin/main --target-path=packages/example/openapi.json`, introduced in commit `2ffb869`, diffs the spec on a PR branch against `origin/main` and fails if the change is not backward-compatible.
 
 There used to be a third mechanism — a CI staleness check that regenerated `openapi.json` via a `scripts/generate-openapi.ts` script and diffed it against the committed file. That script has been removed; `openapi.json` is now a static, hand-maintained file, so nothing currently re-derives it from the live app code automatically. Keeping it in sync with `main.ts`/the controllers is a manual responsibility.
