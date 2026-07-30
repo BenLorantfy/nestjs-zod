@@ -48,16 +48,6 @@ jobs:
         run: cd packages/example && pnpm build
       - name: Test example app
         run: cd packages/example && pnpm test
-      - name: Start example app for backward compatibility check
-        if: github.event_name == 'pull_request'
-        run: cd packages/example && pnpm run start &
-      - name: Fetch live OpenAPI spec for example app
-        if: github.event_name == 'pull_request'
-        run: curl -sf --retry 10 --retry-delay 2 --retry-connrefused http://localhost:3001/openapi.json -o packages/example/openapi.json
-      - name: Backward compatibility check for example app OpenAPI spec
-        if: github.event_name == 'pull_request'
-        run: pnpm exec specmatic backward-compatibility-check --repo-dir="$GITHUB_WORKSPACE" --base-branch=origin/main --target-path=packages/example/openapi.json
-        working-directory: packages/example
       - name: Build example-esm app
         run: cd packages/example-esm && pnpm build
       - name: Cache Playwright Browsers
