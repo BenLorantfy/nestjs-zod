@@ -5,3 +5,4 @@ test-results
 build/reports/specmatic
 .specmatic
 packages/example/.specmatic-readiness-probe.json
+packages/example/openapi.json
