@@ -39,17 +39,19 @@ module.exports = function(fileInfo, api) {
         // Get the openApiDoc argument
         const setupCall = swaggerSetupCall.get();
         const openApiDocArg = setupCall.node.arguments[2];
-        
+
         // Only wrap if not already wrapped
-        if (!(openApiDocArg.type === 'CallExpression' && 
+        if (!(openApiDocArg.type === 'CallExpression' &&
               openApiDocArg.callee.type === 'Identifier' &&
               openApiDocArg.callee.name === 'cleanupOpenApiDoc')) {
-            
+
             setupCall.node.arguments[2] = api.j.callExpression(
                 api.j.identifier('cleanupOpenApiDoc'),
                 [openApiDocArg]
             );
         }
+
+        ensureJsonDocumentUrl(api, setupCall);
     }
 
     return root.toSource();
@@ -160,10 +162,54 @@ function createSwaggerSetup(api) {
                 api.j.callExpression(
                     api.j.identifier('cleanupOpenApiDoc'),
                     [api.j.identifier('openApiDoc')]
-                )
+                ),
+                createJsonDocumentUrlOption(api)
             ]
         )
     )
+}
+
+/**
+ * @param {import('jscodeshift').API} api
+ */
+function createJsonDocumentUrlOption(api) {
+    return api.j.objectExpression([
+        api.j.property('init', api.j.identifier('jsonDocumentUrl'), api.j.literal('openapi.json'))
+    ]);
+}
+
+/**
+ * Ensures the SwaggerModule.setup(...) call's options argument sets
+ * `jsonDocumentUrl: 'openapi.json'`, so the app serves its spec live for
+ * Specmatic's `web` source to fetch. Leaves the call alone if the options
+ * argument isn't a plain object literal we can safely inspect/mutate.
+ *
+ * @param {import('jscodeshift').API} api
+ * @param {import('jscodeshift').ASTPath} setupCall
+ */
+function ensureJsonDocumentUrl(api, setupCall) {
+    const optionsArg = setupCall.node.arguments[3];
+
+    if (!optionsArg) {
+        setupCall.node.arguments[3] = createJsonDocumentUrlOption(api);
+        return;
+    }
+
+    if (optionsArg.type !== 'ObjectExpression') {
+        return;
+    }
+
+    const hasJsonDocumentUrl = optionsArg.properties.some(prop =>
+        prop.type === 'ObjectProperty' &&
+        prop.key?.type === 'Identifier' &&
+        prop.key.name === 'jsonDocumentUrl'
+    );
+
+    if (!hasJsonDocumentUrl) {
+        optionsArg.properties.push(
+            api.j.property('init', api.j.identifier('jsonDocumentUrl'), api.j.literal('openapi.json'))
+        );
+    }
 }
 
 /**

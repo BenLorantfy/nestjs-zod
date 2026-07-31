@@ -39,6 +39,8 @@ Please write tests for any PR you create
 
 `packages/example` is additionally covered by [Specmatic](https://specmatic.io/) contract tests. CI starts the app for real and runs `specmatic test`, which fetches the OpenAPI spec live from the running app's `/openapi.json` endpoint (see `packages/example/specmatic.yaml`) and replays the fixtures in `packages/example/specmatic-examples/*.json` against it, asserting real responses match what's documented — plus, since `schemaResiliencyTests` is enabled, its own generated mutated request variants per operation. If you change a request/response shape in `packages/example`, update the corresponding DTO and `@ApiResponse` decorators so the live spec still matches, and update/add a matching fixture in `specmatic-examples/` if the change affects one of the hand-picked example scenarios. See [`SPECMATIC.md`](./SPECMATIC.md) for the full mechanism.
 
+`packages/cli`'s scaffolded `specmatic.yaml.template` mirrors this same live-`/openapi.json` setup for consumer projects rather than a committed spec file — if you touch `swaggerTransform.js` or `specmatic.yaml.template`, keep them consistent with `packages/example`'s config and verify the codemod output (e.g. by running `jscodeshift` against a sample `main.ts`).
+
 ### Documentation
 
 The `nestjs-zod` documentation lives in the README.md. Be sure to document any API changes you implement.

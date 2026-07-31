@@ -104,6 +104,10 @@ async function main() {
   let specmaticSetUp = false;
   const specmaticYamlPath = path.join(projectFolder, 'specmatic.yaml');
   if (swaggerSetUp && !fs.existsSync(specmaticYamlPath)) {
+    await tryInstallMissingPackages(projectFolder, [
+      { name: 'specmatic', target: 'devDependencies' },
+    ]);
+
     fs.copyFileSync(path.join(__dirname, 'specmatic.yaml.template'), specmaticYamlPath);
 
     const pkgInfo = getProjectPackageJson(projectFolder);
@@ -135,8 +139,8 @@ async function main() {
   if (specmaticSetUp) {
     console.log("");
     console.log("Specmatic contract testing was scaffolded.  Next steps:");
-    console.log("  1. Make sure your app writes its OpenAPI spec to openapi.json (see the nestjs-zod README)");
-    console.log("  2. Start your app");
+    console.log("  1. Start your app (it already serves its OpenAPI spec live at /openapi.json)");
+    console.log("  2. If your app doesn't listen on port 3000, update the URL in specmatic.yaml and the \"test:contract\" script's --testBaseURL to match");
     console.log("  3. Capture real request/response examples as JSON fixtures in specmatic-examples/ (see the nestjs-zod README for the fixture format)");
     console.log("  4. Run your app's \"test:contract\" script");
   }
