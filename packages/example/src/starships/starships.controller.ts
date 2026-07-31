@@ -82,7 +82,25 @@ export class StarshipsController {
       properties: {
         statusCode: { type: 'number' },
         message: { type: 'string' },
-        errors: { type: 'array', items: { type: 'object' } },
+        errors: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              code: { type: 'string' },
+              message: { type: 'string' },
+              expected: { type: 'string' },
+              origin: { type: 'string' },
+              minimum: { type: 'number' },
+              maximum: { type: 'number' },
+              inclusive: { type: 'boolean' },
+              path: {
+                type: 'array',
+                items: { oneOf: [{ type: 'string' }, { type: 'integer' }] },
+              },
+            },
+          },
+        },
       },
     },
   })
