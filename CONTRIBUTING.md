@@ -37,7 +37,7 @@ This repository is a monorepo and includes several packages under the `packages`
 
 Please write tests for any PR you create
 
-`packages/example` is additionally covered by [Specmatic](https://specmatic.io/) contract tests. CI runs `specmatic test` to replay the fixtures in `packages/example/specmatic-examples/*.json` against the running app and verify real responses match the documented OpenAPI schema in `packages/example/openapi.json`. If you change a request/response shape in `packages/example`, update the corresponding DTO, manually update `openapi.json` to match, and update/add a matching fixture in `specmatic-examples/`.
+`packages/example` is additionally covered by [Specmatic](https://specmatic.io/) contract tests. CI starts the app for real and runs `specmatic test`, which fetches the OpenAPI spec live from the running app's `/openapi.json` endpoint (see `packages/example/specmatic.yaml`) and replays the fixtures in `packages/example/specmatic-examples/*.json` against it, asserting real responses match what's documented — plus, since `schemaResiliencyTests` is enabled, its own generated mutated request variants per operation. If you change a request/response shape in `packages/example`, update the corresponding DTO and `@ApiResponse` decorators so the live spec still matches, and update/add a matching fixture in `specmatic-examples/` if the change affects one of the hand-picked example scenarios. See [`SPECMATIC.md`](./SPECMATIC.md) for the full mechanism.
 
 ### Documentation
 
