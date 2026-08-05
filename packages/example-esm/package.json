@@ -35,7 +35,7 @@
     "@nestjs/testing": "^11.1.28",
     "@playwright/test": "^1.61.0",
     "@swc/cli": "^0.8.1",
-    "@swc/core": "^1.15.33",
+    "@swc/core": "^1.15.47",
     "@types/express": "^5.0.6",
     "@types/node": "^25.9.1",
     "@types/supertest": "^6.0.2",
