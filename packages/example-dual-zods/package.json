@@ -47,7 +47,7 @@
     "ts-loader": "^9.6.2",
     "ts-node": "^10.9.1",
     "tsconfig-paths": "^4.2.0",
-    "typescript": "^5.9.3",
+    "typescript": "^7.0.2",
     "zod": "4.4.3"
   },
   "jest": {
