@@ -92,7 +92,7 @@
     "ts-jest": "^29.4.10",
     "tsdown": "^0.22.3",
     "typescript": "5.9.3",
-    "typescript-eslint": "^8.65.0",
+    "typescript-eslint": "^8.66.0",
     "zod": "4.4.3",
     "zod-v4_0_0": "npm:zod@4.0.0"
   },
