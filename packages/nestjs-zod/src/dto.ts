@@ -26,7 +26,7 @@ export interface ZodDto<
   TSchema extends UnknownSchema = UnknownSchema,
   TCodec extends boolean = boolean,
 > {
-  new (): ReturnType<TSchema['parse']>;
+  new (): ZodDtoInstance<ReturnType<TSchema['parse']>>;
   isZodDto: true;
   schema: TSchema;
   codec: TCodec;
@@ -34,6 +34,20 @@ export interface ZodDto<
   Output: ZodDto<UnknownSchema, TCodec>;
   _OPENAPI_METADATA_FACTORY(): unknown;
 }
+
+type IsUnion<T, U = T> = T extends unknown
+  ? [U] extends [T]
+    ? false
+    : true
+  : false;
+
+// TypeScript cannot extend a class whose instance type is a union. Widen union
+// DTO instances to object while preserving their precise parsed type in create().
+type ZodDtoInstance<T> = [T] extends [object]
+  ? IsUnion<T> extends true
+    ? object
+    : T
+  : object;
 
 export function createZodDto<
   TSchema extends UnknownSchema,

@@ -43,6 +43,63 @@ describe.each([
       password: { type: 'string', required: true },
     });
   });
+
+  it('should create the correct DTO for each discriminated-union variant', () => {
+    const AdminUserSchema = z.object({
+      role: z.literal('admin'),
+      username: z.string(),
+      password: z.string(),
+      permissions: z.array(z.string()),
+    });
+    const CustomerUserSchema = z.object({
+      role: z.literal('customer'),
+      username: z.string(),
+      password: z.string(),
+      billingPlan: z.enum(['free', 'pro']),
+    });
+    const UserSchema = z.discriminatedUnion('role', [
+      AdminUserSchema,
+      CustomerUserSchema,
+    ]);
+
+    class UserDto extends createZodDto(UserSchema) {}
+
+    expect(UserDto.isZodDto).toBe(true);
+    expect(UserDto.schema).toBe(UserSchema);
+    expect(
+      UserDto.create({
+        role: 'admin',
+        username: 'vasya',
+        password: 'strong',
+        permissions: ['users:read'],
+      }),
+    ).toEqual({
+      role: 'admin',
+      username: 'vasya',
+      password: 'strong',
+      permissions: ['users:read'],
+    });
+    expect(
+      UserDto.create({
+        role: 'customer',
+        username: 'maria',
+        password: 'secure',
+        billingPlan: 'pro',
+      }),
+    ).toEqual({
+      role: 'customer',
+      username: 'maria',
+      password: 'secure',
+      billingPlan: 'pro',
+    });
+    const metadata = UserDto._OPENAPI_METADATA_FACTORY() as {
+      root: { anyOf?: unknown[]; oneOf?: unknown[] };
+    };
+    expect(metadata.root.anyOf ?? metadata.root.oneOf).toEqual([
+      expect.any(Object),
+      expect.any(Object),
+    ]);
+  });
 });
 
 describe('zod/v4', () => {

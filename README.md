@@ -208,6 +208,7 @@ Check out the [example app](./packages/example/) for a full example of how to in
 
 - [Request Validation](#request-validation)
   - [`createZodDto` (Create a DTO from a Zod schema)](#createzoddto-create-a-dto-from-a-zod-schema)
+  - [`ZodBody` (Use inferred types for root union request bodies)](#zodbody-use-inferred-types-for-root-union-request-bodies)
   - [`ZodValidationPipe` (Get nestjs to validate using zod)](#zodvalidationpipe-get-nestjs-to-validate-using-zod)
   - [`createZodValidationPipe` (Creating custom validation pipe)](#createzodvalidationpipe-creating-custom-validation-pipe)
   - [`ZodValidationException`](#zodvalidationexception)
@@ -269,6 +270,42 @@ class CredentialsDto extends createZodDto(CredentialsSchema) {}
 @Controller('auth')
 class AuthController {
   async signIn(@Body() credentials: CredentialsDto) {}
+}
+```
+
+#### `ZodBody` (Use inferred types for root union request bodies)
+
+`ZodBody` is a specialized body decorator for a complete request body whose
+schema is a union. It keeps the DTO class in Nest's reflected metadata, so the
+global `ZodValidationPipe` still validates the request body with the DTO's
+schema while the parameter can use the inferred union type.
+
+This is particularly useful for union schemas, whose DTO instance type is
+intentionally `object` because TypeScript cannot extend a class with a union
+instance type.
+
+`ZodBody` is not a general replacement for Nest's `@Body()`: it does not
+support property extraction or parameter-level pipes. Continue to use
+`@Body()` for those cases.
+
+```ts
+import { ZodBody, createZodDto } from 'nestjs-zod'
+import { z } from 'zod'
+
+const CommandSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('email'), email: z.string() }),
+  z.object({ type: z.literal('sms'), phone: z.string() }),
+])
+
+class CommandDto extends createZodDto(CommandSchema) {}
+type Command = z.infer<typeof CommandDto.schema>
+
+class CommandsController {
+  create(@ZodBody(CommandDto) command: Command) {
+    if (command.type === 'email') {
+      return command.email
+    }
+  }
 }
 ```
 
