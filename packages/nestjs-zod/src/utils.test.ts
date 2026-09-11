@@ -71,6 +71,27 @@ describe('walkJsonSchema', () => {
     ]);
   });
 
+  it('should walk prefixItems when present (tuples)', () => {
+    const visited: unknown[] = [];
+
+    walkJsonSchema(
+      {
+        type: 'array',
+        prefixItems: [{ type: 'string' }, { type: 'number' }],
+      },
+      (s) => {
+        visited.push(s);
+        return s;
+      },
+    );
+
+    expect(visited).toEqual([
+      expect.objectContaining({ type: 'array' }),
+      expect.objectContaining({ type: 'string' }),
+      expect.objectContaining({ type: 'number' }),
+    ]);
+  });
+
   it('should recurse into propertyNames sub-schemas (e.g. oneOf)', () => {
     const visited: unknown[] = [];
 

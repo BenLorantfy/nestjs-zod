@@ -1,4 +1,4 @@
-import { createZodDto } from './dto';
+import { createZodDto, normalizeArrayType } from './dto';
 import * as z4 from 'zod/v4';
 import * as z3 from 'zod/v3';
 import * as zodMini from 'zod/v4-mini';
@@ -145,3 +145,72 @@ describe.each([
     });
   },
 );
+
+describe('normalizeArrayType', () => {
+  it('leaves a schema with a non-array `type` untouched', () => {
+    const schema = { type: 'string' };
+    expect(normalizeArrayType(schema)).toEqual({ type: 'string' });
+  });
+
+  it('rewrites a 2-member `type` array into `anyOf`', () => {
+    expect(normalizeArrayType({ type: ['string', 'null'] })).toEqual({
+      anyOf: [{ type: 'string' }, { type: 'null' }],
+    });
+  });
+
+  it('rewrites a `type` array with no `null` member into `anyOf`', () => {
+    expect(normalizeArrayType({ type: ['string', 'number'] })).toEqual({
+      anyOf: [{ type: 'string' }, { type: 'number' }],
+    });
+  });
+
+  it('rewrites a `type` array with more than 2 members into `anyOf`, preserving order', () => {
+    expect(
+      normalizeArrayType({ type: ['string', 'number', 'boolean', 'null'] }),
+    ).toEqual({
+      anyOf: [
+        { type: 'string' },
+        { type: 'number' },
+        { type: 'boolean' },
+        { type: 'null' },
+      ],
+    });
+  });
+
+  it('keeps sibling keywords (e.g. `description`) alongside the derived `anyOf`', () => {
+    expect(
+      normalizeArrayType({ type: ['string', 'null'], description: 'hi' }),
+    ).toEqual({
+      anyOf: [{ type: 'string' }, { type: 'null' }],
+      description: 'hi',
+    });
+  });
+
+  // This shape is not currently produced by zod's `toJSONSchema` (a node
+  // either has a `type` array or its own `anyOf`, never both), but the
+  // function is written to stay correct if that ever changes, or when a
+  // hand-written/registered JSON Schema is merged in another way.
+  it('keeps an existing `anyOf` as a separate `allOf` branch instead of merging it with the derived `anyOf`', () => {
+    expect(
+      normalizeArrayType({
+        type: ['string', 'null'],
+        anyOf: [{ $ref: '#/$defs/Foo' }],
+      }),
+    ).toEqual({
+      anyOf: [{ $ref: '#/$defs/Foo' }],
+      allOf: [{ anyOf: [{ type: 'string' }, { type: 'null' }] }],
+    });
+  });
+
+  it('appends to an existing `allOf` when there is no `anyOf` to keep separate', () => {
+    expect(
+      normalizeArrayType({
+        type: ['string', 'null'],
+        allOf: [{ minLength: 1 }],
+      }),
+    ).toEqual({
+      allOf: [{ minLength: 1 }],
+      anyOf: [{ type: 'string' }, { type: 'null' }],
+    });
+  });
+});

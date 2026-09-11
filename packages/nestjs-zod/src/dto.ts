@@ -308,10 +308,57 @@ function cleanupRefs(
       if ('id' in schema) {
         delete schema['id'];
       }
-      return schema;
+      return normalizeArrayType(schema);
     },
     { clone: true },
   );
+}
+
+/**
+ * Zod represents a union of bare types (`z.union([z.string(), z.number()])`,
+ * `z.string().nullable()`, etc.) with the JSON Schema `type` array shorthand,
+ * e.g. `{ type: ["string", "number"] }` or `{ type: ["string", "null"] }`.
+ *
+ * `@nestjs/swagger` does not understand this shorthand: it treats an
+ * array-valued `type` as "this schema is an array", turning the schema into
+ * something like `{ type: "array", items: { type: "string" } }`, which
+ * silently drops every type but the first and is not what the schema means.
+ *
+ * This function rewrites the shorthand into the equivalent (and more widely
+ * understood) `anyOf` form, e.g. `{ anyOf: [{ type: "string" }, { type:
+ * "number" }] }`.  This is also the form `cleanupOpenApiDoc` already knows
+ * how to collapse into `nullable: true` for OpenAPI 3.0 when one of the
+ * `anyOf` branches is `{ type: "null" }`.
+ */
+export function normalizeArrayType(
+  schema: JSONSchema.BaseSchema,
+): JSONSchema.BaseSchema {
+  if (!Array.isArray(schema.type)) {
+    return schema;
+  }
+
+  const derivedAnyOf = schema.type.map((type) => ({ type }));
+  const { type: _type, anyOf, allOf, ...rest } = schema;
+
+  if (anyOf) {
+    // This node already carries its own `anyOf`.  Folding the type
+    // alternatives into it would change what the schema accepts (it would
+    // turn "matches one of these sub-schemas" AND "is one of these bare
+    // types" into a single, looser "matches one of these sub-schemas OR is
+    // one of these bare types"). Keep the two constraints separate instead,
+    // combined with `allOf`, so both still apply.
+    return {
+      ...rest,
+      anyOf,
+      allOf: [...(allOf || []), { anyOf: derivedAnyOf }],
+    };
+  }
+
+  return {
+    ...rest,
+    ...(allOf ? { allOf } : {}),
+    anyOf: derivedAnyOf,
+  };
 }
 
 function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {

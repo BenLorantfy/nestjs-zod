@@ -364,7 +364,7 @@ testMany(
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
     expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   },
-  ['latest', '4.0.0', '3'],
+  ['latest', '4.0.0', '4.6.2', '3'],
 );
 
 testMany(
@@ -530,7 +530,7 @@ describe('issue#349', () => {
       expect(JSON.stringify(doc)).not.toContain(PREFIX);
       expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
     },
-    ['4.0.0', 'latest'],
+    ['4.0.0', '4.6.2', 'latest'],
   );
 });
 
@@ -613,7 +613,7 @@ testMany(
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
     expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   },
-  ['4.0.0', 'latest'],
+  ['4.0.0', '4.6.2', 'latest'],
 );
 
 describe('issue#313', () => {
@@ -750,8 +750,214 @@ testMany(
     expect(JSON.stringify(doc2)).not.toContain(PREFIX);
     expect(await getOpenApiErrors(doc2, '3.1')).toHaveLength(0);
   },
-  ['4.0.0', 'latest'],
+  ['4.0.0', '4.6.2', 'latest'],
 );
+
+describe('issue#473 and issue#474', () => {
+  testMany(
+    'plain union of bare primitive types (no null member)',
+    async ({ z }) => {
+      class BookDto extends createZodDto(
+        z.object({
+          idOrCode: z.union([z.string(), z.number()]),
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController);
+      expect(
+        get(doc, 'components.schemas.BookDto.properties.idOrCode'),
+      ).toEqual({
+        anyOf: [{ type: 'string' }, { type: 'number' }],
+      });
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', '4.6.2', 'latest'],
+  );
+
+  testMany(
+    'union of bare primitive types with a `null` member that is not last',
+    async ({ z }) => {
+      class BookDto extends createZodDto(
+        z.object({
+          idOrCode: z.union([z.string(), z.null(), z.number()]),
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController);
+      expect(
+        get(doc, 'components.schemas.BookDto.properties.idOrCode'),
+      ).toEqual({
+        anyOf: [{ type: 'string' }, { type: 'number' }],
+        nullable: true,
+      });
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', '4.6.2', 'latest'],
+  );
+
+  testMany(
+    'nullable primitive inside an array item',
+    async ({ z }) => {
+      class BookDto extends createZodDto(
+        z.object({
+          tags: z.array(z.string().nullable()),
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController);
+      expect(get(doc, 'components.schemas.BookDto.properties.tags')).toEqual({
+        type: 'array',
+        items: {
+          type: 'string',
+          nullable: true,
+        },
+      });
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', '4.6.2', 'latest'],
+  );
+
+  testMany(
+    'nullable primitive as a record value',
+    async ({ z }) => {
+      class BookDto extends createZodDto(
+        z.object({
+          notesById: z.record(z.string(), z.string().nullable()),
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController);
+      expect(
+        get(doc, 'components.schemas.BookDto.properties.notesById'),
+      ).toEqual({
+        type: 'object',
+        additionalProperties: {
+          type: 'string',
+          nullable: true,
+        },
+      });
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', '4.6.2', 'latest'],
+  );
+
+  testMany(
+    'nullable primitive inside a tuple item',
+    async ({ z }) => {
+      class BookDto extends createZodDto(
+        z.object({
+          range: z.tuple([z.string().nullable(), z.number()]),
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController);
+      const rangeSchema = get(
+        doc,
+        'components.schemas.BookDto.properties.range',
+      ) as { prefixItems?: unknown[] };
+      // Regardless of how tuples are otherwise represented, the first
+      // position must never come back as `{ type: 'array', items: { type:
+      // 'string' } }` - that would mean the nullable primitive's `type`
+      // array was left untouched and misread as "array of string"
+      expect(rangeSchema.prefixItems?.[0]).toEqual({
+        type: 'string',
+        nullable: true,
+      });
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    },
+    ['4.0.0', '4.6.2', 'latest'],
+  );
+
+  testMany(
+    'named schema with a bare nullable primitive, referenced from $defs',
+    async ({ z }) => {
+      const Score = z.string().nullable().meta({ id: 'Score' });
+
+      class BookDto extends createZodDto(
+        z.object({
+          mathScore: Score,
+          historyScore: Score,
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController);
+      expect(get(doc, 'components.schemas.Score')).toEqual({
+        type: 'string',
+        nullable: true,
+      });
+      expect(
+        get(doc, 'components.schemas.BookDto.properties.mathScore'),
+      ).toEqual({ $ref: '#/components/schemas/Score' });
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', '4.6.2', 'latest'],
+  );
+});
 
 testMany(
   'optional fields',
