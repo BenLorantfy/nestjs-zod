@@ -159,6 +159,15 @@ export function walkJsonSchema(
     schema.items = walkJsonSchema(schema.items, callback);
   }
 
+  // Handle tuple items.  Zod represents `z.tuple([...])` using `prefixItems`
+  // (one schema per fixed position) rather than `items`
+  if (schema.type === 'array' && Array.isArray(schema.prefixItems)) {
+    // @ts-expect-error FIXME
+    schema.prefixItems = schema.prefixItems.map((item) =>
+      walkJsonSchema(item, callback),
+    );
+  }
+
   // Handle oneOf
   if (schema.oneOf) {
     schema.oneOf = schema.oneOf.map((subSchema) =>
