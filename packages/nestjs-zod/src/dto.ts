@@ -30,6 +30,7 @@ export interface ZodDto<
   isZodDto: true;
   schema: TSchema;
   codec: TCodec;
+  [ioSymbol]?: 'input' | 'output';
   create(input: unknown): ReturnType<TSchema['parse']>;
   Output: ZodDto<UnknownSchema, TCodec>;
   _OPENAPI_METADATA_FACTORY(): unknown;

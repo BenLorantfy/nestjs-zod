@@ -141,9 +141,13 @@ export function testMany<V extends Version = BaseVersion>(
         isDirty ? version.replace(' - dirty', '') : version
       ) as BaseVersion;
 
-      const versionedToJSONSchema: Record<BaseVersion, unknown> = {
+      const versionedToJSONSchema: Record<
+        BaseVersion,
+        typeof zodV4Core.toJSONSchema | undefined
+      > = {
         '3': undefined,
-        '4.0.0': z4_0_0.toJSONSchema,
+        '4.0.0':
+          z4_0_0.toJSONSchema as unknown as typeof zodV4Core.toJSONSchema,
         latest: z4.toJSONSchema,
         'latest/mini': zMini.toJSONSchema,
       };
