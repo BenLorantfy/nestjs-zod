@@ -44,7 +44,7 @@ testMany(
         expect(guard.canActivate(contextMock)).toBe(true);
 
         mockSource(source, invalid);
-        expect(() => guard.canActivate(contextMock)).toThrowError(
+        expect(() => guard.canActivate(contextMock)).toThrow(
           ZodValidationException,
         );
       }

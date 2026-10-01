@@ -40,5 +40,5 @@ describe('GET /api/people', () => {
         expect(res.body.data.length).toBeGreaterThan(0);
         expect(res.headers['x-example']).toBe('example');
       });
-  })
+  });
 });

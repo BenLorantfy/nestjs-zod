@@ -21,6 +21,6 @@ import { ZodValidationPipe, ZodSerializerInterceptor } from 'nestjs-zod';
       provide: APP_FILTER,
       useClass: HttpExceptionFilter,
     },
-  ]
+  ],
 })
 export class AppModule {}
