@@ -52,6 +52,7 @@
     "build": "tsdown",
     "test": "TZ=UTC jest",
     "lint": "eslint",
+    "typecheck": "tsc --noEmit",
     "lint:fix": "eslint  --fix",
     "format:write": "prettier --write \"src/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\""

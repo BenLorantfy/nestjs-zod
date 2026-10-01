@@ -33,6 +33,8 @@ jobs:
         run: cd packages/nestjs-zod && pnpm run format:check
       - name: Lint nestjs-zod
         run: cd packages/nestjs-zod && pnpm run lint
+      - name: Typecheck nestjs-zod
+        run: cd packages/nestjs-zod && pnpm run typecheck
       - name: Build example-dual-zods app
         run: cd packages/example-dual-zods && pnpm run build
       - name: Test example-dual-zods app
