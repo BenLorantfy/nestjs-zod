@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Type } from '@nestjs/common';
 import { z } from 'zod/v3';
-import deepmerge from 'deepmerge';
+import { deepMerge } from './merge';
 import type { OpenAPIObject } from '@nestjs/swagger';
 
 type SchemaObject = Exclude<
@@ -212,15 +212,9 @@ export function zodV3ToOpenAPI(
 
   if (is(zodType, z.ZodIntersection)) {
     const { left, right } = zodType._def;
-    const merged = deepmerge(
+    const merged = deepMerge(
       zodV3ToOpenAPI(left, visited),
       zodV3ToOpenAPI(right, visited),
-      {
-        arrayMerge: (target, source) => {
-          const mergedSet = new Set([...target, ...source]);
-          return Array.from(mergedSet);
-        },
-      },
     );
     Object.assign(object, merged);
   }

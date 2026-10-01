@@ -1,5 +1,5 @@
 import type { OpenAPIObject } from '@nestjs/swagger';
-import deepmerge from 'deepmerge';
+import { deepClone } from './merge';
 import { JSONSchema } from 'zod/v4/core';
 import { fixAllRefs, convertToOpenApi3Point0 } from './utils';
 import {
@@ -91,7 +91,7 @@ export function cleanupOpenApiDoc(
     registerSchema(schemas, newSchemaName, newSchema);
   }
 
-  const paths = deepmerge<typeof doc.paths>(doc.paths, {});
+  const paths = deepClone(doc.paths);
   for (const { get, patch, post, delete: del, put, head } of Object.values(
     paths,
   )) {
@@ -304,10 +304,7 @@ function cleanupSchema({
   const defRenames: Record<string, string> = {};
 
   // Clone so we can mutate
-  let newOpenapiSchema = deepmerge<typeof oldOpenapiSchema>(
-    {},
-    oldOpenapiSchema,
-  );
+  let newOpenapiSchema = deepClone(oldOpenapiSchema);
 
   for (const [propertyName, propertySchema] of Object.entries(
     newOpenapiSchema.properties || {},
@@ -509,7 +506,7 @@ function fixParameter(
   parameterInput: OpenAPIParameter,
   version: '3.1' | '3.0',
 ) {
-  const parameter = deepmerge<typeof parameterInput>({}, parameterInput);
+  const parameter = deepClone(parameterInput);
   let usesThreePointOneSyntax = false;
 
   // nestjs seems to move some stuff out of the schema and into the root level of the parameter object 🤷
