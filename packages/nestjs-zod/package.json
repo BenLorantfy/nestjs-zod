@@ -23,6 +23,14 @@
         "types": "./dist/dto.d.cts",
         "default": "./dist/dto.cjs"
       }
+    },
+    "./dist/*.cjs": {
+      "types": "./dist/*.d.cts",
+      "require": "./dist/*.cjs"
+    },
+    "./dist/*.mjs": {
+      "types": "./dist/*.d.mts",
+      "import": "./dist/*.mjs"
     }
   },
   "module": "./dist/index.mjs",
