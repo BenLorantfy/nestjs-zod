@@ -1,5 +1,5 @@
 export type { ZodDto } from './dto';
-export { createZodDto } from './dto';
+export { createZodDto, isZodDto } from './dto';
 export { ZodValidationException, ZodSerializationException } from './exception';
 export { createZodGuard, UseZodGuard, ZodGuard } from './guard';
 export { zodV3ToOpenAPI } from './zodV3ToOpenApi';
