@@ -85,16 +85,62 @@ export function createZodDto<
   return AugmentedZodDto as unknown as ZodDto<TSchema, TCodec>;
 }
 
-function openApiMetadataFactory({
-  schema,
-  io,
-}: {
+type OpenApiMetadataArgs = {
   schema:
     | UnknownSchema
     | z3.ZodTypeAny
     | ($ZodType & { parse: (input: unknown) => unknown });
   io: 'input' | 'output';
-}) {
+};
+
+type OpenApiMetadata = ReturnType<typeof generateOpenApiMetadata>;
+
+let openApiMetadataCache = new WeakMap<
+  object,
+  Partial<Record<'input' | 'output', string>>
+>();
+
+/**
+ * Forgets all cached OpenAPI metadata. The metadata depends on the zod
+ * registry, which can change between documents, so `cleanupOpenApiDoc` calls
+ * this once a document is finished.
+ */
+export function clearOpenApiMetadataCache() {
+  openApiMetadataCache = new WeakMap();
+}
+
+/**
+ * `@nestjs/swagger` calls the factory every time a DTO is referenced in a
+ * document, and generating the JSON schema dominates document generation.
+ *
+ * For zod v4, the result is generated once per schema and io and stored as
+ * JSON, so each caller gets its own copy. zod v4 output is already JSON-safe.
+ * zod v3 output is not (e.g. `.default()` can return functions or class
+ * instances), so it is generated on every call as before.
+ */
+function openApiMetadataFactory(args: OpenApiMetadataArgs): OpenApiMetadata {
+  if (!('_zod' in args.schema)) {
+    return generateOpenApiMetadata(args);
+  }
+
+  let entry = openApiMetadataCache.get(args.schema);
+  if (!entry) {
+    entry = {};
+    openApiMetadataCache.set(args.schema, entry);
+  }
+  const json = entry[args.io];
+  if (json !== undefined) {
+    return JSON.parse(json);
+  }
+
+  // Nothing else holds a reference to a freshly generated result, so the
+  // first caller can have it without a copy
+  const metadata = generateOpenApiMetadata(args);
+  entry[args.io] = JSON.stringify(metadata);
+  return metadata;
+}
+
+function generateOpenApiMetadata({ schema, io }: OpenApiMetadataArgs) {
   if (!('_zod' in schema) && '_def' in schema && io === 'output') {
     throw new Error('[nestjs-zod] Output schemas are not supported for zod@v3');
   }

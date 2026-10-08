@@ -1,7 +1,8 @@
-import { createZodDto } from './dto';
+import { clearOpenApiMetadataCache, createZodDto } from './dto';
 import * as z4 from 'zod/v4';
 import * as z3 from 'zod/v3';
 import * as zodMini from 'zod/v4-mini';
+import * as zodV4Core from 'zod/v4/core';
 import { z as nestZod } from '@nest-zod/z';
 
 describe.each([
@@ -43,6 +44,30 @@ describe.each([
       password: { type: 'string', required: true },
     });
   });
+
+  it('should generate the OpenAPI metadata once per DTO', () => {
+    const UserSchema = z.object({
+      username: z.string(),
+    });
+
+    class UserDto extends createZodDto(UserSchema) {}
+
+    const toJSONSchema = jest.spyOn(zodV4Core, 'toJSONSchema');
+    let first: unknown;
+    try {
+      first = UserDto._OPENAPI_METADATA_FACTORY();
+      const second = UserDto._OPENAPI_METADATA_FACTORY();
+
+      expect(second).toEqual(first);
+      expect(second).not.toBe(first);
+      expect(toJSONSchema).toHaveBeenCalledTimes(z === z4 ? 1 : 0);
+    } finally {
+      toJSONSchema.mockRestore();
+    }
+
+    (first as Record<string, unknown>).username = 'edited by a caller';
+    expect(UserDto._OPENAPI_METADATA_FACTORY()).not.toEqual(first);
+  });
 });
 
 describe('zod/v4', () => {
@@ -65,6 +90,31 @@ describe('zod/v4', () => {
       }),
     });
   });
+
+  it('regenerates the OpenAPI metadata after the cache is cleared', () => {
+    const InnerSchema = z4.object({ name: z4.string() });
+    const OuterSchema = z4.object({ inner: InnerSchema });
+
+    class OuterDto extends createZodDto(OuterSchema) {}
+
+    expect(OuterDto._OPENAPI_METADATA_FACTORY()).toEqual({
+      inner: expect.not.objectContaining({ $ref: expect.anything() }),
+    });
+
+    InnerSchema.register(z4.globalRegistry, {
+      id: 'RegeneratesAfterClearInner',
+    });
+    try {
+      clearOpenApiMetadataCache();
+      expect(OuterDto._OPENAPI_METADATA_FACTORY()).toEqual({
+        inner: expect.objectContaining({
+          $ref: '#/$defs/RegeneratesAfterClearInner',
+        }),
+      });
+    } finally {
+      z4.globalRegistry.remove(InnerSchema);
+    }
+  });
 });
 
 describe('zod/v3', () => {
@@ -80,6 +130,22 @@ describe('zod/v3', () => {
     expect(() => UserDto.Output).toThrow(
       '[nestjs-zod] Output DTOs can only be created from zod v4 schemas',
     );
+  });
+
+  it('evaluates defaults on every call to the OpenAPI metadata factory', () => {
+    let calls = 0;
+    const UserSchema = z3.object({
+      createdAt: z3.number().default(() => ++calls),
+    });
+
+    class UserDto extends createZodDto(UserSchema) {}
+
+    expect(UserDto._OPENAPI_METADATA_FACTORY()).toEqual({
+      createdAt: expect.objectContaining({ default: 1 }),
+    });
+    expect(UserDto._OPENAPI_METADATA_FACTORY()).toEqual({
+      createdAt: expect.objectContaining({ default: 2 }),
+    });
   });
 });
 

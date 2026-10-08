@@ -15,6 +15,7 @@ import {
 } from './const';
 import { isDeepStrictEqual } from 'node:util';
 import { assert } from './assert';
+import { clearOpenApiMetadataCache } from './dto';
 
 type DtoSchema = Exclude<
   Exclude<OpenAPIObject['components'], undefined>['schemas'],
@@ -60,6 +61,8 @@ export function cleanupOpenApiDoc(
   doc: OpenAPIObject,
   { version: versionParam = 'auto' }: { version?: '3.1' | '3.0' | 'auto' } = {},
 ): OpenAPIObject {
+  clearOpenApiMetadataCache();
+
   const schemas: Record<string, DtoSchema> = {};
   const renames: Record<string, string> = {};
   const version =
