@@ -128,7 +128,7 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
   );
 }
 
-import deepmerge from 'deepmerge';
+import { deepClone } from './merge';
 
 export function walkJsonSchema(
   schema: JSONSchema.BaseSchema,
@@ -136,9 +136,7 @@ export function walkJsonSchema(
   options?: { clone?: boolean },
 ) {
   // Process the schema with callback
-  schema = callback(
-    options?.clone ? deepmerge<typeof schema>(schema, {}) : schema,
-  );
+  schema = callback(options?.clone ? deepClone(schema) : schema);
 
   // Handle object properties
   if (schema.type === 'object' && schema.properties) {
