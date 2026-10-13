@@ -1,6 +1,3 @@
-// Small replacements for the `deepmerge` package, which has an unpatched
-// prototype pollution vulnerability (CVE-2026-93753)
-
 function isMergeableObject(value: unknown): value is Record<string, unknown> {
   return (
     typeof value === 'object' &&
