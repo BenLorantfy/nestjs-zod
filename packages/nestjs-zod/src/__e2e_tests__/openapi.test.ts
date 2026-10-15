@@ -1323,6 +1323,60 @@ testMany(
   ['4.0.0', 'latest'],
 );
 
+// zod < 4.4.2 marks `z.preprocess(fn, schema.default(x))` as required in
+// input JSON schemas, so this test only runs against the latest version
+// https://github.com/colinhacks/zod/pull/5929
+testMany(
+  'preprocessed fields with defaults are optional',
+  async ({ z }) => {
+    const stringToNumber = (value: unknown) =>
+      typeof value === 'string' ? Number(value) : value;
+
+    class PaginationQueryDto extends createZodDto(
+      z
+        .object({
+          pageIndex: z
+            .preprocess(stringToNumber, z.int().min(0).default(0))
+            .describe('Page index'),
+          pageSize: z
+            .preprocess(stringToNumber, z.int().min(1).max(100).default(10))
+            .describe('Page size'),
+          search: z.string(),
+        })
+        .meta({ id: 'PaginationQuery' }),
+      { codec: true },
+    ) {}
+
+    @Controller()
+    class BookController {
+      constructor() {}
+
+      @Get()
+      getBooks(@Query() _query: PaginationQueryDto) {
+        return [];
+      }
+
+      @Post()
+      createBook(@Body() _body: PaginationQueryDto) {
+        return {};
+      }
+    }
+
+    const doc = await getSwaggerDoc(BookController);
+
+    expect(get(doc, 'paths./.get.parameters')).toMatchObject([
+      { name: 'pageIndex', required: false },
+      { name: 'pageSize', required: false },
+      { name: 'search', required: true },
+    ]);
+    expect(get(doc, 'components.schemas.PaginationQuery.required')).toEqual([
+      'search',
+    ]);
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+  },
+  ['latest'],
+);
+
 testMany(
   'query param with nested named schema',
   async ({ z }) => {
