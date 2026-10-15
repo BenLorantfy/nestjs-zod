@@ -21,6 +21,7 @@ import {
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
 import { ioSymbol } from './symbols';
+import './meta';
 
 export interface ZodDto<
   TSchema extends UnknownSchema = UnknownSchema,

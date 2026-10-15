@@ -694,6 +694,39 @@ class BookController {
 ```
 See the example app [here](/packages/example/src/people/people.dto.ts) for a full example.
 
+#### Metadata (descriptions, examples, etc.)
+Fields set with [`.meta()`](https://zod.dev/metadata) are added to the schema in the OpenAPI document.  This is how you add descriptions, examples, etc. that are displayed in SwaggerUI:
+```ts
+class UserDto extends createZodDto(
+  z.object({
+    name: z.string().meta({ description: 'Full name', example: 'John Doe' }),
+    age: z.number().meta({ example: 42 }),
+    nickname: z.string().optional().meta({ deprecated: true }),
+  }),
+) {}
+```
+Will result in this OpenAPI document:
+```jsonc
+{
+  "components": {
+    "schemas": {
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Full name", "example": "John Doe" },
+          "age": { "type": "number", "example": 42 },
+          "nickname": { "type": "string", "deprecated": true }
+        },
+        "required": ["name", "age"]
+      }
+    }
+  },
+  // ...
+}
+```
+
+`id`, `title`, `description`, `deprecated` and `example` are typed, so they show up in autocomplete.  Other fields are passed through as is.  Note that `id` has a special meaning, see [Reusable schemas](#reusable-schemas).
+
 #### Reusable schemas
 You can also externalize and reuse schemas across multiple DTOs.  If you add `.meta({ id: "MySchema" })` to any zod schema, then that schema will be added directly to `components.schemas` in the OpenAPI documentation.  For example, this code:
 ```ts
