@@ -1,3 +1,4 @@
+import './meta';
 export type { ZodDto } from './dto';
 export { createZodDto } from './dto';
 export { ZodValidationException, ZodSerializationException } from './exception';
