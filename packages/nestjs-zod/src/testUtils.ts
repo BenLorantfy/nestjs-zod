@@ -26,6 +26,7 @@ import { ZodError } from 'zod/v4';
 import * as z3 from 'zod/v3';
 import * as z4 from 'zod/v4';
 import * as z4_0_0 from 'zod-v4_0_0';
+import * as z4_6_7 from 'zod-v4_6_7';
 import { z as zMini } from 'zod/v4-mini';
 import * as zodV4Core from 'zod/v4/core';
 
@@ -104,7 +105,7 @@ export async function setupApp(
   };
 }
 
-type BaseVersion = '3' | '4.0.0' | 'latest' | 'latest/mini';
+type BaseVersion = '3' | '4.0.0' | '4.6.7' | 'latest' | 'latest/mini';
 type DirtyVersion = `${BaseVersion} - dirty`;
 type Version = BaseVersion | DirtyVersion;
 type ZForVersions<V extends Version> = 'latest/mini' extends V
@@ -122,13 +123,14 @@ export function testMany<V extends Version = BaseVersion>(
         cleanUp: boolean;
       }) => Promise<void>)
     | (({ z, cleanUp }: { z: ZForVersions<V>; cleanUp: boolean }) => void),
-  versions: V[] = ['3', '4.0.0', 'latest', 'latest/mini'] as V[],
+  versions: V[] = ['3', '4.0.0', '4.6.7', 'latest', 'latest/mini'] as V[],
 ) {
   describe(name, () => {
     beforeEach(() => {
       z4.globalRegistry.clear();
       zMini.globalRegistry.clear();
       z4_0_0.globalRegistry.clear();
+      z4_6_7.globalRegistry.clear();
     });
 
     afterEach(() => {
@@ -148,6 +150,8 @@ export function testMany<V extends Version = BaseVersion>(
         '3': undefined,
         '4.0.0':
           z4_0_0.toJSONSchema as unknown as typeof zodV4Core.toJSONSchema,
+        '4.6.7':
+          z4_6_7.toJSONSchema as unknown as typeof zodV4Core.toJSONSchema,
         latest: z4.toJSONSchema,
         'latest/mini': zMini.toJSONSchema,
       };
@@ -158,6 +162,8 @@ export function testMany<V extends Version = BaseVersion>(
         '3': undefined,
         '4.0.0':
           z4_0_0.globalRegistry as unknown as typeof zodV4Core.globalRegistry,
+        '4.6.7':
+          z4_6_7.globalRegistry as unknown as typeof zodV4Core.globalRegistry,
         latest: z4.globalRegistry,
         'latest/mini': zMini.globalRegistry,
       };
@@ -185,6 +191,7 @@ export function testMany<V extends Version = BaseVersion>(
         z: {
           '3': z3,
           '4.0.0': z4_0_0,
+          '4.6.7': z4_6_7,
           latest: z4,
           'latest/mini': zMini,
         }[baseVersion] as unknown as ZForVersions<V>,

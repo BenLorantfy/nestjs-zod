@@ -434,6 +434,9 @@ importers:
       zod-v4_0_0:
         specifier: npm:zod@4.0.0
         version: zod@4.0.0
+      zod-v4_6_7:
+        specifier: npm:zod@4.6.7
+        version: zod@4.6.7
 
   packages/z:
     devDependencies:
@@ -6387,6 +6390,9 @@ packages:
 
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
+  zod@4.6.7:
+    resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
 
 snapshots:
 
@@ -13286,3 +13292,5 @@ snapshots:
   zod@4.0.0: {}
 
   zod@4.4.3: {}
+
+  zod@4.6.7: {}

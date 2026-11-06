@@ -292,6 +292,11 @@ function generateJsonSchema(
  *
  * Also removes the `id` field from the schema, since this is not a valid
  * openapi field.  Some earlier versions of zod 4 included `id`
+ *
+ * Also rewrites a multi-type `type` array (e.g. `type: ['string', 'null']`,
+ * which zod >= 4.5 emits for a bare nullable field) as an `anyOf` of single
+ * types, since OpenAPI 3.0 has no multi-type `type` and the rest of the
+ * pipeline only handles the `anyOf` form.
  */
 function cleanupRefs(
   rootSchema: JSONSchema.JSONSchema,
@@ -300,6 +305,13 @@ function cleanupRefs(
   return walkJsonSchema(
     rootSchema,
     (schema) => {
+      if (Array.isArray(schema.type)) {
+        const { type: types, ...rest } = schema;
+        schema =
+          types.length === 1
+            ? { ...rest, type: types[0] }
+            : { ...rest, anyOf: types.map((type) => ({ type })) };
+      }
       if (schema.$ref && schema.$ref.startsWith('#/$defs/')) {
         const defKey = schema.$ref.replace('#/$defs/', '');
         if (defKey && io === 'output') {

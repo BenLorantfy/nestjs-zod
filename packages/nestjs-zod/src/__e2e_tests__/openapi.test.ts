@@ -364,7 +364,81 @@ testMany(
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
     expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   },
-  ['latest', '4.0.0', '3'],
+  ['4.6.7', 'latest', '4.0.0', '3'],
+);
+
+// zod >= 4.5 emits a bare nullable field as `type: ['string', 'null']`
+// instead of `anyOf: [{ type: 'string' }, { type: 'null' }]`
+testMany(
+  'issue#473 - bare nullable fields from zod >= 4.5 (3.0)',
+  async ({ z }) => {
+    class BookDto extends createZodDto(
+      z.object({
+        bare: z.string().nullish(),
+        withConstraint: z.string().max(10).nullish(),
+        nested: z.object({ inner: z.string().nullish() }),
+      }),
+    ) {}
+
+    @Controller()
+    class BookController {
+      constructor() {}
+
+      @Post()
+      createBook(@Body() book: BookDto) {
+        return book;
+      }
+    }
+
+    const doc = await getSwaggerDoc(BookController, { version: '3.0' });
+    expect(get(doc, 'components.schemas.BookDto.properties')).toEqual({
+      bare: { type: 'string', nullable: true },
+      withConstraint: { type: 'string', maxLength: 10, nullable: true },
+      nested: {
+        type: 'object',
+        properties: { inner: { type: 'string', nullable: true } },
+      },
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+  },
+  ['4.6.7', 'latest', '4.0.0'],
+);
+
+testMany(
+  'issue#473 - bare nullable fields from zod >= 4.5 (3.1)',
+  async ({ z }) => {
+    class BookDto extends createZodDto(
+      z.object({
+        bare: z.string().nullish(),
+        nested: z.object({ inner: z.string().nullish() }),
+      }),
+    ) {}
+
+    @Controller()
+    class BookController {
+      constructor() {}
+
+      @Post()
+      createBook(@Body() book: BookDto) {
+        return book;
+      }
+    }
+
+    const doc = await getSwaggerDoc(BookController, { version: '3.1' });
+    expect(get(doc, 'components.schemas.BookDto.properties')).toEqual({
+      bare: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+      nested: {
+        type: 'object',
+        properties: {
+          inner: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+        },
+      },
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+  },
+  ['4.6.7', 'latest', '4.0.0'],
 );
 
 testMany(
