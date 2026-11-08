@@ -613,11 +613,11 @@ Cleans up the generated OpenAPI doc by applying some post-processing and ensurin
   - `3.1` - Generates schemas that take advantage of OpenAPI 3.1 syntax.  See table below for more information
   - `3.0` - Generates schemas that are compatible with OpenAPI 3.0.  See table below for more information
 
-|         | 3.0                                   | 3.1                                                |
-|---------|---------------------------------------|----------------------------------------------------|
-| null    | `{ type: 'string', nullable: true }`  | `{ anyOf: [{ type: 'string'}, { type: 'null' }] }` |
-| literal | `{ type: 'string', enum: ['hello'] }` | `{ type: 'string', const: 'hello' }`               |
-| id      | _Omitted_                             | `{ id: 'Author', type: 'object', ... }`            |
+|         | 3.0                                   | 3.1                                     |
+|---------|---------------------------------------|-----------------------------------------|
+| null    | `{ type: 'string', nullable: true }`  | `{ type: ['string', 'null'] }`          |
+| literal | `{ type: 'string', enum: ['hello'] }` | `{ type: 'string', const: 'hello' }`    |
+| id      | _Omitted_                             | `{ id: 'Author', type: 'object', ... }` |
 
 ##### Example
 To complete the swagger integration/setup, `cleanupOpenApiDoc` needs to be called with the generated open api doc, like so:
