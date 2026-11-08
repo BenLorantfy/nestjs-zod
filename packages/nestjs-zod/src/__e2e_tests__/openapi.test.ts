@@ -196,7 +196,7 @@ testMany(
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
     expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   },
-  [/*'4.0.0', */ 'latest'],
+  ['4.0.0', 'latest'],
 );
 
 describe('issue#473', () => {
