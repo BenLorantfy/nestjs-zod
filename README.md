@@ -222,6 +222,7 @@ Check out the [example app](./packages/example/) for a full example of how to in
   - [`cleanupOpenApiDoc` (Ensure proper OpenAPI output)](#cleanupopenapidoc-ensure-proper-openapi-output)
   - [Output schemas](#output-schemas)
   - [Codecs](#codecs)
+  - [Metadata](#metadata)
   - [Reusable schemas](#reusable-schemas)
   - [`zodV3ToOpenAPI` (⚠️ DEPRECATED)](#zodv3toopenapi-deprecated)
 - [`validate` (⚠️ DEPRECATED)](#validate-deprecated)
@@ -693,6 +694,39 @@ class BookController {
 }
 ```
 See the example app [here](/packages/example/src/people/people.dto.ts) for a full example.
+
+#### Metadata
+Fields set with [`.meta()`](https://zod.dev/metadata) are added to the schema in the OpenAPI document.  This can be used to add descriptions, examples, etc. that are displayed in SwaggerUI:
+```ts
+class UserDto extends createZodDto(
+  z.object({
+    name: z.string().meta({ description: 'Full name', example: 'John Doe' }),
+    age: z.number().meta({ example: 42 }),
+    nickname: z.string().optional().meta({ deprecated: true }),
+  }),
+) {}
+```
+Will result in this OpenAPI document:
+```json
+{
+  "components": {
+    "schemas": {
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string", "description": "Full name", "example": "John Doe" },
+          "age": { "type": "number", "example": 42 },
+          "nickname": { "type": "string", "deprecated": true }
+        },
+        "required": ["name", "age"]
+      }
+    }
+  },
+  // ...
+}
+```
+
+Note that `id` has a special meaning, see [Reusable schemas](#reusable-schemas).
 
 #### Reusable schemas
 You can also externalize and reuse schemas across multiple DTOs.  If you add `.meta({ id: "MySchema" })` to any zod schema, then that schema will be added directly to `components.schemas` in the OpenAPI documentation.  For example, this code:
