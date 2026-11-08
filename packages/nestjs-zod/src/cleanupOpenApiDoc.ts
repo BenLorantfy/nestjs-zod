@@ -10,6 +10,7 @@ import {
   PARENT_ID_KEY,
   PARENT_METADATA_KEY,
   SELF_REQUIRED_KEY,
+  TYPE_ARRAY_KEY,
   UNWRAP_ROOT_KEY,
   USES_THREE_POINT_ONE_SYNTAX_KEY,
 } from './const';
@@ -351,6 +352,14 @@ function cleanupSchema({
       }
     }
 
+    // Restore `type: ['string', 'null']` (etc.) that we hid from nestjs/swagger
+    if (TYPE_ARRAY_KEY in propertySchema) {
+      if (Array.isArray(propertySchema[TYPE_ARRAY_KEY])) {
+        Object.assign(propertySchema, { type: propertySchema[TYPE_ARRAY_KEY] });
+      }
+      delete propertySchema[TYPE_ARRAY_KEY];
+    }
+
     // Rename the schema if using `meta({ id: "NewName" })`
     if (
       PARENT_ID_KEY in propertySchema &&
@@ -519,6 +528,18 @@ function fixParameter(
     ) {
       delete parameter.schema.type;
     }
+  }
+
+  // Restore `type: ['string', 'null']` (etc.) that we hid from nestjs/swagger
+  if (TYPE_ARRAY_KEY in parameter) {
+    if (
+      Array.isArray(parameter[TYPE_ARRAY_KEY]) &&
+      'schema' in parameter &&
+      parameter.schema
+    ) {
+      Object.assign(parameter.schema, { type: parameter[TYPE_ARRAY_KEY] });
+    }
+    delete parameter[TYPE_ARRAY_KEY];
   }
 
   if (UNWRAP_ROOT_KEY in parameter) {

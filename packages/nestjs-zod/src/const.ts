@@ -8,3 +8,4 @@ export const UNWRAP_ROOT_KEY = `${PREFIX}-unwrap-root`;
 export const USES_THREE_POINT_ONE_SYNTAX_KEY = `${PREFIX}-uses-3-point-1-syntax`;
 export const SELF_REQUIRED_KEY = `${PREFIX}-self-required`;
 export const PARENT_METADATA_KEY = `${PREFIX}-parent-metadata`;
+export const TYPE_ARRAY_KEY = `${PREFIX}-type-array`;
