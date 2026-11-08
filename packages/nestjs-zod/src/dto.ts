@@ -17,6 +17,7 @@ import {
   SELF_REQUIRED_KEY,
   PARENT_METADATA_KEY,
   USES_THREE_POINT_ONE_SYNTAX_KEY,
+  TYPE_ARRAY_KEY,
 } from './const';
 import { walkJsonSchema } from './utils';
 import { zodV3ToOpenAPI } from './zodV3ToOpenApi';
@@ -164,8 +165,18 @@ function openApiMetadataFactory({
       // An empty string is not a valid value for `type` as per jsonSchema
       // standards, but we clean this up and remove this field in
       // `cleanupOpenApiDoc`
-      type: propertySchema.type || '',
+      type:
+        typeof propertySchema.type === 'string' ? propertySchema.type : '',
     };
+
+    // zod >= 4.5 emits unions of bare types (e.g. `z.string().nullable()`) as
+    // `type: ['string', 'null']`.  nestjs/swagger interprets an array-valued
+    // `type` as its `[String]` nested-array shorthand and would turn this
+    // into `{ type: 'array', items: { type: 'string' } }`.  So we stash the
+    // array here and restore it in `cleanupOpenApiDoc`
+    if (Array.isArray(propertySchema.type)) {
+      newPropertySchema[TYPE_ARRAY_KEY] = propertySchema.type;
+    }
 
     if (usesThreePointOneSyntax) {
       newPropertySchema[USES_THREE_POINT_ONE_SYNTAX_KEY] = true;
@@ -321,6 +332,8 @@ function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
   walkJsonSchema(jsonSchema, (schema) => {
     if (
       schema.type === 'null' ||
+      // OpenAPI 3.0 requires `type` to be a single string
+      Array.isArray(schema.type) ||
       schema.const ||
       schema.id ||
       'propertyNames' in schema ||

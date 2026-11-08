@@ -94,7 +94,7 @@
     "tsdown": "^0.22.3",
     "typescript": "5.9.3",
     "typescript-eslint": "^8.67.0",
-    "zod": "4.4.3",
+    "zod": "4.5.0",
     "zod-v4_0_0": "npm:zod@4.0.0"
   },
   "peerDependencies": {

@@ -61,6 +61,29 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
         delete s.id;
       }
 
+      // OpenAPI 3.0 requires `type` to be a single string.  zod >= 4.5 emits
+      // unions of bare types as `type: ['string', 'null']`, so we convert
+      // `null` to `nullable: true` and any remaining multi-type to `anyOf`
+      if (Array.isArray(s.type)) {
+        const { type, ...rest } = s;
+        const types = type.filter((t) => t !== 'null');
+        const hadNull = types.length !== type.length;
+
+        if (types.length === 1) {
+          return {
+            ...rest,
+            type: types[0],
+            ...(hadNull && { nullable: true }),
+          };
+        }
+
+        return {
+          ...rest,
+          anyOf: types.map((t) => ({ type: t })),
+          ...(hadNull && { nullable: true }),
+        };
+      }
+
       if (s.anyOf) {
         const nullSchema = s.anyOf.findIndex(
           (subSchema) => subSchema.type === 'null',
