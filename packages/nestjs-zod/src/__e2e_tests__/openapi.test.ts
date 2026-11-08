@@ -507,7 +507,54 @@ testMany(
 );
 
 testMany(
-  'intersections' /* (v4) */,
+  'intersections different types',
+  async ({ z }) => {
+    class BookDto extends createZodDto(
+      z.intersection(
+        z.object({
+          numPages: z.string(),
+        }),
+        z.object({
+          numPages: z.number(),
+        }),
+      ),
+    ) {}
+
+    @Controller()
+    class BookController {
+      constructor() {}
+
+      @Post()
+      createBook(@Body() book: BookDto) {
+        return book;
+      }
+    }
+
+    const doc = await getSwaggerDoc(BookController);
+    expect(get(doc, 'components.schemas.BookDto')).toEqual({
+      properties: {
+        numPages: {
+          allOf: [
+            {
+              type: 'string',
+            },
+            {
+              type: 'number',
+            },
+          ],
+        },
+      },
+      required: ['numPages'],
+      type: 'object',
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+  },
+  ['latest', 'latest/mini'],
+);
+
+testMany(
+  'intersections object type',
   async ({ z }) => {
     class BookDto extends createZodDto(
       z.intersection(
@@ -558,7 +605,7 @@ testMany(
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
     expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   },
-  ['4.0.0', 'latest'],
+  ['4.0.0'],
 );
 
 testMany(
