@@ -165,8 +165,7 @@ function openApiMetadataFactory({
       // An empty string is not a valid value for `type` as per jsonSchema
       // standards, but we clean this up and remove this field in
       // `cleanupOpenApiDoc`
-      type:
-        typeof propertySchema.type === 'string' ? propertySchema.type : '',
+      type: typeof propertySchema.type === 'string' ? propertySchema.type : '',
     };
 
     // zod >= 4.5 emits unions of bare types (e.g. `z.string().nullable()`) as
@@ -293,6 +292,33 @@ function generateJsonSchema(
 
   if ($defs) {
     newSchema.$defs = newDefs;
+  }
+
+  // zod >= 4.5 extracts a named root (`schema.meta({ id })`) into `$defs`
+  // and leaves the root as `{ $ref: '#/$defs/<id>' }`.  nestjs/swagger needs
+  // real properties, so splice that def back in as the root (the pre-4.5
+  // shape).  `$ref`s have already been `_Output`-suffixed, so the def key
+  // matches the rewritten ref.
+  const rootRef = newSchema.$ref;
+  if (
+    typeof rootRef === 'string' &&
+    rootRef.startsWith('#/$defs/') &&
+    newSchema.$defs
+  ) {
+    const defKey = rootRef.replace('#/$defs/', '');
+    const def = newSchema.$defs[defKey];
+    if (def) {
+      delete newSchema.$defs[defKey];
+      const remainingDefs = newSchema.$defs;
+      delete newSchema.$ref;
+      delete newSchema.$defs;
+
+      Object.assign(newSchema, def);
+
+      if (Object.keys(remainingDefs).length > 0) {
+        newSchema.$defs = remainingDefs;
+      }
+    }
   }
 
   return newSchema;
