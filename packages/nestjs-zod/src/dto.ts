@@ -360,7 +360,8 @@ function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
       schema.type === 'null' ||
       // OpenAPI 3.0 requires `type` to be a single string
       Array.isArray(schema.type) ||
-      schema.const ||
+      // Not a truthiness check: `z.literal('')`, `0` and `false` are `const`s too
+      typeof schema.const !== 'undefined' ||
       schema.id ||
       'propertyNames' in schema ||
       typeof schema.exclusiveMinimum === 'number' ||
