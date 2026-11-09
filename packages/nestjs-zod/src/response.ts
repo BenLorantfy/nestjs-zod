@@ -161,7 +161,6 @@ export function ZodResponse<TSchema extends UnknownSchema>({
   assert(ApiResponse, 'ZodResponse requires @nestjs/swagger to be installed');
 
   if (Array.isArray(type)) {
-    // @ts-expect-error FIXME
     assert(
       type[0][ioSymbol] !== 'output',
       'There is no need to use Dto.Output with ZodResponse',
@@ -184,7 +183,6 @@ export function ZodResponse<TSchema extends UnknownSchema>({
       ],
     );
   } else {
-    // @ts-expect-error FIXME
     assert(
       type[ioSymbol] !== 'output',
       'There is no need to use Dto.Output with ZodResponse',

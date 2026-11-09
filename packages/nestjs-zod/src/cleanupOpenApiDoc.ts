@@ -1,5 +1,5 @@
 import type { OpenAPIObject } from '@nestjs/swagger';
-import deepmerge from 'deepmerge';
+import { deepClone } from './merge';
 import { JSONSchema } from 'zod/v4/core';
 import { fixAllRefs, convertToOpenApi3Point0 } from './utils';
 import {
@@ -10,6 +10,7 @@ import {
   PARENT_ID_KEY,
   PARENT_METADATA_KEY,
   SELF_REQUIRED_KEY,
+  TYPE_ARRAY_KEY,
   UNWRAP_ROOT_KEY,
   USES_THREE_POINT_ONE_SYNTAX_KEY,
 } from './const';
@@ -91,7 +92,7 @@ export function cleanupOpenApiDoc(
     registerSchema(schemas, newSchemaName, newSchema);
   }
 
-  const paths = deepmerge<typeof doc.paths>(doc.paths, {});
+  const paths = deepClone(doc.paths);
   for (const { get, patch, post, delete: del, put, head } of Object.values(
     paths,
   )) {
@@ -304,10 +305,7 @@ function cleanupSchema({
   const defRenames: Record<string, string> = {};
 
   // Clone so we can mutate
-  let newOpenapiSchema = deepmerge<typeof oldOpenapiSchema>(
-    {},
-    oldOpenapiSchema,
-  );
+  let newOpenapiSchema = deepClone(oldOpenapiSchema);
 
   for (const [propertyName, propertySchema] of Object.entries(
     newOpenapiSchema.properties || {},
@@ -352,6 +350,14 @@ function cleanupSchema({
       if ('type' in propertySchema && propertySchema.type === '') {
         delete propertySchema.type;
       }
+    }
+
+    // Restore `type: ['string', 'null']` (etc.) that we hid from nestjs/swagger
+    if (TYPE_ARRAY_KEY in propertySchema) {
+      if (Array.isArray(propertySchema[TYPE_ARRAY_KEY])) {
+        Object.assign(propertySchema, { type: propertySchema[TYPE_ARRAY_KEY] });
+      }
+      delete propertySchema[TYPE_ARRAY_KEY];
     }
 
     // Rename the schema if using `meta({ id: "NewName" })`
@@ -509,7 +515,7 @@ function fixParameter(
   parameterInput: OpenAPIParameter,
   version: '3.1' | '3.0',
 ) {
-  const parameter = deepmerge<typeof parameterInput>({}, parameterInput);
+  const parameter = deepClone(parameterInput);
   let usesThreePointOneSyntax = false;
 
   // nestjs seems to move some stuff out of the schema and into the root level of the parameter object 🤷
@@ -522,6 +528,18 @@ function fixParameter(
     ) {
       delete parameter.schema.type;
     }
+  }
+
+  // Restore `type: ['string', 'null']` (etc.) that we hid from nestjs/swagger
+  if (TYPE_ARRAY_KEY in parameter) {
+    if (
+      Array.isArray(parameter[TYPE_ARRAY_KEY]) &&
+      'schema' in parameter &&
+      parameter.schema
+    ) {
+      Object.assign(parameter.schema, { type: parameter[TYPE_ARRAY_KEY] });
+    }
+    delete parameter[TYPE_ARRAY_KEY];
   }
 
   if (UNWRAP_ROOT_KEY in parameter) {

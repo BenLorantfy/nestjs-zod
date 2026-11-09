@@ -55,6 +55,29 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
   return walkJsonSchema(
     schema,
     (s) => {
+      // OpenAPI 3.0 requires `type` to be a single string.  zod >= 4.5 emits
+      // unions of bare types as `type: ['string', 'null']`, so we convert
+      // `null` to `nullable: true` and any remaining multi-type to `anyOf`
+      if (Array.isArray(s.type)) {
+        const { type, ...rest } = s;
+        const types = type.filter((t) => t !== 'null');
+        const hadNull = types.length !== type.length;
+
+        if (types.length === 1) {
+          return cleanOpenApi3Point0Schema({
+            ...rest,
+            type: types[0],
+            ...(hadNull && { nullable: true }),
+          });
+        }
+
+        return cleanOpenApi3Point0Schema({
+          ...rest,
+          anyOf: types.map((t) => ({ type: t })),
+          ...(hadNull && { nullable: true }),
+        });
+      }
+
       if (s.anyOf) {
         const nullSchema = s.anyOf.findIndex(
           (subSchema) => subSchema.type === 'null',
@@ -136,7 +159,7 @@ function cleanOpenApi3Point0Schema(s: JSONSchema.BaseSchema) {
   return s;
 }
 
-import deepmerge from 'deepmerge';
+import { deepClone } from './merge';
 
 export function walkJsonSchema(
   schema: JSONSchema.BaseSchema,
@@ -144,9 +167,7 @@ export function walkJsonSchema(
   options?: { clone?: boolean },
 ) {
   // Process the schema with callback
-  schema = callback(
-    options?.clone ? deepmerge<typeof schema>(schema, {}) : schema,
-  );
+  schema = callback(options?.clone ? deepClone(schema) : schema);
 
   // Handle object properties
   if (schema.type === 'object' && schema.properties) {

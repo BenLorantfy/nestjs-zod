@@ -199,6 +199,270 @@ testMany(
   ['4.0.0', 'latest'],
 );
 
+describe('issue#473', () => {
+  // zod >= 4.5 compacts unions of bare types into `type: ['string', 'number']`.
+  // This is valid JSON Schema (and OpenAPI 3.1), so it is preserved as-is
+  testMany(
+    'unions in OpenAPI 3.1',
+    async ({ z }) => {
+      class BookDto extends createZodDto(
+        z.object({
+          id: z.union([z.string(), z.number()]),
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController, { version: '3.1' });
+      expect(get(doc, 'components.schemas.BookDto')).toEqual({
+        properties: {
+          id: {
+            type: ['string', 'number'],
+          },
+        },
+        required: ['id'],
+        type: 'object',
+      });
+
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+    },
+    ['latest', 'latest/mini'],
+  );
+
+  testMany(
+    'nullable fields in OpenAPI 3.1',
+    async ({ z }) => {
+      class BookDto extends createZodDto(
+        z.object({
+          title: z.nullable(z.string()),
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController, { version: '3.1' });
+      expect(get(doc, 'components.schemas.BookDto.properties.title')).toEqual({
+        type: ['string', 'null'],
+      });
+
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+    },
+    ['latest', 'latest/mini'],
+  );
+
+  testMany(
+    'nullable fields in referenced schema in OpenAPI 3.1',
+    async ({ z }) => {
+      const Author = z
+        .object({
+          name: z.string().nullable(),
+        })
+        .meta({ id: 'Author' });
+
+      class BookDto extends createZodDto(
+        z.object({
+          author: Author,
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController, { version: '3.1' });
+      expect(get(doc, 'components.schemas.Author.properties.name')).toEqual({
+        type: ['string', 'null'],
+      });
+
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+    },
+    ['latest'],
+  );
+
+  testMany(
+    'nullable query parameters in OpenAPI 3.0',
+    async ({ z }) => {
+      class QueryDto extends createZodDto(
+        z.object({
+          name: z.string().nullable(),
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Get()
+        getBooks(@Query() query: QueryDto) {
+          return query;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController);
+      expect(get(doc, 'paths./.get.parameters')).toEqual([
+        {
+          in: 'query',
+          name: 'name',
+          required: true,
+          schema: {
+            type: 'string',
+            nullable: true,
+          },
+        },
+      ]);
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['latest'],
+  );
+
+  testMany(
+    'nullable fields nested in arrays and objects in OpenAPI 3.0',
+    async ({ z }) => {
+      class BookDto extends createZodDto(
+        z.object({
+          title: z.string().nullable(),
+          tags: z.array(z.string().nullable()),
+          author: z.object({
+            name: z.string().nullable(),
+          }),
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController);
+      expect(get(doc, 'components.schemas.BookDto.properties')).toEqual({
+        title: {
+          type: 'string',
+          nullable: true,
+        },
+        tags: {
+          type: 'array',
+          items: {
+            type: 'string',
+            nullable: true,
+          },
+        },
+        author: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              nullable: true,
+            },
+          },
+          required: ['name'],
+        },
+      });
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['latest'],
+  );
+
+  testMany(
+    'nullable fields with metadata in OpenAPI 3.0',
+    async ({ z }) => {
+      class BookDto extends createZodDto(
+        z.object({
+          title: z.string().nullable().meta({ example: 'Dune' }),
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController);
+      expect(get(doc, 'components.schemas.BookDto.properties.title')).toEqual({
+        type: 'string',
+        nullable: true,
+        example: 'Dune',
+      });
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['latest'],
+  );
+
+  testMany(
+    'multi-type unions with null in OpenAPI 3.0',
+    async ({ z }) => {
+      class BookDto extends createZodDto(
+        z.object({
+          id: z.union([z.string(), z.number(), z.null()]),
+        }),
+      ) {}
+
+      @Controller()
+      class BookController {
+        constructor() {}
+
+        @Post()
+        createBook(@Body() book: BookDto) {
+          return book;
+        }
+      }
+
+      const doc = await getSwaggerDoc(BookController);
+      expect(get(doc, 'components.schemas.BookDto.properties.id')).toEqual({
+        anyOf: [
+          {
+            type: 'string',
+          },
+          {
+            type: 'number',
+          },
+        ],
+        nullable: true,
+      });
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['latest'],
+  );
+});
+
 testMany(
   'unions' /* (v3) */,
   async ({ z }) => {
@@ -243,7 +507,54 @@ testMany(
 );
 
 testMany(
-  'intersections' /* (v4) */,
+  'intersections different types',
+  async ({ z }) => {
+    class BookDto extends createZodDto(
+      z.intersection(
+        z.object({
+          numPages: z.string(),
+        }),
+        z.object({
+          numPages: z.number(),
+        }),
+      ),
+    ) {}
+
+    @Controller()
+    class BookController {
+      constructor() {}
+
+      @Post()
+      createBook(@Body() book: BookDto) {
+        return book;
+      }
+    }
+
+    const doc = await getSwaggerDoc(BookController);
+    expect(get(doc, 'components.schemas.BookDto')).toEqual({
+      properties: {
+        numPages: {
+          allOf: [
+            {
+              type: 'string',
+            },
+            {
+              type: 'number',
+            },
+          ],
+        },
+      },
+      required: ['numPages'],
+      type: 'object',
+    });
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+  },
+  ['latest', 'latest/mini'],
+);
+
+testMany(
+  'intersections object type',
   async ({ z }) => {
     class BookDto extends createZodDto(
       z.intersection(
@@ -294,7 +605,7 @@ testMany(
     expect(JSON.stringify(doc)).not.toContain(PREFIX);
     expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
   },
-  ['4.0.0', 'latest'],
+  ['4.0.0'],
 );
 
 testMany(
@@ -654,104 +965,6 @@ describe('issue#313', () => {
     ['4.0.0', 'latest'],
   );
 });
-
-testMany(
-  'nullable fields in openapi 3.1',
-  async ({ z }) => {
-    const Author = z
-      .object({
-        name: z.string().nullable(),
-      })
-      .meta({ id: 'Author' });
-
-    class BookDto extends createZodDto(
-      z.object({
-        title: z.string().nullable(),
-        author: Author,
-      }),
-    ) {}
-
-    @Controller()
-    class BookController {
-      constructor() {}
-
-      @Post()
-      createBook(@Body() book: BookDto) {
-        return book;
-      }
-    }
-
-    const app = await createApp(BookController);
-
-    // If the OpenAPI version is set directly on the openapi document, then by
-    // default cleanupOpenApiDoc should use 3.1
-    const doc = cleanupOpenApiDoc(
-      SwaggerModule.createDocument(
-        app,
-        new DocumentBuilder().setOpenAPIVersion('3.1.1').build(),
-      ),
-    );
-    expect(get(doc, 'components.schemas.BookDto.properties.title')).toEqual({
-      // If the OpenAPI version is 3.1, we should use `anyOf`
-      // and `{ type: 'null' }` instead of `nullable`
-      anyOf: [
-        {
-          type: 'string',
-        },
-        {
-          type: 'null',
-        },
-      ],
-    });
-    expect(get(doc, 'components.schemas.Author.properties.name')).toEqual({
-      anyOf: [
-        {
-          type: 'string',
-        },
-        {
-          type: 'null',
-        },
-      ],
-    });
-    expect(JSON.stringify(doc)).not.toContain(PREFIX);
-    expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
-
-    // Alternatively, the user can leave the version on the OpenAPI document
-    // unchanged (in which case it seems nestjs defaults to 3.0), but set the
-    // version on the cleanupOpenApiDoc to 3.1
-    const doc2 = cleanupOpenApiDoc(
-      SwaggerModule.createDocument(app, new DocumentBuilder().build()),
-      {
-        version: '3.1',
-      },
-    );
-    expect(get(doc2, 'components.schemas.BookDto.properties.title')).toEqual({
-      // If the OpenAPI version is 3.1, we should use `anyOf`
-      // and `{ type: 'null' }` instead of `nullable`
-      anyOf: [
-        {
-          type: 'string',
-        },
-        {
-          type: 'null',
-        },
-      ],
-    });
-    expect(get(doc2, 'components.schemas.Author.properties.name')).toEqual({
-      anyOf: [
-        {
-          type: 'string',
-        },
-        {
-          type: 'null',
-        },
-      ],
-    });
-    expect(JSON.stringify(doc2)).not.toContain(PREFIX);
-    expect(await getOpenApiErrors(doc2, '3.1')).toHaveLength(0);
-  },
-  ['4.0.0', 'latest'],
-);
 
 testMany(
   'optional fields',
