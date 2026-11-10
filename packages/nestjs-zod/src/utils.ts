@@ -136,7 +136,11 @@ function cleanOpenApi3Point0Schema(s: JSONSchema.BaseSchema) {
   }
 
   if (typeof s.const !== 'undefined') {
-    s.enum = [s.const];
+    // A nullable schema needs `null` in its `enum`, otherwise the schema does
+    // not allow `null`
+    // See: https://github.com/OAI/OpenAPI-Specification/issues/1900
+    s.enum =
+      s.nullable === true && s.const !== null ? [s.const, null] : [s.const];
     delete s.const;
   }
 

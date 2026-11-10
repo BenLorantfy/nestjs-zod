@@ -3503,6 +3503,53 @@ describe('issue#366 - propertyNames and exclusiveMinimum/Maximum in openapi 3.0'
   );
 
   testMany(
+    'converts const and exclusiveMinimum in nullable schemas for OpenAPI 3.0',
+    async ({ z }) => {
+      class NullableConversionsDto extends createZodDto(
+        z.object({
+          count: z.number().positive().nullable(),
+          kind: z.literal('tour').nullable(),
+        }),
+      ) {}
+
+      @Controller()
+      class NullableConversionsController {
+        @Post()
+        create(@Body() body: NullableConversionsDto) {
+          return body;
+        }
+      }
+
+      const app = await createApp(NullableConversionsController);
+      const doc = cleanupOpenApiDoc(
+        SwaggerModule.createDocument(
+          app,
+          new DocumentBuilder().setOpenAPIVersion('3.0.0').build(),
+        ),
+      );
+
+      const properties = get(
+        doc,
+        'components.schemas.NullableConversionsDto.properties',
+      );
+
+      expect(properties?.count).toEqual({
+        type: 'number',
+        minimum: 0,
+        exclusiveMinimum: true,
+        nullable: true,
+      });
+      expect(properties?.kind).toEqual({
+        type: 'string',
+        enum: ['tour', null],
+        nullable: true,
+      });
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', 'latest'],
+  );
+
+  testMany(
     'converts exclusiveMinimum/Maximum from number to boolean for OpenAPI 3.0',
     async ({ z }) => {
       class BoundsDto extends createZodDto(
