@@ -55,12 +55,6 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
   return walkJsonSchema(
     schema,
     (s) => {
-      // `id` is not valid in OpenAPI 3.0.  Some generators, like
-      // `openapi-generator` fail if they come across unrecognized fields
-      if ('id' in s) {
-        delete s.id;
-      }
-
       // OpenAPI 3.0 requires `type` to be a single string.  zod >= 4.5 emits
       // unions of bare types as `type: ['string', 'null']`, so we convert
       // `null` to `nullable: true` and any remaining multi-type to `anyOf`
@@ -70,18 +64,18 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
         const hadNull = types.length !== type.length;
 
         if (types.length === 1) {
-          return {
+          return cleanOpenApi3Point0Schema({
             ...rest,
             type: types[0],
             ...(hadNull && { nullable: true }),
-          };
+          });
         }
 
-        return {
+        return cleanOpenApi3Point0Schema({
           ...rest,
           anyOf: types.map((t) => ({ type: t })),
           ...(hadNull && { nullable: true }),
-        };
+        });
       }
 
       if (s.anyOf) {
@@ -89,7 +83,7 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
           (subSchema) => subSchema.type === 'null',
         );
         if (nullSchema === -1) {
-          return s;
+          return cleanOpenApi3Point0Schema(s);
         }
 
         s.anyOf.splice(nullSchema, 1);
@@ -99,11 +93,15 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
         if (anyOf.length === 1) {
           const sole = anyOf[0];
           if (sole.$ref && Object.keys(sole).length === 1) {
-            return { allOf: [sole], nullable: true, ...rest };
+            return cleanOpenApi3Point0Schema({
+              allOf: [sole],
+              nullable: true,
+              ...rest,
+            });
           }
 
           const enumValues = Array.isArray(sole.enum) ? sole.enum : undefined;
-          return {
+          return cleanOpenApi3Point0Schema({
             ...sole,
             ...rest,
             // We need to add `null` to the `enum` array if it exists and is not
@@ -112,43 +110,57 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
             ...(enumValues &&
               !enumValues.includes(null) && { enum: [...enumValues, null] }),
             nullable: true,
-          };
+          });
         }
 
-        return {
+        return cleanOpenApi3Point0Schema({
           ...rest,
           anyOf,
           nullable: true,
-        };
+        });
       }
 
-      if (typeof s.const !== 'undefined') {
-        s.enum = [s.const];
-        delete s.const;
-      }
-
-      // `propertyNames` is not valid in OpenAPI 3.0
-      if ('propertyNames' in s) {
-        delete s.propertyNames;
-      }
-
-      // In JSON Schema 2020-12, `exclusiveMinimum` and `exclusiveMaximum` are
-      // numbers.  In OpenAPI 3.0, they are booleans alongside `minimum`/`maximum`.
-      if (typeof s.exclusiveMinimum === 'number') {
-        s.minimum = s.exclusiveMinimum;
-        s.exclusiveMinimum = true;
-      }
-      if (typeof s.exclusiveMaximum === 'number') {
-        s.maximum = s.exclusiveMaximum;
-        s.exclusiveMaximum = true;
-      }
-
-      return s;
+      return cleanOpenApi3Point0Schema(s);
     },
     {
       clone: true,
     },
   );
+}
+
+function cleanOpenApi3Point0Schema(s: JSONSchema.BaseSchema) {
+  // `id` is not valid in OpenAPI 3.0.  Some generators, like
+  // `openapi-generator` fail if they come across unrecognized fields
+  if ('id' in s) {
+    delete s.id;
+  }
+
+  if (typeof s.const !== 'undefined') {
+    // A nullable schema needs `null` in its `enum`, otherwise the schema does
+    // not allow `null`
+    // See: https://github.com/OAI/OpenAPI-Specification/issues/1900
+    s.enum =
+      s.nullable === true && s.const !== null ? [s.const, null] : [s.const];
+    delete s.const;
+  }
+
+  // `propertyNames` is not valid in OpenAPI 3.0
+  if ('propertyNames' in s) {
+    delete s.propertyNames;
+  }
+
+  // In JSON Schema 2020-12, `exclusiveMinimum` and `exclusiveMaximum` are
+  // numbers.  In OpenAPI 3.0, they are booleans alongside `minimum`/`maximum`.
+  if (typeof s.exclusiveMinimum === 'number') {
+    s.minimum = s.exclusiveMinimum;
+    s.exclusiveMinimum = true;
+  }
+  if (typeof s.exclusiveMaximum === 'number') {
+    s.maximum = s.exclusiveMaximum;
+    s.exclusiveMaximum = true;
+  }
+
+  return s;
 }
 
 import { deepClone } from './merge';
