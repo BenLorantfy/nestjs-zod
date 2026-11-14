@@ -199,6 +199,225 @@ testMany(
   ['4.0.0', 'latest'],
 );
 
+describe('tuples in OpenAPI 3.0', () => {
+  // zod v4 documents tuples with 2020-12 `prefixItems`.  OpenAPI 3.0 has no
+  // tuples, so they are documented as an array of their member types, like
+  // the zod v3 converter did.  `toMatchObject` because only newer zod versions
+  // emit `minItems`/`maxItems` for tuples
+
+  testMany(
+    'documents a tuple as an array of its member types',
+    async ({ z }) => {
+      class TupleDto extends createZodDto(
+        z.object({
+          id: z.string().nullable(),
+          pair: z.tuple([z.number(), z.enum(['A', 'B'])]),
+        }),
+      ) {}
+
+      @Controller()
+      class TupleController {
+        constructor() {}
+
+        @Post()
+        create(@Body() body: TupleDto) {
+          return body;
+        }
+      }
+
+      const doc = await getSwaggerDoc(TupleController);
+      expect(
+        get(doc, 'components.schemas.TupleDto.properties.pair'),
+      ).toMatchObject({
+        type: 'array',
+        items: {
+          anyOf: [{ type: 'number' }, { type: 'string', enum: ['A', 'B'] }],
+        },
+      });
+      expect(JSON.stringify(doc)).not.toContain('prefixItems');
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', 'latest'],
+  );
+
+  testMany(
+    'converts a DTO whose only 3.1 syntax is a tuple',
+    async ({ z }) => {
+      class TupleDto extends createZodDto(
+        z.object({ pair: z.tuple([z.string(), z.string()]) }),
+      ) {}
+
+      @Controller()
+      class TupleController {
+        constructor() {}
+
+        @Post()
+        create(@Body() body: TupleDto) {
+          return body;
+        }
+      }
+
+      const doc = await getSwaggerDoc(TupleController);
+      expect(
+        get(doc, 'components.schemas.TupleDto.properties.pair'),
+      ).toMatchObject({
+        type: 'array',
+        items: { anyOf: [{ type: 'string' }, { type: 'string' }] },
+      });
+      expect(JSON.stringify(doc)).not.toContain('prefixItems');
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', 'latest'],
+  );
+
+  testMany(
+    'documents a single-member tuple and a rest element',
+    async ({ z }) => {
+      class TupleDto extends createZodDto(
+        z.object({
+          single: z.tuple([z.string()]),
+          rest: z.tuple([z.string()]).rest(z.number()),
+        }),
+      ) {}
+
+      @Controller()
+      class TupleController {
+        constructor() {}
+
+        @Post()
+        create(@Body() body: TupleDto) {
+          return body;
+        }
+      }
+
+      const doc = await getSwaggerDoc(TupleController);
+      expect(
+        get(doc, 'components.schemas.TupleDto.properties.single'),
+      ).toMatchObject({
+        type: 'array',
+        items: { type: 'string' },
+      });
+      expect(
+        get(doc, 'components.schemas.TupleDto.properties.rest'),
+      ).toMatchObject({
+        type: 'array',
+        items: { anyOf: [{ type: 'string' }, { type: 'number' }] },
+      });
+      expect(JSON.stringify(doc)).not.toContain('prefixItems');
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', 'latest'],
+  );
+
+  testMany(
+    'documents a nullable tuple',
+    async ({ z }) => {
+      class TupleDto extends createZodDto(
+        z.object({ pair: z.tuple([z.number(), z.string()]).nullable() }),
+      ) {}
+
+      @Controller()
+      class TupleController {
+        constructor() {}
+
+        @Post()
+        create(@Body() body: TupleDto) {
+          return body;
+        }
+      }
+
+      const doc = await getSwaggerDoc(TupleController);
+      expect(
+        get(doc, 'components.schemas.TupleDto.properties.pair'),
+      ).toMatchObject({
+        type: 'array',
+        items: { anyOf: [{ type: 'number' }, { type: 'string' }] },
+        nullable: true,
+      });
+      expect(JSON.stringify(doc)).not.toContain('prefixItems');
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', 'latest'],
+  );
+
+  testMany(
+    'converts 3.1 syntax inside tuple members',
+    async ({ z }) => {
+      class TupleDto extends createZodDto(
+        z.object({
+          pair: z.tuple([z.literal('tour'), z.number().positive()]),
+        }),
+      ) {}
+
+      @Controller()
+      class TupleController {
+        constructor() {}
+
+        @Post()
+        create(@Body() body: TupleDto) {
+          return body;
+        }
+      }
+
+      const doc = await getSwaggerDoc(TupleController);
+      expect(
+        get(doc, 'components.schemas.TupleDto.properties.pair'),
+      ).toMatchObject({
+        type: 'array',
+        items: {
+          anyOf: [
+            { type: 'string', enum: ['tour'] },
+            { type: 'number', minimum: 0, exclusiveMinimum: true },
+          ],
+        },
+      });
+      expect(JSON.stringify(doc)).not.toContain('"const"');
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', 'latest'],
+  );
+
+  testMany(
+    'references a named schema inside a tuple',
+    async ({ z }) => {
+      const Author = z.object({ name: z.string() }).meta({ id: 'Author' });
+
+      class TupleDto extends createZodDto(
+        z.object({ pair: z.tuple([z.string(), Author]) }),
+      ) {}
+
+      @Controller()
+      class TupleController {
+        constructor() {}
+
+        @Post()
+        create(@Body() body: TupleDto) {
+          return body;
+        }
+      }
+
+      const doc = await getSwaggerDoc(TupleController);
+      expect(
+        get(doc, 'components.schemas.TupleDto.properties.pair'),
+      ).toMatchObject({
+        type: 'array',
+        items: {
+          anyOf: [{ type: 'string' }, { $ref: '#/components/schemas/Author' }],
+        },
+      });
+      expect(get(doc, 'components.schemas.Author')).toMatchObject({
+        type: 'object',
+        properties: { name: { type: 'string' } },
+      });
+      expect(JSON.stringify(doc)).not.toContain('prefixItems');
+      expect(JSON.stringify(doc)).not.toContain(PREFIX);
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['latest'],
+  );
+});
+
 describe('issue#473', () => {
   // zod >= 4.5 compacts unions of bare types into `type: ['string', 'number']`.
   // This is valid JSON Schema (and OpenAPI 3.1), so it is preserved as-is
