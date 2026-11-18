@@ -327,8 +327,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       '@ibm-cloud/openapi-ruleset':
-        specifier: ^1.33.17
-        version: 1.33.17
+        specifier: ^1.33.18
+        version: 1.33.18
       '@nest-zod/z':
         specifier: workspace:*
         version: link:../z
@@ -1595,12 +1595,12 @@ packages:
     resolution: {integrity: sha512-bV0Tgo9K4hfPCek+aMAn81RppFKv2ySDQeMoSZuvTASywNTnVJCArCZE2FWqpvIatKu7VMRLWlR1EazvVhDyhQ==}
     engines: {node: '>=18.18'}
 
-  '@ibm-cloud/openapi-ruleset-utilities@1.9.4':
-    resolution: {integrity: sha512-DZqYuqpQpaC0s2Fc+8/lt6oOpMi+BTeKZiv1O5h2gnV/0fCS/gJ90i83F4T51QQNLsyJPhS4OGqxwQd05E+ixQ==}
+  '@ibm-cloud/openapi-ruleset-utilities@1.9.5':
+    resolution: {integrity: sha512-WFh/ZfLkGaXt3WlFna6Xb2fbm+7142Q6uNIQgmoeEtUp68j9Wby+GQkT7UWatL/VpnbnkhoSN8d8RbnRvQCcWQ==}
     engines: {node: '>=16.0.0'}
 
-  '@ibm-cloud/openapi-ruleset@1.33.17':
-    resolution: {integrity: sha512-rJt8AiVOmI4gpIvaWSSKdadJ9teMzM/1ep9ofaFElul2VvyPF6PTB/jZcbJ0OrbTmQul770RQrXDd32Znk1MHg==}
+  '@ibm-cloud/openapi-ruleset@1.33.18':
+    resolution: {integrity: sha512-3VpeFGEsA9Awkij5toWrlgTB80q7E5l1QZkIn9//qdomOop8s78Wq5A5jbcD2R85DwncaCVVnXtEenMtssoQEQ==}
     engines: {node: '>=16.0.0'}
 
   '@inquirer/ansi@1.0.2':
@@ -3329,10 +3329,6 @@ packages:
 
   brace-expansion@5.0.13:
     resolution: {integrity: sha512-Vh3dmFbc4wZeox7M9I/0L9GfFd83Su4+yCck/OF9Gi/P/dAHn0RT7X4K9R7gMNMhDck3DvhR6QXsnQdjjgwNvQ==}
-    engines: {node: 20 || >=22}
-
-  brace-expansion@5.0.9:
-    resolution: {integrity: sha512-ScQ4IuvIEF1TMlP7Zt+vjJ//9zlPb2SDcxWxM3bk8s6t6GGdJ7KO1dCcTidOPJKePW30LE/2cT7wCyPho9/Wxg==}
     engines: {node: 20 || >=22}
 
   braces@3.0.3:
@@ -7786,11 +7782,11 @@ snapshots:
 
   '@humanwhocodes/retry@0.4.3': {}
 
-  '@ibm-cloud/openapi-ruleset-utilities@1.9.4': {}
+  '@ibm-cloud/openapi-ruleset-utilities@1.9.5': {}
 
-  '@ibm-cloud/openapi-ruleset@1.33.17':
+  '@ibm-cloud/openapi-ruleset@1.33.18':
     dependencies:
-      '@ibm-cloud/openapi-ruleset-utilities': 1.9.4
+      '@ibm-cloud/openapi-ruleset-utilities': 1.9.5
       '@stoplight/spectral-formats': 1.9.0
       '@stoplight/spectral-functions': 1.11.0
       '@stoplight/spectral-rulesets': 1.23.0
@@ -8781,7 +8777,7 @@ snapshots:
       '@stoplight/better-ajv-errors': 1.0.3(ajv@8.20.0)
       '@stoplight/json': 3.21.7
       '@stoplight/spectral-core': 1.24.1
-      '@stoplight/spectral-formats': 1.8.5
+      '@stoplight/spectral-formats': 1.9.0
       '@stoplight/spectral-runtime': 1.1.6
       ajv: 8.20.0
       ajv-draft-04: 1.0.0(ajv@8.20.0)
@@ -8837,8 +8833,8 @@ snapshots:
       '@stoplight/better-ajv-errors': 1.0.3(ajv@8.20.0)
       '@stoplight/json': 3.21.7
       '@stoplight/spectral-core': 1.24.1
-      '@stoplight/spectral-formats': 1.8.5
-      '@stoplight/spectral-functions': 1.10.5
+      '@stoplight/spectral-formats': 1.9.0
+      '@stoplight/spectral-functions': 1.11.0
       '@stoplight/spectral-runtime': 1.1.6
       '@stoplight/types': 13.20.0
       '@types/json-schema': 7.0.15
@@ -9852,10 +9848,6 @@ snapshots:
       balanced-match: 1.0.2
 
   brace-expansion@5.0.13:
-    dependencies:
-      balanced-match: 4.0.4
-
-  brace-expansion@5.0.9:
     dependencies:
       balanced-match: 4.0.4
 
@@ -11876,7 +11868,7 @@ snapshots:
 
   minimatch@10.2.6:
     dependencies:
-      brace-expansion: 5.0.9
+      brace-expansion: 5.0.13
 
   minimatch@11.0.8:
     dependencies:
