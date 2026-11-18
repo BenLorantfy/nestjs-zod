@@ -66,7 +66,7 @@
     "@nestjs/core": "^11.1.5",
     "@nestjs/swagger": "^11.2.0",
     "@nestjs/swagger-v7": "npm:@nestjs/swagger@7.4.2",
-    "@nestjs/testing": "^11.1.28",
+    "@nestjs/testing": "^12.5.0",
     "@stoplight/spectral-core": "^1.24.1",
     "@stoplight/spectral-rulesets": "^1.22.7",
     "@types/express": "^5.0.6",
