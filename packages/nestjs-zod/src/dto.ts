@@ -363,6 +363,8 @@ function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
       schema.const ||
       schema.id ||
       'propertyNames' in schema ||
+      // OpenAPI 3.0 has no tuples
+      Array.isArray(schema.prefixItems) ||
       typeof schema.exclusiveMinimum === 'number' ||
       typeof schema.exclusiveMaximum === 'number'
     ) {

@@ -42,6 +42,38 @@ export function fixAllRefs({
 }
 
 /**
+ * OpenAPI 3.0 has no tuples.  zod v4 documents them with 2020-12
+ * `prefixItems` (plus `items` for a rest element, or `items: false`), so we
+ * document them as an array of their member types, like the zod v3 converter
+ * did.  `minItems`/`maxItems` are kept.
+ */
+function convertPrefixItems(s: JSONSchema.BaseSchema): JSONSchema.BaseSchema {
+  if (!Array.isArray(s.prefixItems)) {
+    return s;
+  }
+
+  const { prefixItems, items, ...rest } = s;
+  const members = (
+    items && typeof items === 'object' && !Array.isArray(items)
+      ? [...prefixItems, items]
+      : prefixItems
+  ).map((member) =>
+    // Boolean schemas: `true` allows any value, `false` allows none
+    typeof member === 'boolean' ? (member ? {} : { not: {} }) : member,
+  );
+
+  return {
+    ...rest,
+    items:
+      members.length === 0
+        ? {}
+        : members.length === 1
+          ? members[0]
+          : { anyOf: members },
+  };
+}
+
+/**
  * By default, zod generates openapi schemas that are compatible with OpenAPI
  * 3.1.  But OpenAPI 3.0 supports a weird flavour of JSONSchema they call the
  * "subset superset"
@@ -60,6 +92,8 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
       if ('id' in s) {
         delete s.id;
       }
+
+      s = convertPrefixItems(s);
 
       // OpenAPI 3.0 requires `type` to be a single string.  zod >= 4.5 emits
       // unions of bare types as `type: ['string', 'null']`, so we convert
@@ -97,7 +131,9 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
         const { anyOf, ...rest } = s;
 
         if (anyOf.length === 1) {
-          const sole = anyOf[0];
+          // A nullable tuple is merged into this schema before the walk reaches
+          // it, so convert it here
+          const sole = convertPrefixItems(anyOf[0]);
           if (sole.$ref && Object.keys(sole).length === 1) {
             return { allOf: [sole], nullable: true, ...rest };
           }
@@ -178,6 +214,13 @@ export function walkJsonSchema(
   if (schema.type === 'array' && schema.items) {
     // @ts-expect-error FIXME
     schema.items = walkJsonSchema(schema.items, callback);
+  }
+
+  // Handle tuple members
+  if (schema.type === 'array' && Array.isArray(schema.prefixItems)) {
+    schema.prefixItems = schema.prefixItems.map((item) =>
+      typeof item === 'boolean' ? item : walkJsonSchema(item, callback),
+    );
   }
 
   // Handle oneOf
