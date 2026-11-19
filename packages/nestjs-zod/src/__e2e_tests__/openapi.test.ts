@@ -199,6 +199,49 @@ testMany(
   ['4.0.0', 'latest'],
 );
 
+testMany(
+  'converts falsy literals to enum in OpenAPI 3.0',
+  async ({ z }) => {
+    // `z.literal('')`, `0` and `false` are 2020-12 `const`s too.  Nothing else
+    // in this DTO is 3.1 syntax, so they alone must trigger the conversion
+    class BookDto extends createZodDto(
+      z.object({
+        subtitle: z.literal(''),
+        edition: z.literal(0),
+        archived: z.literal(false),
+      }),
+    ) {}
+
+    @Controller()
+    class BookController {
+      constructor() {}
+
+      @Post()
+      createBook(@Body() book: BookDto) {
+        return book;
+      }
+    }
+
+    const doc = await getSwaggerDoc(BookController);
+    expect(get(doc, 'components.schemas.BookDto.properties.subtitle')).toEqual({
+      type: 'string',
+      enum: [''],
+    });
+    expect(get(doc, 'components.schemas.BookDto.properties.edition')).toEqual({
+      type: 'number',
+      enum: [0],
+    });
+    expect(get(doc, 'components.schemas.BookDto.properties.archived')).toEqual({
+      type: 'boolean',
+      enum: [false],
+    });
+    expect(JSON.stringify(doc)).not.toContain('"const"');
+    expect(JSON.stringify(doc)).not.toContain(PREFIX);
+    expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+  },
+  ['4.0.0', 'latest'],
+);
+
 describe('issue#473', () => {
   // zod >= 4.5 compacts unions of bare types into `type: ['string', 'number']`.
   // This is valid JSON Schema (and OpenAPI 3.1), so it is preserved as-is
