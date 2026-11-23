@@ -1,4 +1,4 @@
-import { fixAllRefs, walkJsonSchema } from './utils';
+import { convertToOpenApi3Point0, fixAllRefs, walkJsonSchema } from './utils';
 
 describe('walkJsonSchema', () => {
   it('should walk the schema and call the callback for each node', () => {
@@ -96,6 +96,46 @@ describe('walkJsonSchema', () => {
       expect.objectContaining({ type: 'string', pattern: '^a' }),
       expect.objectContaining({ type: 'string', pattern: '^b' }),
     ]);
+  });
+});
+
+describe('convertToOpenApi3Point0', () => {
+  it('removes content* keywords from schemas', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        secret: {
+          type: 'string',
+          format: 'base64',
+          contentEncoding: 'base64',
+          pattern: '^([A-Za-z0-9+/]{4})*$',
+        },
+        document: {
+          type: 'string',
+          contentMediaType: 'application/json',
+          contentSchema: { type: 'object' },
+        },
+        files: {
+          type: 'array',
+          items: { type: 'string', contentEncoding: 'binary' },
+        },
+      },
+    } as const;
+
+    expect(convertToOpenApi3Point0(schema)).toEqual({
+      type: 'object',
+      properties: {
+        secret: {
+          type: 'string',
+          format: 'base64',
+          pattern: '^([A-Za-z0-9+/]{4})*$',
+        },
+        document: { type: 'string' },
+        files: { type: 'array', items: { type: 'string' } },
+      },
+    });
+    // The input schema is not mutated
+    expect(schema.properties.secret).toHaveProperty('contentEncoding');
   });
 });
 

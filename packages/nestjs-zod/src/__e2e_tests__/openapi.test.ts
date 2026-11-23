@@ -3629,6 +3629,109 @@ describe('issue#368', () => {
   );
 });
 
+describe('issue#476 - content* keywords in OpenAPI 3.0', () => {
+  testMany(
+    'strips contentEncoding from base64 strings for OpenAPI 3.0',
+    async ({ z }) => {
+      class CredentialDto extends createZodDto(
+        z.object({
+          secret: z.base64(),
+        }),
+      ) {}
+
+      @Controller()
+      class CredentialController {
+        @Post()
+        createCredential(@Body() credential: CredentialDto) {
+          return credential;
+        }
+      }
+
+      const doc = await getSwaggerDoc(CredentialController, {
+        version: '3.0',
+      });
+
+      expect(
+        get(doc, 'components.schemas.CredentialDto.properties.secret'),
+      ).toEqual({
+        type: 'string',
+        format: 'base64',
+        pattern: expect.any(String),
+      });
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', 'latest'],
+  );
+
+  testMany(
+    'strips contentEncoding from base64 query params for OpenAPI 3.0',
+    async ({ z }) => {
+      class QueryParamsDto extends createZodDto(
+        z.object({
+          secret: z.base64(),
+        }),
+      ) {}
+
+      @Controller()
+      class CredentialController {
+        @Get()
+        getCredential(@Query() _query: QueryParamsDto) {
+          return {};
+        }
+      }
+
+      const doc = await getSwaggerDoc(CredentialController, {
+        version: '3.0',
+      });
+
+      expect(get(doc, 'paths./.get.parameters.0.schema')).toEqual({
+        type: 'string',
+        format: 'base64',
+        pattern: expect.any(String),
+      });
+      expect(await getOpenApiErrors(doc, '3.0')).toHaveLength(0);
+    },
+    ['4.0.0', 'latest'],
+  );
+
+  testMany(
+    'preserves contentEncoding for OpenAPI 3.1',
+    async ({ z }) => {
+      class CredentialDto extends createZodDto(
+        z.object({
+          secret: z.base64(),
+        }),
+      ) {}
+
+      @Controller()
+      class CredentialController {
+        @Post()
+        createCredential(@Body() credential: CredentialDto) {
+          return credential;
+        }
+      }
+
+      const app = await createApp(CredentialController);
+      const doc = cleanupOpenApiDoc(
+        SwaggerModule.createDocument(
+          app,
+          new DocumentBuilder().setOpenAPIVersion('3.1.1').build(),
+        ),
+      );
+
+      expect(
+        get(doc, 'components.schemas.CredentialDto.properties.secret'),
+      ).toMatchObject({
+        type: 'string',
+        format: 'base64',
+        contentEncoding: 'base64',
+      });
+      expect(await getOpenApiErrors(doc, '3.1')).toHaveLength(0);
+    },
+    ['4.0.0', 'latest'],
+  );
+});
+
 describe('issue#371 - optional object properties in @nestjs/swagger version 7', () => {
   testMany(
     'does not include optional object as a required field',
