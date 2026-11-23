@@ -3671,6 +3671,57 @@ describe('issue#371 - optional object properties in @nestjs/swagger version 7', 
   );
 });
 
+describe('issue#508', () => {
+  testMany(
+    'rewrites refs in query, options and trace operations',
+    async ({ z }) => {
+      class IdsDto extends createZodDto(
+        z.object({ ids: z.array(z.string()) }).meta({ id: 'Ids' }),
+      ) {}
+
+      @Controller()
+      class ThingsController {
+        constructor() {}
+
+        @Post('things')
+        @ApiOkResponse({ type: IdsDto })
+        find(@Body() body: IdsDto) {
+          return body;
+        }
+      }
+
+      // @nestjs/swagger puts an HTTP QUERY route (`@QueryMethod()`) under the path item's `query` key, as in OpenAPI 3.2
+      const rawDoc: any = await getSwaggerDoc(ThingsController, {
+        cleanUp: false,
+      });
+      const operation = rawDoc.paths['/things'].post;
+      rawDoc.paths['/things'] = {
+        query: structuredClone(operation),
+        options: structuredClone(operation),
+        trace: structuredClone(operation),
+      };
+
+      const doc = cleanupOpenApiDoc(rawDoc);
+
+      for (const method of ['query', 'options', 'trace']) {
+        expect(
+          get(
+            doc,
+            `paths./things.${method}.requestBody.content.application/json.schema.$ref`,
+          ),
+        ).toEqual('#/components/schemas/Ids');
+        expect(
+          get(
+            doc,
+            `paths./things.${method}.responses.200.content.application/json.schema.$ref`,
+          ),
+        ).toEqual('#/components/schemas/Ids');
+      }
+    },
+    ['latest'],
+  );
+});
+
 async function createApp(controllerClass: Type<unknown>) {
   @Module({
     imports: [],
