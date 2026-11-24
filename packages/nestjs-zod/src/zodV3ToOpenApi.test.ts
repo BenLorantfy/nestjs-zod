@@ -116,3 +116,86 @@ it('should handle optional types', () => {
     },
   });
 });
+
+describe('nullable enums', () => {
+  it('should add null to the enum array of a nullable enum', () => {
+    expect(zodV3ToOpenAPI(z.enum(['a', 'b']).nullable())).toEqual({
+      type: 'string',
+      enum: ['a', 'b', null],
+      nullable: true,
+    });
+  });
+
+  it('should add null to the enum array of a nullable native enum', () => {
+    enum Direction {
+      Up = 'UP',
+      Down = 'DOWN',
+    }
+
+    expect(zodV3ToOpenAPI(z.nativeEnum(Direction).nullable())).toEqual({
+      type: 'string',
+      enum: ['UP', 'DOWN', null],
+      'x-enumNames': ['Up', 'Down'],
+      nullable: true,
+    });
+  });
+
+  it('should add null to the enum array of a nullable string literal', () => {
+    expect(zodV3ToOpenAPI(z.literal('a').nullable())).toEqual({
+      type: 'string',
+      enum: ['a', null],
+      nullable: true,
+    });
+  });
+
+  it('should add null only once when nullable is applied twice', () => {
+    expect(zodV3ToOpenAPI(z.enum(['a', 'b']).nullable().nullable())).toEqual({
+      type: 'string',
+      enum: ['a', 'b', null],
+      nullable: true,
+    });
+  });
+
+  it('should add null when the nullable enum is wrapped', () => {
+    const openApiObject = zodV3ToOpenAPI(
+      z.object({
+        optional: z.enum(['a', 'b']).nullable().optional(),
+        withDefault: z.enum(['a', 'b']).nullable().default(null),
+        optionalInside: z.enum(['a', 'b']).optional().nullable(),
+      }),
+    );
+
+    expect(openApiObject.properties).toEqual({
+      optional: { type: 'string', enum: ['a', 'b', null], nullable: true },
+      withDefault: {
+        type: 'string',
+        enum: ['a', 'b', null],
+        nullable: true,
+        default: null,
+      },
+      optionalInside: {
+        type: 'string',
+        enum: ['a', 'b', null],
+        nullable: true,
+      },
+    });
+  });
+
+  it('should not change the enum array of a non-nullable enum', () => {
+    const schema = z.enum(['a', 'b']);
+
+    expect(zodV3ToOpenAPI(schema)).toEqual({
+      type: 'string',
+      enum: ['a', 'b'],
+    });
+  });
+
+  it('should not mutate the values of the zod enum', () => {
+    const schema = z.enum(['a', 'b']);
+
+    zodV3ToOpenAPI(schema.nullable());
+
+    expect(schema.options).toEqual(['a', 'b']);
+    expect(zodV3ToOpenAPI(schema).enum).toEqual(['a', 'b']);
+  });
+});
