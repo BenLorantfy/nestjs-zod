@@ -61,6 +61,19 @@ export function convertToOpenApi3Point0(schema: JSONSchema.BaseSchema) {
         delete s.id;
       }
 
+      // The `content*` keywords are JSON Schema 2020-12 keywords that are not
+      // supported by OpenAPI 3.0.  zod emits them for schemas like
+      // `z.base64()` and `z.file()`.
+      if ('contentEncoding' in s) {
+        delete s.contentEncoding;
+      }
+      if ('contentMediaType' in s) {
+        delete s.contentMediaType;
+      }
+      if ('contentSchema' in s) {
+        delete s.contentSchema;
+      }
+
       // OpenAPI 3.0 requires `type` to be a single string.  zod >= 4.5 emits
       // unions of bare types as `type: ['string', 'null']`, so we convert
       // `null` to `nullable: true` and any remaining multi-type to `anyOf`

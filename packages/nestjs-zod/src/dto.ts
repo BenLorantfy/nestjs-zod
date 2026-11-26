@@ -363,6 +363,9 @@ function getSchemaMetadata(jsonSchema: JSONSchema.BaseSchema) {
       schema.const ||
       schema.id ||
       'propertyNames' in schema ||
+      'contentEncoding' in schema ||
+      'contentMediaType' in schema ||
+      'contentSchema' in schema ||
       typeof schema.exclusiveMinimum === 'number' ||
       typeof schema.exclusiveMaximum === 'number'
     ) {
