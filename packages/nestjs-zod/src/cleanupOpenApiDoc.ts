@@ -33,6 +33,19 @@ type OperationsObject = Exclude<
   undefined
 >;
 
+// Every operation a path item can hold, including `query` (HTTP QUERY, OpenAPI 3.2)
+const OPERATION_METHODS = [
+  'get',
+  'put',
+  'post',
+  'delete',
+  'options',
+  'head',
+  'patch',
+  'trace',
+  'query',
+] as const;
+
 /**
  * This function performs some post-processing on the OpenAPI document.  It
  * should only touch parts of the document that were generated from nestjs-zod
@@ -93,17 +106,13 @@ export function cleanupOpenApiDoc(
   }
 
   const paths = deepClone(doc.paths);
-  for (const { get, patch, post, delete: del, put, head } of Object.values(
-    paths,
-  )) {
-    for (const methodObject of Object.values({
-      get,
-      patch,
-      post,
-      del,
-      put,
-      head,
-    })) {
+  for (const pathItem of Object.values(paths)) {
+    for (const method of OPERATION_METHODS) {
+      const methodObject = (
+        pathItem as Partial<
+          Record<(typeof OPERATION_METHODS)[number], OperationsObject>
+        >
+      )[method];
       fixRefsInBodies({ methodObject, renames });
 
       for (let i = 0; i < (methodObject?.parameters || []).length; i++) {
