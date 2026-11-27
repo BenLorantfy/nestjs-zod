@@ -172,6 +172,9 @@ export function zodV3ToOpenAPI(
     const { innerType } = zodType._def;
     Object.assign(object, zodV3ToOpenAPI(innerType, visited));
     object.nullable = true;
+    if (Array.isArray(object.enum) && !object.enum.includes(null)) {
+      object.enum = [...object.enum, null];
+    }
   }
 
   if (is(zodType, z.ZodOptional)) {
